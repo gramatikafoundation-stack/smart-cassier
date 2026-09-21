@@ -1,0 +1,103 @@
+name: Public Runtime Architecture and Lifecycle Gate
+
+on:
+  pull_request:
+    branches: [freeze-prep]
+    paths:
+      - 'apps/public/lib/render-runtime-architecture.js'
+      - 'apps/public/lib/render-lifecycle.js'
+      - 'apps/public/lib/runtime-lifecycle.js'
+      - 'apps/public/api/render-seo-brand.js'
+      - 'apps/public/api/render-a11y-v3.js'
+      - 'apps/public/api/render-a11y-v2.js'
+      - 'apps/public/api/render-a11y.js'
+      - 'apps/public/api/render-inp.js'
+      - 'apps/public/vercel.json'
+      - 'apps/public/tests/runtime-architecture-gate.mjs'
+      - 'apps/public/tests/runtime-memory-stress-gate.mjs'
+      - 'apps/public/tests/lifecycle-browser-gate.mjs'
+      - 'apps/public/tests/lifecycle-checkout-gate.mjs'
+      - '.github/workflows/public-lifecycle-gate.yml'
+  push:
+    branches: [freeze-prep]
+    paths:
+      - 'apps/public/lib/render-runtime-architecture.js'
+      - 'apps/public/lib/render-lifecycle.js'
+      - 'apps/public/lib/runtime-lifecycle.js'
+      - 'apps/public/api/render-seo-brand.js'
+      - 'apps/public/api/render-a11y-v3.js'
+      - 'apps/public/api/render-a11y-v2.js'
+      - 'apps/public/api/render-a11y.js'
+      - 'apps/public/api/render-inp.js'
+      - 'apps/public/vercel.json'
+      - 'apps/public/tests/runtime-architecture-gate.mjs'
+      - 'apps/public/tests/runtime-memory-stress-gate.mjs'
+      - 'apps/public/tests/lifecycle-browser-gate.mjs'
+      - 'apps/public/tests/lifecycle-checkout-gate.mjs'
+      - '.github/workflows/public-lifecycle-gate.yml'
+  workflow_dispatch:
+
+jobs:
+  lifecycle-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and runtime architecture source contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check apps/public/lib/render-runtime-architecture.js
+          node --check apps/public/lib/render-lifecycle.js
+          node --check apps/public/lib/runtime-lifecycle.js
+          node --check apps/public/api/render-seo-brand.js
+          node --check apps/public/tests/runtime-architecture-gate.mjs
+          node --check apps/public/tests/runtime-memory-stress-gate.mjs
+          node --check apps/public/tests/lifecycle-browser-gate.mjs
+          node --check apps/public/tests/lifecycle-checkout-gate.mjs
+          test ! -e apps/public/api/render-lifecycle.js
+          test ! -e apps/public/api/runtime-lifecycle.js
+          node <<'NODE'
+          const fs=require('fs');
+          const architecture=fs.readFileSync('apps/public/lib/render-runtime-architecture.js','utf8');
+          const lifecycle=fs.readFileSync('apps/public/lib/render-lifecycle.js','utf8');
+          const runtime=fs.readFileSync('apps/public/lib/runtime-lifecycle.js','utf8');
+          const seo=fs.readFileSync('apps/public/api/render-seo-brand.js','utf8');
+          const config=JSON.parse(fs.readFileSync('apps/public/vercel.json','utf8'));
+          const fail=m=>{throw new Error(m)};
+          for(const marker of ['rohmat-fetch-pipeline-v1','signed-table-v22','ocr-smart-v6','runtime_arch_fetch_wrapper','X-Rohmat-Public-Runtime-Architecture']) if(!architecture.includes(marker)) fail('missing_architecture_marker:'+marker);
+          if(!lifecycle.includes("from './render-runtime-architecture.js'")) fail('runtime_architecture_chain_missing');
+          for(const marker of ['clearSendGuard','clearVerificationWatch','stopExpiryTimer','armExpiryTimer','ocr-bfcache-rearm','runtime-v65-same-origin']) if(!lifecycle.includes(marker)) fail('missing_lifecycle_marker:'+marker);
+          for(const marker of ['clearDialogObserver','stopPoll','resumePoll','design-poll-pause-resume']) if(!runtime.includes(marker)) fail('missing_runtime_marker:'+marker);
+          const route=config.rewrites.find(x=>x.source==='/runtime-lifecycle.js');
+          if(!route||route.destination!=='/api/render-seo-brand?rohmat_runtime=lifecycle') fail('runtime_route_missing');
+          if(!seo.includes("from '../lib/render-lifecycle.js'")||!seo.includes("from '../lib/runtime-lifecycle.js'")) fail('seo_chain_missing_lifecycle_libraries');
+          if(!seo.includes("rohmat_runtime') === 'lifecycle'")) fail('runtime_dispatch_missing');
+          const apiFiles=fs.readdirSync('apps/public/api').filter(x=>x.endsWith('.js'));
+          if(apiFiles.length>12) fail('hobby_function_limit_exceeded:'+apiFiles.length);
+          console.log('PUBLIC_RUNTIME_SOURCE_GATE_PASS=1 api_functions='+apiFiles.length);
+          NODE
+
+  lifecycle-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Fetch pipeline architecture and idempotency
+        run: node apps/public/tests/runtime-architecture-gate.mjs
+      - name: Deep memory and duplicate-execution stress
+        run: node apps/public/tests/runtime-memory-stress-gate.mjs
+      - name: Repeated SPA and BFCache lifecycle regression
+        run: node apps/public/tests/lifecycle-browser-gate.mjs
+      - name: Checkout observer teardown and repeated restore
+        run: node apps/public/tests/lifecycle-checkout-gate.mjs

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "scope": "rohmat-public-monitoring-rum",
+  "recorded_at": "2026-09-17",
+  "runtime": {
+    "edge_function": "rohmat-public-element-runtime-v64",
+    "production_version": 56,
+    "production_sha256": "16130c381c209538fc9600f11c650c28c8ae2382be16980255c9ae832c2bf712",
+    "runtime_header": "v56-rum-v2-a11y31",
+    "quality_header": "v35",
+    "rum_header": "v2-web-vitals-6.2.2",
+    "source_commit": "4f7b339a58a120fe0791fed8d33b6aad6ad32abd"
+  },
+  "collection": {
+    "library": "web-vitals@6.2.2",
+    "metrics": ["VIEW", "LCP", "CLS", "INP", "FCP", "TTFB", "JSERR"],
+    "dimensions": ["release_id", "route_stage", "navigation_type", "viewport_class", "effective_type", "save_data", "metric_source", "runtime_version", "path"],
+    "anonymous": true,
+    "view_token": "uuid-per-view",
+    "upsert_key": ["view_token", "metric"],
+    "origin_restricted": true,
+    "max_payload_bytes": 6144
+  },
+  "database": {
+    "table": "public.public_rum_samples",
+    "rls_enabled": true,
+    "public_policies": 0,
+    "retention_days": 90,
+    "retention_cron": "public-rum-retention-90d",
+    "retention_schedule": "17 3 * * *",
+    "summary_views_schema": "private",
+    "metric_constraint_conflict_fixed": true,
+    "legacy_data_preserved": true,
+    "admin_legacy_data_excluded_by_release_scoped_monitoring": true
+  },
+  "verification": {
+    "synthetic_view_insert_test": "passed_and_removed",
+    "browser_loads": 5,
+    "release_id": "rum-v2-20260917-a11y31",
+    "runtime_version": "v35",
+    "view_samples": 5,
+    "fcp_samples": 5,
+    "ttfb_samples": 5,
+    "view_good_samples": 5,
+    "note": "Five short browser loads verified end-to-end ingestion. Finalized LCP/CLS/INP require longer or interaction-complete sessions and were not fabricated from these short verification loads."
+  },
+  "rollback_branch": "public-rum-baseline-20260917",
+  "scope_guard": "Monitoring maintenance must not modify menu data, prices, order logic, payment, OCR rules, visual design, SEO routes, KDS, or Admin behavior."
+}

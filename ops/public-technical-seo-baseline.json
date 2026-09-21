@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "scope": "rohmat-public-technical-seo",
+  "canonical_domain": "https://rohmat-pesan-bayar-publik.vercel.app/",
+  "parent_verified_baseline_commit": "a677fb5a2a41a87291a588dfc2d0f3cf8f003a27",
+  "production_branch": "freeze-prep",
+  "production_source_commit": "0bb08001cfbbdb4d547a6c0adb3309027914bbc4",
+  "production_deployment_id": "dpl_FDj5Nhqssy3yqB82NznSv9ip1Pjs",
+  "rollback_branch": "public-technical-seo-baseline-20260917",
+  "problem_before": {
+    "robots_txt": {
+      "status": 200,
+      "content_type": "text/html",
+      "problem": "Global SPA rewrite returned the full application HTML instead of a valid robots.txt document."
+    },
+    "sitemap_xml": {
+      "status": 200,
+      "content_type": "text/html",
+      "problem": "Global SPA rewrite returned the full application HTML instead of a valid XML sitemap."
+    },
+    "root_cause": "apps/public/vercel.json rewrote every path /(.*) to /api/render-inp with no higher-priority SEO routes."
+  },
+  "implementation": {
+    "strategy": "dedicated SEO handlers with exact-path rewrites placed before the existing SPA catch-all",
+    "files_added": [
+      "apps/public/api/robots.js",
+      "apps/public/api/sitemap.js"
+    ],
+    "file_updated": "apps/public/vercel.json",
+    "rewrites": [
+      {"source": "/robots.txt", "destination": "/api/robots"},
+      {"source": "/sitemap.xml", "destination": "/api/sitemap"},
+      {"source": "/(.*)", "destination": "/api/render-inp"}
+    ],
+    "spa_handler_modified": false,
+    "lkg_modified": false,
+    "supabase_modified": false
+  },
+  "robots_txt": {
+    "status": 200,
+    "content_type": "text/plain; charset=utf-8",
+    "body": "User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: https://rohmat-pesan-bayar-publik.vercel.app/sitemap.xml\n",
+    "policy": {
+      "all_crawlers": true,
+      "public_root_allowed": true,
+      "internal_api_disallowed": true,
+      "absolute_sitemap_reference": true
+    },
+    "method_policy": "GET and HEAD allowed; other methods return 405",
+    "response_marker": "X-Rohmat-SEO: robots-v1"
+  },
+  "sitemap_xml": {
+    "status": 200,
+    "content_type": "application/xml; charset=utf-8",
+    "encoding": "UTF-8",
+    "namespace": "http://www.sitemaps.org/schemas/sitemap/0.9",
+    "url_count": 1,
+    "urls": [
+      "https://rohmat-pesan-bayar-publik.vercel.app/"
+    ],
+    "canonical_only": true,
+    "excluded_noncanonical_examples": [
+      "table or meja query parameters",
+      "take-away query state",
+      "checkout/payment UI state",
+      "API routes"
+    ],
+    "optional_metadata_policy": "lastmod, changefreq and priority omitted rather than fabricated",
+    "method_policy": "GET and HEAD allowed; other methods return 405",
+    "response_marker": "X-Rohmat-SEO: sitemap-v1"
+  },
+  "live_validation": {
+    "robots_live_http_status": 200,
+    "robots_live_content_type_valid": true,
+    "robots_body_is_not_spa_html": true,
+    "sitemap_live_http_status": 200,
+    "sitemap_live_content_type_valid": true,
+    "sitemap_body_is_valid_protocol_shape": true,
+    "homepage_http_status": 200,
+    "homepage_canonical_preserved": true,
+    "homepage_meta_robots_preserved": "index,follow,max-image-preview:large",
+    "runtime_errors_last_30m": 0
+  },
+  "protected_unmodified_dimensions": {
+    "render_inp_path": "apps/public/api/render-inp.js",
+    "render_inp_blob_sha": "9fb96e55a5ab6f8539a2164a51040435e35979b1",
+    "main_renderer_modified": false,
+    "lkg_bytes": 92648,
+    "lkg_etag": "eb4d1731c96dc8aab71248a91b09aa1f",
+    "menu_image_loading_baseline_preserved": "adaptive 881/561 native 3/2/1 eager-high strategy",
+    "menu_data_modified": false,
+    "menu_images_modified": false,
+    "ui_css_modified": false,
+    "checkout_modified": false,
+    "qris_modified": false,
+    "ocr_modified": false,
+    "order_backend_modified": false,
+    "kds_modified": false,
+    "admin_studio_modified": false
+  },
+  "maintenance_rule": "Future public maintenance must preserve the dedicated robots.txt and sitemap.xml routes ahead of the SPA catch-all unless a newer verified SEO baseline explicitly supersedes this contract."
+}

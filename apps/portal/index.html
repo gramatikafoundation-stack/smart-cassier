@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal Terpadu - Rohmat Nasi Uduk Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: rgba(30, 41, 59, 0.7);
+      --border-card: rgba(255, 255, 255, 0.1);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #10b981;
+      --primary-hover: #059669;
+      --accent-kds: #f59e0b;
+      --accent-admin: #6366f1;
+      --accent-public: #10b981;
+      --glass-blur: blur(16px);
+      --radius: 16px;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      overflow-x: hidden;
+    }
+
+    .background-glow {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(99, 102, 241, 0.05) 50%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1000px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .header {
+      margin-bottom: 40px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.subtitle {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 32px;
+    }
+
+    .role-card {
+      background: var(--bg-card);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius);
+      padding: 32px 24px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: var(--transition);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .role-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      transition: var(--transition);
+    }
+
+    .role-card.public::before {
+      background: var(--accent-public);
+    }
+
+    .role-card.kds::before {
+      background: var(--accent-kds);
+    }
+
+    .role-card.admin::before {
+      background: var(--accent-admin);
+    }
+
+    .role-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(255, 255, 255, 0.25);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+    }
+
+    .icon-wrapper {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 1.75rem;
+    }
+
+    .public .icon-wrapper {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+    }
+
+    .kds .icon-wrapper {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+    }
+
+    .admin .icon-wrapper {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+    }
+
+    .role-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .role-desc {
+      font-size: 0.925rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .btn-action {
+      width: 100%;
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+
+    .public .btn-action {
+      background: var(--accent-public);
+      color: #064e3b;
+    }
+
+    .public .btn-action:hover {
+      background: #34d399;
+    }
+
+    .kds .btn-action {
+      background: var(--accent-kds);
+      color: #451a03;
+    }
+
+    .kds .btn-action:hover {
+      background: #fbbf24;
+    }
+
+    .admin .btn-action {
+      background: var(--accent-admin);
+      color: #ffffff;
+    }
+
+    .admin .btn-action:hover {
+      background: #4f46e5;
+    }
+
+    .footer {
+      margin-top: 60px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 640px) {
+      h1 {
+        font-size: 1.85rem;
+      }
+
+      .roles-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="background-glow"></div>
+
+  <div class="container">
+    <div class="header">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        Unified Deployment Multi-User Active
+      </div>
+      <h1>Rohmat Nasi Uduk Platform</h1>
+      <p class="subtitle">
+        Selamat datang di Portal Terpadu. Pilih pintu masuk layanan sesuai peran dan wewenang pengguna Anda.
+      </p>
+    </div>
+
+    <div class="roles-grid">
+      <!-- Public Storefront Card -->
+      <div class="role-card public" onclick="window.location.href='/'">
+        <div>
+          <div class="icon-wrapper">🛒</div>
+          <div class="role-title">Pelanggan / Storefront</div>
+          <div class="role-desc">
+            Akses antarmuka pemesanan menu, pembayaran QRIS, katalog digital, dan status pesanan meja.
+          </div>
+        </div>
+        <a href="/" class="btn-action">
+          Buka Storefront &rarr;
+        </a>
+      </div>
+
+      <!-- KDS & Cashier Card -->
+      <div class="role-card kds" onclick="window.location.href='/kds'">
+        <div>
+          <div class="icon-wrapper">👨‍🍳</div>
+          <div class="role-title">Dapur & Kasir (KDS)</div>
+          <div class="role-desc">
+            Display dapur real-time untuk persiapan makanan, kasir pencetakan struk, dan pengelolaan antrean.
+          </div>
+        </div>
+        <a href="/kds" class="btn-action">
+          Masuk Layanan Dapur &rarr;
+        </a>
+      </div>
+
+      <!-- Admin Studio Card -->
+      <div class="role-card admin" onclick="window.location.href='/admin'">
+        <div>
+          <div class="icon-wrapper">⚙️</div>
+          <div class="role-title">Studio Pengelola</div>
+          <div class="role-desc">
+            Dashboard manajemen pemilik usaha: analitik penjualan, manajemen menu, keamanan, & konfigurasi toko.
+          </div>
+        </div>
+        <a href="/admin" class="btn-action">
+          Masuk Studio Admin &rarr;
+        </a>
+      </div>
+    </div>
+
+    <div class="footer">
+      &copy; 2026 Rohmat Nasi Uduk Platform &bull; Single Deployment Architecture (Master Clone v1.0)
+    </div>
+  </div>
+</body>
+
+</html>

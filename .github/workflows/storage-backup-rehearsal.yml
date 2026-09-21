@@ -1,0 +1,70 @@
+name: Critical Storage Backup Rehearsal
+
+on:
+  push:
+    branches: [freeze-prep]
+    paths:
+      - 'dr/storage-backup-manifest.json'
+      - '.github/workflows/storage-backup-rehearsal.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: freeze-prep
+          fetch-depth: 1
+
+      - name: Download critical long-lived assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT='dr/storage-backup/2026-09-14'
+          rm -rf "$OUT"
+          mkdir -p "$OUT/menu"
+          node <<'NODE'
+          const fs = require('fs');
+          const {execFileSync} = require('child_process');
+          const m = JSON.parse(fs.readFileSync('dr/storage-backup-manifest.json','utf8'));
+          const out = 'dr/storage-backup/2026-09-14';
+          for (const id of m.menu_ids) {
+            execFileSync('curl',['-fsSL','--retry','3','--retry-delay','1',`${m.base_menu_url}/${id}.jpg`,'-o',`${out}/menu/${id}.jpg`],{stdio:'inherit'});
+          }
+          for (const a of m.additional_assets) {
+            execFileSync('curl',['-fsSL','--retry','3','--retry-delay','1',a.url,'-o',`${out}/${a.name}`],{stdio:'inherit'});
+          }
+          NODE
+
+      - name: Validate inventory and compute checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT='dr/storage-backup/2026-09-14'
+          EXPECTED="$(node -p "JSON.parse(require('fs').readFileSync('dr/storage-backup-manifest.json','utf8')).expected_asset_count")"
+          ACTUAL="$(find "$OUT" -type f | wc -l | tr -d ' ')"
+          test "$ACTUAL" -eq "$EXPECTED"
+          find "$OUT" -type f -size 0 -print -quit | grep -q . && { echo 'Zero-byte asset detected'; exit 1; } || true
+          (cd "$OUT" && find . -type f ! -name 'CHECKSUMS.sha256' -print0 | sort -z | xargs -0 sha256sum) > "$OUT/CHECKSUMS.sha256"
+          test "$(wc -l < "$OUT/CHECKSUMS.sha256" | tr -d ' ')" -eq "$EXPECTED"
+          sha256sum dr/storage-backup-manifest.json > "$OUT/SOURCE_MANIFEST.sha256"
+          printf 'STORAGE_BACKUP_PASS=1\nEXPECTED=%s\nACTUAL=%s\n' "$EXPECTED" "$ACTUAL" | tee "$OUT/VERIFICATION.txt"
+
+      - name: Commit verified backup bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add dr/storage-backup/2026-09-14
+          if git diff --cached --quiet; then
+            echo 'Backup bundle already current.'
+            exit 0
+          fi
+          git commit -m 'dr: capture critical storage backup 2026-09-14'
+          git push origin HEAD:freeze-prep

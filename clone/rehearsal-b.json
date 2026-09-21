@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "merchant_slug": "clone-rehearsal-b",
+  "business_name": "Bistro Senandika",
+  "merchant_name": "Senandika Hospitality",
+  "merchant_name_acknowledged": true,
+  "locale": "en-SG",
+  "currency": "SGD",
+  "timezone": "Asia/Singapore",
+  "public_url": "https://senandika-public.example.test",
+  "admin_url": "https://senandika-admin.example.test",
+  "kds_url": "https://senandika-kds.example.test",
+  "qris_asset": "storage://brand-assets/qris.png",
+  "table_count": 18,
+  "table_qr_secret_mode": "external-secret",
+  "require_table_qr_signature": true,
+  "menu_seed": "clone/menu.example.json",
+  "admin_owner_email": "owner-b@example.test",
+  "supabase_project_ref": "rehearsalbprojectref",
+  "spreadsheet_target": "REHEARSAL-B-SHEETS",
+  "storage": { "static_bucket": "brand-assets", "payment_bucket": "transaction-proofs" },
+  "sheets": { "start_year": 2027, "years": 3, "expected_tabs": ["DASHBOARD", "PEMESAN", "PESANAN", "MENU & STOK", "KEUANGAN"] }
+}

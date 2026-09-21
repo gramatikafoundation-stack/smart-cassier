@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "scope": "rohmat-public-supabase-security-hygiene",
+  "recorded_at": "2026-09-17T05:15:00Z",
+  "project_ref": "yybhpmjuywjxqurrrrxl",
+  "source_baseline_commit": "7a58693929d229577afc38192d1252055b88303d",
+  "rollback_branch": "public-security-hygiene-baseline-20260917",
+  "advisor_before": {
+    "rls_enabled_no_policy": true,
+    "extension_in_public_pg_net": true,
+    "leaked_password_protection_disabled": true
+  },
+  "advisor_after_automated_work": {
+    "rls_enabled_no_policy": false,
+    "extension_in_public_pg_net": true,
+    "leaked_password_protection_disabled": true
+  },
+  "private_table_hardening": {
+    "table": "private.sheet_writer_lease",
+    "rls_enabled": true,
+    "effective_policy": "sheet_writer_lease_no_direct_access",
+    "policy_scope": "PUBLIC",
+    "policy_using": false,
+    "policy_with_check": false,
+    "status": "verified"
+  },
+  "pg_net_assessment": {
+    "extension_version": "0.20.4",
+    "extension_schema": "public",
+    "extrelocatable": false,
+    "move_strategy": "not_applied",
+    "reason": "pg_net is platform-managed and non-relocatable; moving would require destructive drop/recreate or unsupported ownership changes and risks active internal workers",
+    "internal_callers": [
+      "private.dispatch_sheet_sync_event",
+      "private.invoke_public_lkg_publisher",
+      "private.invoke_public_warmup",
+      "private.invoke_reliability_probe",
+      "private.invoke_sheet_sync_worker",
+      "private.invoke_storage_retention_worker"
+    ],
+    "internal_callers_security_definer_owner": "postgres",
+    "public_schema_forwarders_to_pg_net": 0,
+    "rest_publishable_key_probe_accept_profile_net": {
+      "status": 401,
+      "message": "Secret API key required"
+    },
+    "direct_database_role_probe": {
+      "anon_can_execute_pg_net_inside_database": true,
+      "probe_domain": "security-probe.invalid",
+      "probe_transaction_rolled_back": true
+    },
+    "managed_acl_note": "Supabase-managed pg_net ACLs are restored by platform ownership; attempted REVOKE statements do not persist. No destructive extension rewrite was performed."
+  },
+  "private_security_definer_audit": {
+    "client_callable_helpers": [
+      "private.is_admin",
+      "private.is_admin_session",
+      "private.is_superadmin"
+    ],
+    "all_have_empty_search_path": true,
+    "all_are_read_only_identity_or_session_checks": true,
+    "mutation_functions_exposed_to_clients": false
+  },
+  "auth_password_assessment": {
+    "total_auth_users": 1,
+    "password_users": 1,
+    "email_identities": 1,
+    "leaked_password_protection": "disabled_pending_manual_dashboard_toggle",
+    "automation_attempt": "TinyFish strict mode unavailable; Opera Browser Connector not connected; Supabase connector exposes no Auth-config mutation action",
+    "required_user_action": "Authentication > Providers > Email > enable leaked password protection and Save",
+    "supabase_plan_requirement": "Pro or above according to current Supabase documentation"
+  },
+  "scope_guard": {
+    "application_code_changed": false,
+    "public_ui_changed": false,
+    "order_flow_changed": false,
+    "ocr_changed": false,
+    "menu_or_prices_changed": false,
+    "kds_or_admin_changed": false
+  },
+  "final_note": "Automated hardening is complete. One managed Auth setting remains pending because no connected tool can mutate Supabase Auth configuration safely."
+}

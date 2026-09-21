@@ -1,0 +1,169 @@
+name: DR Restore Rehearsal
+
+on:
+  push:
+    branches: [freeze-prep]
+    paths:
+      - 'supabase/restore/**'
+      - 'supabase/functions/**'
+      - '.github/workflows/dr-restore-rehearsal.yml'
+  workflow_dispatch:
+
+jobs:
+  isolated-restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start isolated local Supabase foundation without app migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/rohmat-repo-migrations
+          if compgen -G 'supabase/migrations/*.sql' >/dev/null; then
+            mv supabase/migrations/*.sql /tmp/rohmat-repo-migrations/
+          fi
+          supabase start
+
+      - name: Apply production pre-migration prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_URL='postgresql://postgres:postgres@127.0.0.1:54322/postgres'
+          while IFS= read -r f; do
+            echo "Applying prerequisite $f"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f"
+          done < <(find supabase/restore/bootstrap -maxdepth 1 -type f -name '*.sql' | sort)
+
+      - name: Replay sanitized canonical production migration history
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_URL='postgresql://postgres:postgres@127.0.0.1:54322/postgres'
+          test -f supabase/restore/manifest.json
+          COUNT="$(node -p "JSON.parse(require('fs').readFileSync('supabase/restore/manifest.json','utf8')).count")"
+          EXPECTED_HEAD="$(node -p "const m=JSON.parse(require('fs').readFileSync('supabase/restore/manifest.json','utf8')).migrations; m[m.length-1].version")"
+          test "$COUNT" -ge 166
+          APPLIED=0
+          INTERSTITIAL=0
+          while IFS= read -r f; do
+            echo "Applying $f"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f" >/tmp/rohmat-dr-psql.log 2>&1 || { cat /tmp/rohmat-dr-psql.log; exit 1; }
+            case "$f" in
+              */history/*)
+                APPLIED=$((APPLIED+1))
+                base="$(basename "$f" .sql)"
+                version="${base%%_*}"
+                name="${base#*_}"
+                [[ "$version" =~ ^[0-9]{14}$ ]]
+                [[ "$name" =~ ^[a-z0-9_]+$ ]]
+                psql "$DB_URL" -v ON_ERROR_STOP=1 -c "insert into supabase_migrations.schema_migrations(version,name,statements) values ('$version','$name',array[]::text[]) on conflict(version) do update set name=excluded.name" >/dev/null
+                ;;
+              */interstitial/*) INTERSTITIAL=$((INTERSTITIAL+1)) ;;
+              *) echo "Unexpected replay path: $f"; exit 1 ;;
+            esac
+          done < <(find supabase/restore/history supabase/restore/interstitial -maxdepth 1 -type f -name '*.sql' -printf '%f\t%p\n' | sort -k1,1 | cut -f2-)
+          test "$APPLIED" -eq "$COUNT"
+          test "$INTERSTITIAL" -ge 1
+          LEDGER_COUNT="$(psql "$DB_URL" -Atc "select count(*) from supabase_migrations.schema_migrations")"
+          ACTUAL_HEAD="$(psql "$DB_URL" -Atc "select max(version) from supabase_migrations.schema_migrations")"
+          test "$LEDGER_COUNT" -eq "$COUNT"
+          test "$ACTUAL_HEAD" = "$EXPECTED_HEAD"
+          while IFS= read -r f; do
+            echo "Applying cleanup $f"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f"
+          done < <(find supabase/restore/post-export -maxdepth 1 -type f -name '*.sql' | sort)
+          echo "Replayed $APPLIED sanitized production migrations, $INTERSTITIAL explicit untracked prerequisites, plus cleanup."
+
+      - name: Verify production structural contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_URL='postgresql://postgres:postgres@127.0.0.1:54322/postgres'
+          sql(){ psql "$DB_URL" -Atc "$1"; }
+          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r'")" = '17'
+          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='private' and c.relkind='r'")" = '32'
+          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='v'")" = '2'
+          test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public'")" = '59'
+          test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='private'")" = '60'
+          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and c.relkind='r' and c.relrowsecurity")" = '49'
+          test "$(sql "select count(*) from pg_policies where schemaname in ('public','private')")" = '58'
+          test "$(sql "select count(*) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and not t.tgisinternal")" = '25'
+          test "$(sql "select count(*) from pg_indexes where schemaname in ('public','private')")" = '99'
+
+      - name: Verify critical restored relations and RLS
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_URL='postgresql://postgres:postgres@127.0.0.1:54322/postgres'
+          required=(orders menu_items site_settings site_settings_public_v2 site_settings_admin_runtime_v1 sheet_sync_outbox sheet_sync_targets order_events admin_users order_history_archive public_site_source_snapshots)
+          for rel in "${required[@]}"; do
+            test "$(psql "$DB_URL" -Atc "select to_regclass('public.${rel}') is not null")" = 't'
+          done
+          for rel in orders menu_items site_settings_public_v2 site_settings_admin_runtime_v1 sheet_sync_outbox admin_users; do
+            test "$(psql "$DB_URL" -Atc "select relrowsecurity from pg_class where oid='public.${rel}'::regclass")" = 't'
+          done
+          test "$(psql "$DB_URL" -Atc "select to_regclass('private.sheet_writer_lease') is not null")" = 't'
+          test "$(psql "$DB_URL" -Atc "select relrowsecurity from pg_class where oid='private.sheet_writer_lease'::regclass")" = 't'
+
+      - name: Verify least-privilege and sensitive RPC contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_URL='postgresql://postgres:postgres@127.0.0.1:54322/postgres'
+          sql(){ psql "$DB_URL" -Atc "$1"; }
+          test "$(sql "select has_table_privilege('anon','public.site_settings','select')")" = 'f'
+          test "$(sql "select has_table_privilege('anon','public.site_settings_public_v2','select')")" = 't'
+          test "$(sql "select has_table_privilege('anon','public.site_settings_admin_runtime_v1','select')")" = 't'
+          test "$(sql "select has_table_privilege('anon','public.order_archive_7d','select')")" = 'f'
+          test "$(sql "select has_table_privilege('authenticated','public.order_archive_7d','select')")" = 'f'
+          test "$(sql "select has_function_privilege('anon','public.kds_snapshot(text)','execute')")" = 'f'
+          test "$(sql "select has_function_privilege('anon','public.kds_update_order(text,uuid,text)','execute')")" = 'f'
+          test "$(sql "select has_function_privilege('anon','public.sheet_writer_try_acquire_lease(uuid,integer)','execute')")" = 'f'
+          test "$(sql "select has_function_privilege('authenticated','public.sheet_writer_try_acquire_lease(uuid,integer)','execute')")" = 'f'
+          test "$(sql "select has_function_privilege('service_role','public.sheet_writer_try_acquire_lease(uuid,integer)','execute')")" = 't'
+          test "$(sql "select has_function_privilege('anon','public.sheet_writer_release_lease(uuid)','execute')")" = 'f'
+          test "$(sql "select has_function_privilege('authenticated','public.sheet_writer_release_lease(uuid)','execute')")" = 'f'
+          test "$(sql "select has_function_privilege('service_role','public.sheet_writer_release_lease(uuid)','execute')")" = 't'
+          test "$(sql "select to_regprocedure('public.kds_bff_login_bound(text,text,text)') is not null")" = 't'
+          test "$(sql "select to_regprocedure('public.admin_console_snapshot(text)') is not null")" = 't'
+          test "$(sql "select to_regprocedure('private.release_preflight_status()') is not null")" = 't'
+          test "$(sql "select to_regprocedure('public.release_preflight_status()') is null")" = 't'
+          test "$(sql "select to_regprocedure('public.get_sheet_sync_health()') is not null")" = 't'
+          test "$(sql "select to_regprocedure('public.dr_export_migration_history_v1(integer,integer)') is null")" = 't'
+          test "$(sql "select pg_get_functiondef('private.dispatch_sheet_sync_event()'::regprocedure) like '%rohmat-sheet-sync-worker-v1%'")" = 't'
+
+      - name: Verify canonical Edge Function source is present
+        run: |
+          test -f supabase/functions/rohmat-kds-api/index.ts
+          test -f supabase/functions/rohmat-admin-render/index.ts
+          test -f supabase/functions/rohmat-secure-api-v1/index.ts
+          test -f supabase/functions/rohmat-sheet-sync-worker-v1/index.ts
+          test -f supabase/functions/rohmat-sheet-sync-dispatch-v1/index.ts
+          test -f supabase/functions/rohmat-smart-cashier-v1/index.ts
+          test -f supabase/functions/create-order/index.ts
+          test -f supabase/functions/create-order-v6/index.ts
+
+      - name: Export isolated restore fingerprint
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_CONTAINER="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n1)"
+          test -n "$DB_CONTAINER"
+          docker exec "$DB_CONTAINER" pg_dump -U postgres -d postgres --schema-only --no-owner --no-privileges \
+            --schema=public --schema=private \
+            | sed -E '/^-- Dumped (from|by)/d;/^\\restrict /d;/^\\unrestrict /d' \
+            | sha256sum | tee /tmp/dr-schema-fingerprint.txt
+          test -s /tmp/dr-schema-fingerprint.txt
+          test "$(cut -d' ' -f1 /tmp/dr-schema-fingerprint.txt)" != 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+          echo 'DR_RESTORE_PASS=1'
+
+      - name: Stop isolated stack
+        if: always()
+        run: supabase stop --no-backup

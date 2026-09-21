@@ -1,0 +1,1003 @@
+{
+  "generated_at": "2026-09-13T20:15:57.432Z",
+  "source": "production-sanitized-migration-history",
+  "count": 166,
+  "migrations": [
+    {
+      "version": "20260904024505",
+      "name": "create_rohmat_ordering_platform",
+      "file": "20260904024505_create_rohmat_ordering_platform.sql",
+      "bytes": 19639
+    },
+    {
+      "version": "20260904024535",
+      "name": "harden_api_and_add_fk_indexes",
+      "file": "20260904024535_harden_api_and_add_fk_indexes.sql",
+      "bytes": 1088
+    },
+    {
+      "version": "20260904024821",
+      "name": "add_private_payment_proof_bucket",
+      "file": "20260904024821_add_private_payment_proof_bucket.sql",
+      "bytes": 788
+    },
+    {
+      "version": "20260904024846",
+      "name": "add_order_submission_rate_limit",
+      "file": "20260904024846_add_order_submission_rate_limit.sql",
+      "bytes": 1517
+    },
+    {
+      "version": "20260904144636",
+      "name": "enforce_least_privilege_table_grants",
+      "file": "20260904144636_enforce_least_privilege_table_grants.sql",
+      "bytes": 1498
+    },
+    {
+      "version": "20260905074204",
+      "name": "admin_password_auth_without_email",
+      "file": "20260905074204_admin_password_auth_without_email.sql",
+      "bytes": 11308
+    },
+    {
+      "version": "20260905074319",
+      "name": "admin_password_storage_policies",
+      "file": "20260905074319_admin_password_storage_policies.sql",
+      "bytes": 1586
+    },
+    {
+      "version": "20260905074357",
+      "name": "initialize_existing_admin_passwords",
+      "file": "20260905074357_initialize_existing_admin_passwords.sql",
+      "bytes": 455
+    },
+    {
+      "version": "20260905090110",
+      "name": "admin_console_rpc_gateway",
+      "file": "20260905090110_admin_console_rpc_gateway.sql",
+      "bytes": 13807
+    },
+    {
+      "version": "20260905101004",
+      "name": "add_kds_inventory_and_kitchen_flow",
+      "file": "20260905101004_add_kds_inventory_and_kitchen_flow.sql",
+      "bytes": 7380
+    },
+    {
+      "version": "20260905101028",
+      "name": "enforce_menu_availability_on_orders",
+      "file": "20260905101028_enforce_menu_availability_on_orders.sql",
+      "bytes": 1061
+    },
+    {
+      "version": "20260905102457",
+      "name": "enforce_menu_availability_on_orders",
+      "file": "20260905102457_enforce_menu_availability_on_orders.sql",
+      "bytes": 1453
+    },
+    {
+      "version": "20260905105155",
+      "name": "kds_separate_login_console",
+      "file": "20260905105155_kds_separate_login_console.sql",
+      "bytes": 5356
+    },
+    {
+      "version": "20260905183622",
+      "name": "allow_public_menu_read",
+      "file": "20260905183622_allow_public_menu_read.sql",
+      "bytes": 676
+    },
+    {
+      "version": "20260907191809",
+      "name": "revise_order_notes_payment_and_7d_archive",
+      "file": "20260907191809_revise_order_notes_payment_and_7d_archive.sql",
+      "bytes": 3746
+    },
+    {
+      "version": "20260907191920",
+      "name": "add_google_sheet_link_to_site_settings",
+      "file": "20260907191920_add_google_sheet_link_to_site_settings.sql",
+      "bytes": 513
+    },
+    {
+      "version": "20260907192227",
+      "name": "allow_safe_superadmin_transfer",
+      "file": "20260907192227_allow_safe_superadmin_transfer.sql",
+      "bytes": 1882
+    },
+    {
+      "version": "20260907192932",
+      "name": "move_payment_verification_to_kds",
+      "file": "20260907192932_move_payment_verification_to_kds.sql",
+      "bytes": 5778
+    },
+    {
+      "version": "20260907193348",
+      "name": "harden_legacy_admin_kds_rpc_access",
+      "file": "20260907193348_harden_legacy_admin_kds_rpc_access.sql",
+      "bytes": 2090
+    },
+    {
+      "version": "20260907193436",
+      "name": "remove_obsolete_password_session_rls",
+      "file": "20260907193436_remove_obsolete_password_session_rls.sql",
+      "bytes": 1464
+    },
+    {
+      "version": "20260907195628",
+      "name": "move_payment_verification_to_kds",
+      "file": "20260907195628_move_payment_verification_to_kds.sql",
+      "bytes": 6490
+    },
+    {
+      "version": "20260907200433",
+      "name": "grant_admin_password_rpc_to_anon",
+      "file": "20260907200433_grant_admin_password_rpc_to_anon.sql",
+      "bytes": 501
+    },
+    {
+      "version": "20260907200504",
+      "name": "grant_admin_console_rpcs_to_anon",
+      "file": "20260907200504_grant_admin_console_rpcs_to_anon.sql",
+      "bytes": 913
+    },
+    {
+      "version": "20260907200526",
+      "name": "grant_kds_console_rpcs_to_anon",
+      "file": "20260907200526_grant_kds_console_rpcs_to_anon.sql",
+      "bytes": 518
+    },
+    {
+      "version": "20260907200951",
+      "name": "admin_internal_auth_v4_support",
+      "file": "20260907200951_admin_internal_auth_v4_support.sql",
+      "bytes": 3671
+    },
+    {
+      "version": "20260907203737",
+      "name": "harden_public_payment_proof_and_fix_admin_menu",
+      "file": "20260907203737_harden_public_payment_proof_and_fix_admin_menu.sql",
+      "bytes": 3910
+    },
+    {
+      "version": "20260907205320",
+      "name": "archive_orders_before_7d_purge_for_analytics",
+      "file": "20260907205320_archive_orders_before_7d_purge_for_analytics.sql",
+      "bytes": 2241
+    },
+    {
+      "version": "20260908011547",
+      "name": "harden_menu_image_and_archive_cleanup",
+      "file": "20260908011547_harden_menu_image_and_archive_cleanup.sql",
+      "bytes": 1726
+    },
+    {
+      "version": "20260908033934",
+      "name": "preserve_customer_phone_for_yearly_sheet_archive",
+      "file": "20260908033934_preserve_customer_phone_for_yearly_sheet_archive.sql",
+      "bytes": 2919
+    },
+    {
+      "version": "20260908044824",
+      "name": "centralize_multisite_design_settings",
+      "file": "20260908044824_centralize_multisite_design_settings.sql",
+      "bytes": 5856
+    },
+    {
+      "version": "20260908091930",
+      "name": "add_kds_live_design_url_marker",
+      "file": "20260908091930_add_kds_live_design_url_marker.sql",
+      "bytes": 393
+    },
+    {
+      "version": "20260908091938",
+      "name": "document_yearly_sheet_direct_sync",
+      "file": "20260908091938_document_yearly_sheet_direct_sync.sql",
+      "bytes": 414
+    },
+    {
+      "version": "20260908091948",
+      "name": "noop_marker_kds_live_predeploy",
+      "file": "20260908091948_noop_marker_kds_live_predeploy.sql",
+      "bytes": 244
+    },
+    {
+      "version": "20260908091956",
+      "name": "ensure_site_settings_design_columns_documented",
+      "file": "20260908091956_ensure_site_settings_design_columns_documented.sql",
+      "bytes": 260
+    },
+    {
+      "version": "20260908155421",
+      "name": "restore_kds_browser_rpc_access",
+      "file": "20260908155421_restore_kds_browser_rpc_access.sql",
+      "bytes": 507
+    },
+    {
+      "version": "20260908160254",
+      "name": "add_payment_details_to_kds_print_data",
+      "file": "20260908160254_add_payment_details_to_kds_print_data.sql",
+      "bytes": 5709
+    },
+    {
+      "version": "20260908163659",
+      "name": "format_kds_payment_print_lines",
+      "file": "20260908163659_format_kds_payment_print_lines.sql",
+      "bytes": 3281
+    },
+    {
+      "version": "20260909021311",
+      "name": "create_public_site_source_snapshot",
+      "file": "20260909021311_create_public_site_source_snapshot.sql",
+      "bytes": 740
+    },
+    {
+      "version": "20260909021434",
+      "name": "enable_http_extension_for_public_snapshot",
+      "file": "20260909021434_enable_http_extension_for_public_snapshot.sql",
+      "bytes": 305
+    },
+    {
+      "version": "20260909033140",
+      "name": "add_admin_design_page_update_rpc",
+      "file": "20260909033140_add_admin_design_page_update_rpc.sql",
+      "bytes": 3104
+    },
+    {
+      "version": "20260909034318",
+      "name": "restrict_admin_design_page_rpc_execute",
+      "file": "20260909034318_restrict_admin_design_page_rpc_execute.sql",
+      "bytes": 454
+    },
+    {
+      "version": "20260909055849",
+      "name": "expand_site_settings_theme_presets",
+      "file": "20260909055849_expand_site_settings_theme_presets.sql",
+      "bytes": 848
+    },
+    {
+      "version": "20260909060121",
+      "name": "align_site_settings_text_limits_with_admin",
+      "file": "20260909060121_align_site_settings_text_limits_with_admin.sql",
+      "bytes": 677
+    },
+    {
+      "version": "20260909110127",
+      "name": "central_design_system_v2",
+      "file": "20260909110127_central_design_system_v2.sql",
+      "bytes": 11993
+    },
+    {
+      "version": "20260909110358",
+      "name": "design_system_legacy_bridge",
+      "file": "20260909110358_design_system_legacy_bridge.sql",
+      "bytes": 4940
+    },
+    {
+      "version": "20260909110644",
+      "name": "design_system_draft_bridge_fix",
+      "file": "20260909110644_design_system_draft_bridge_fix.sql",
+      "bytes": 6846
+    },
+    {
+      "version": "20260909111137",
+      "name": "preserve_general_on_theme_publish",
+      "file": "20260909111137_preserve_general_on_theme_publish.sql",
+      "bytes": 8128
+    },
+    {
+      "version": "20260909111300",
+      "name": "design_system_publish_legacy_mirror",
+      "file": "20260909111300_design_system_publish_legacy_mirror.sql",
+      "bytes": 4574
+    },
+    {
+      "version": "20260909111731",
+      "name": "design_system_v2_hardening",
+      "file": "20260909111731_design_system_v2_hardening.sql",
+      "bytes": 1401
+    },
+    {
+      "version": "20260909111846",
+      "name": "design_system_general_delta_bridge",
+      "file": "20260909111846_design_system_general_delta_bridge.sql",
+      "bytes": 9684
+    },
+    {
+      "version": "20260909113031",
+      "name": "harden_rls_and_design_indexes",
+      "file": "20260909113031_harden_rls_and_design_indexes.sql",
+      "bytes": 1333
+    },
+    {
+      "version": "20260909113220",
+      "name": "security_rate_limit_and_audit_layer",
+      "file": "20260909113220_security_rate_limit_and_audit_layer.sql",
+      "bytes": 4949
+    },
+    {
+      "version": "20260909113724",
+      "name": "visual_editor_element_registry",
+      "file": "20260909113724_visual_editor_element_registry.sql",
+      "bytes": 9942
+    },
+    {
+      "version": "20260909113739",
+      "name": "visual_editor_registry_rpc",
+      "file": "20260909113739_visual_editor_registry_rpc.sql",
+      "bytes": 1201
+    },
+    {
+      "version": "20260909114332",
+      "name": "strengthen_custom_admin_auth",
+      "file": "20260909114332_strengthen_custom_admin_auth.sql",
+      "bytes": 5104
+    },
+    {
+      "version": "20260909114349",
+      "name": "revoke_direct_sensitive_rpc_access",
+      "file": "20260909114349_revoke_direct_sensitive_rpc_access.sql",
+      "bytes": 1258
+    },
+    {
+      "version": "20260909115853",
+      "name": "harden_table_qr_signature_registry",
+      "file": "20260909115853_harden_table_qr_signature_registry.sql",
+      "bytes": 2812
+    },
+    {
+      "version": "20260909120346",
+      "name": "close_remaining_direct_console_rpc_grants",
+      "file": "20260909120346_close_remaining_direct_console_rpc_grants.sql",
+      "bytes": 906
+    },
+    {
+      "version": "20260909120802",
+      "name": "lock_transfer_superadmin_service_only",
+      "file": "20260909120802_lock_transfer_superadmin_service_only.sql",
+      "bytes": 455
+    },
+    {
+      "version": "20260909130632",
+      "name": "theme_profiles_v3_fourteen_categories_fixed",
+      "file": "20260909130632_theme_profiles_v3_fourteen_categories_fixed.sql",
+      "bytes": 12044
+    },
+    {
+      "version": "20260909131621",
+      "name": "admin_theme_profile_catalog_rpc",
+      "file": "20260909131621_admin_theme_profile_catalog_rpc.sql",
+      "bytes": 955
+    },
+    {
+      "version": "20260909142512",
+      "name": "restore_kds_legacy_compat_with_origin_rate_limit",
+      "file": "20260909142512_restore_kds_legacy_compat_with_origin_rate_limit.sql",
+      "bytes": 4792
+    },
+    {
+      "version": "20260909161840",
+      "name": "theme_profile_apply_content_lock",
+      "file": "20260909161840_theme_profile_apply_content_lock.sql",
+      "bytes": 8312
+    },
+    {
+      "version": "20260909171711",
+      "name": "add_design_system_scope_overrides",
+      "file": "20260909171711_add_design_system_scope_overrides.sql",
+      "bytes": 8367
+    },
+    {
+      "version": "20260909171915",
+      "name": "allow_database_design_registry",
+      "file": "20260909171915_allow_database_design_registry.sql",
+      "bytes": 507
+    },
+    {
+      "version": "20260909172450",
+      "name": "allow_database_registry_rpc",
+      "file": "20260909172450_allow_database_registry_rpc.sql",
+      "bytes": 1221
+    },
+    {
+      "version": "20260909182835",
+      "name": "visual_editor_text_content_and_full_registry_v61",
+      "file": "20260909182835_visual_editor_text_content_and_full_registry_v61.sql",
+      "bytes": 8683
+    },
+    {
+      "version": "20260909192519",
+      "name": "fix_design_system_nested_paths",
+      "file": "20260909192519_fix_design_system_nested_paths.sql",
+      "bytes": 11640
+    },
+    {
+      "version": "20260910111347",
+      "name": "add_public_runtime_asset_backup_store",
+      "file": "20260910111347_add_public_runtime_asset_backup_store.sql",
+      "bytes": 754
+    },
+    {
+      "version": "20260910151337",
+      "name": "add_smart_cashier_order_fields",
+      "file": "20260910151337_add_smart_cashier_order_fields.sql",
+      "bytes": 1566
+    },
+    {
+      "version": "20260910151420",
+      "name": "add_smart_cashier_backend",
+      "file": "20260910151420_add_smart_cashier_backend.sql",
+      "bytes": 8394
+    },
+    {
+      "version": "20260910165942",
+      "name": "simplify_kds_to_three_atomic_status_actions",
+      "file": "20260910165942_simplify_kds_to_three_atomic_status_actions.sql",
+      "bytes": 6215
+    },
+    {
+      "version": "20260910185010",
+      "name": "add_reliable_event_driven_google_sheet_sync",
+      "file": "20260910185010_add_reliable_event_driven_google_sheet_sync.sql",
+      "bytes": 16498
+    },
+    {
+      "version": "20260910185814",
+      "name": "route_sheet_sync_cron_through_edge_worker",
+      "file": "20260910185814_route_sheet_sync_cron_through_edge_worker.sql",
+      "bytes": 613
+    },
+    {
+      "version": "20260910191514",
+      "name": "add_admin_order_history_snapshot",
+      "file": "20260910191514_add_admin_order_history_snapshot.sql",
+      "bytes": 2057
+    },
+    {
+      "version": "20260911014445",
+      "name": "rohmat_sheet_writer_authenticated_receiver",
+      "file": "20260911014445_rohmat_sheet_writer_authenticated_receiver.sql",
+      "bytes": 841
+    },
+    {
+      "version": "20260911014830",
+      "name": "stabilize_rohmat_integrations_and_history",
+      "file": "20260911014830_stabilize_rohmat_integrations_and_history.sql",
+      "bytes": 1949
+    },
+    {
+      "version": "20260911014853",
+      "name": "make_table_signature_policy_configurable",
+      "file": "20260911014853_make_table_signature_policy_configurable.sql",
+      "bytes": 887
+    },
+    {
+      "version": "20260911015600",
+      "name": "lighten_smart_cashier_snapshot",
+      "file": "20260911015600_lighten_smart_cashier_snapshot.sql",
+      "bytes": 1496
+    },
+    {
+      "version": "20260911021016",
+      "name": "preserve_full_order_history",
+      "file": "20260911021016_preserve_full_order_history.sql",
+      "bytes": 6803
+    },
+    {
+      "version": "20260911021027",
+      "name": "enforce_archive_dedupe_on_new_orders",
+      "file": "20260911021027_enforce_archive_dedupe_on_new_orders.sql",
+      "bytes": 1248
+    },
+    {
+      "version": "20260911024328",
+      "name": "allow_new_kds_origin_for_login",
+      "file": "20260911024328_allow_new_kds_origin_for_login.sql",
+      "bytes": 3714
+    },
+    {
+      "version": "20260911025652",
+      "name": "restrict_archived_order_dedupe_rpc",
+      "file": "20260911025652_restrict_archived_order_dedupe_rpc.sql",
+      "bytes": 550
+    },
+    {
+      "version": "20260911034049",
+      "name": "enable_pg_net_for_sheet_event_dispatch",
+      "file": "20260911034049_enable_pg_net_for_sheet_event_dispatch.sql",
+      "bytes": 281
+    },
+    {
+      "version": "20260911034101",
+      "name": "allow_service_role_to_read_sheet_writer_credential_when_staged",
+      "file": "20260911034101_allow_service_role_to_read_sheet_writer_credential_when_staged.sql",
+      "bytes": 796
+    },
+    {
+      "version": "20260911034219",
+      "name": "add_realtime_sheet_outbox_dispatch",
+      "file": "20260911034219_add_realtime_sheet_outbox_dispatch.sql",
+      "bytes": 1270
+    },
+    {
+      "version": "20260911040809",
+      "name": "sheet_sync_service_role_helpers",
+      "file": "20260911040809_sheet_sync_service_role_helpers.sql",
+      "bytes": 1324
+    },
+    {
+      "version": "20260911045347",
+      "name": "optimize_sheet_reconciliation_single_global_event",
+      "file": "20260911045347_optimize_sheet_reconciliation_single_global_event.sql",
+      "bytes": 1255
+    },
+    {
+      "version": "20260911051627",
+      "name": "harden_admin_kds_rpc_access",
+      "file": "20260911051627_harden_admin_kds_rpc_access.sql",
+      "bytes": 1322
+    },
+    {
+      "version": "20260911053756",
+      "name": "isolate_sensitive_admin_kds_rpcs",
+      "file": "20260911053756_isolate_sensitive_admin_kds_rpcs.sql",
+      "bytes": 3825
+    },
+    {
+      "version": "20260911053847",
+      "name": "document_kds_hosting_canonical_url",
+      "file": "20260911053847_document_kds_hosting_canonical_url.sql",
+      "bytes": 395
+    },
+    {
+      "version": "20260911053900",
+      "name": "document_sensitive_rpc_bridge",
+      "file": "20260911053900_document_sensitive_rpc_bridge.sql",
+      "bytes": 388
+    },
+    {
+      "version": "20260911053910",
+      "name": "restrict_internal_rpc_schema_defaults",
+      "file": "20260911053910_restrict_internal_rpc_schema_defaults.sql",
+      "bytes": 401
+    },
+    {
+      "version": "20260911053923",
+      "name": "restrict_sensitive_public_rpc_grants",
+      "file": "20260911053923_restrict_sensitive_public_rpc_grants.sql",
+      "bytes": 731
+    },
+    {
+      "version": "20260911053946",
+      "name": "set_kds_canonical_vercel",
+      "file": "20260911053946_set_kds_canonical_vercel.sql",
+      "bytes": 320
+    },
+    {
+      "version": "20260911060013",
+      "name": "revoke_direct_anon_rpc_wrappers",
+      "file": "20260911060013_revoke_direct_anon_rpc_wrappers.sql",
+      "bytes": 1277
+    },
+    {
+      "version": "20260911061354",
+      "name": "harden_kds_direct_rpc_compat_wrappers",
+      "file": "20260911061354_harden_kds_direct_rpc_compat_wrappers.sql",
+      "bytes": 6189
+    },
+    {
+      "version": "20260911062942",
+      "name": "production_rpc_hardening_v2",
+      "file": "20260911062942_production_rpc_hardening_v2.sql",
+      "bytes": 1962
+    },
+    {
+      "version": "20260911062954",
+      "name": "production_route_lock_v1",
+      "file": "20260911062954_production_route_lock_v1.sql",
+      "bytes": 955
+    },
+    {
+      "version": "20260911063009",
+      "name": "production_change_control_manifest_v1",
+      "file": "20260911063009_production_change_control_manifest_v1.sql",
+      "bytes": 3052
+    },
+    {
+      "version": "20260911063037",
+      "name": "sheet_sync_async_retry_cron_v1b",
+      "file": "20260911063037_sheet_sync_async_retry_cron_v1b.sql",
+      "bytes": 1097
+    },
+    {
+      "version": "20260911063100",
+      "name": "sheet_sync_cron_vault_secret_v1",
+      "file": "20260911063100_sheet_sync_cron_vault_secret_v1.sql",
+      "bytes": 1414
+    },
+    {
+      "version": "20260911063214",
+      "name": "sheet_sync_cron_private_invoker_v1",
+      "file": "20260911063214_sheet_sync_cron_private_invoker_v1.sql",
+      "bytes": 566
+    },
+    {
+      "version": "20260911063316",
+      "name": "kds_compat_anon_wrapper_access_v1",
+      "file": "20260911063316_kds_compat_anon_wrapper_access_v1.sql",
+      "bytes": 680
+    },
+    {
+      "version": "20260911063334",
+      "name": "kds_internal_rpc_compat_v1",
+      "file": "20260911063334_kds_internal_rpc_compat_v1.sql",
+      "bytes": 753
+    },
+    {
+      "version": "20260911063743",
+      "name": "maintenance_retention_cleanup_v1",
+      "file": "20260911063743_maintenance_retention_cleanup_v1.sql",
+      "bytes": 1495
+    },
+    {
+      "version": "20260911065001",
+      "name": "production_lock_and_health_monitor_v2",
+      "file": "20260911065001_production_lock_and_health_monitor_v2.sql",
+      "bytes": 4983
+    },
+    {
+      "version": "20260911065111",
+      "name": "explicit_deny_client_sheet_sync_policies",
+      "file": "20260911065111_explicit_deny_client_sheet_sync_policies.sql",
+      "bytes": 910
+    },
+    {
+      "version": "20260912094027",
+      "name": "backend_database_security_hardening_v3",
+      "file": "20260912094027_backend_database_security_hardening_v3.sql",
+      "bytes": 26345
+    },
+    {
+      "version": "20260912094333",
+      "name": "private_schema_explicit_deny_policies_v1",
+      "file": "20260912094333_private_schema_explicit_deny_policies_v1.sql",
+      "bytes": 830
+    },
+    {
+      "version": "20260912094500",
+      "name": "backend_security_compensating_controls_v1",
+      "file": "20260912094500_backend_security_compensating_controls_v1.sql",
+      "bytes": 1835
+    },
+    {
+      "version": "20260912094634",
+      "name": "revoke_client_net_schema_usage_v2",
+      "file": "20260912094634_revoke_client_net_schema_usage_v2.sql",
+      "bytes": 341
+    },
+    {
+      "version": "20260912094713",
+      "name": "restrict_pg_net_function_execution_v1",
+      "file": "20260912094713_restrict_pg_net_function_execution_v1.sql",
+      "bytes": 801
+    },
+    {
+      "version": "20260912094800",
+      "name": "fix_custom_password_repeat_regex_v1",
+      "file": "20260912094800_fix_custom_password_repeat_regex_v1.sql",
+      "bytes": 786
+    },
+    {
+      "version": "20260912103407",
+      "name": "kds_browser_session_ttl_hardening_v1",
+      "file": "20260912103407_kds_browser_session_ttl_hardening_v1.sql",
+      "bytes": 3919
+    },
+    {
+      "version": "20260912103900",
+      "name": "kds_session_fingerprint_binding_v1",
+      "file": "20260912103900_kds_session_fingerprint_binding_v1.sql",
+      "bytes": 8293
+    },
+    {
+      "version": "20260912111605",
+      "name": "integration_contracts_and_correlation_v1",
+      "file": "20260912111605_integration_contracts_and_correlation_v1.sql",
+      "bytes": 37262
+    },
+    {
+      "version": "20260912113338",
+      "name": "sheet_sync_consistency_hardening_v1",
+      "file": "20260912113338_sheet_sync_consistency_hardening_v1.sql",
+      "bytes": 12135
+    },
+    {
+      "version": "20260912113744",
+      "name": "sheet_sync_dispatch_auth_binding_v1",
+      "file": "20260912113744_sheet_sync_dispatch_auth_binding_v1.sql",
+      "bytes": 1333
+    },
+    {
+      "version": "20260912113958",
+      "name": "sheet_sync_consistency_cadence_guard_v1",
+      "file": "20260912113958_sheet_sync_consistency_cadence_guard_v1.sql",
+      "bytes": 2503
+    },
+    {
+      "version": "20260912114723",
+      "name": "reliability_archive_recovery_foundation_v1",
+      "file": "20260912114723_reliability_archive_recovery_foundation_v1.sql",
+      "bytes": 14384
+    },
+    {
+      "version": "20260912114809",
+      "name": "reliability_probe_schedule_v1",
+      "file": "20260912114809_reliability_probe_schedule_v1.sql",
+      "bytes": 1257
+    },
+    {
+      "version": "20260912115040",
+      "name": "reliability_health_slo_v1",
+      "file": "20260912115040_reliability_health_slo_v1.sql",
+      "bytes": 9842
+    },
+    {
+      "version": "20260912120210",
+      "name": "frontend_asset_route_backup_v1",
+      "file": "20260912120210_frontend_asset_route_backup_v1.sql",
+      "bytes": 779
+    },
+    {
+      "version": "20260912120458",
+      "name": "frontend_performance_observability_v1",
+      "file": "20260912120458_frontend_performance_observability_v1.sql",
+      "bytes": 3520
+    },
+    {
+      "version": "20260912121023",
+      "name": "kds_reference_snapshot_cache_v2",
+      "file": "20260912121023_kds_reference_snapshot_cache_v2.sql",
+      "bytes": 5221
+    },
+    {
+      "version": "20260912121320",
+      "name": "frontend_performance_health_gate_v2",
+      "file": "20260912121320_frontend_performance_health_gate_v2.sql",
+      "bytes": 6029
+    },
+    {
+      "version": "20260912121518",
+      "name": "performance_private_tables_explicit_deny_v1",
+      "file": "20260912121518_performance_private_tables_explicit_deny_v1.sql",
+      "bytes": 905
+    },
+    {
+      "version": "20260912121630",
+      "name": "frontend_performance_rolling_latency_v3",
+      "file": "20260912121630_frontend_performance_rolling_latency_v3.sql",
+      "bytes": 3311
+    },
+    {
+      "version": "20260912165559",
+      "name": "frontend_ux_functional_accuracy_contract_v1",
+      "file": "20260912165559_frontend_ux_functional_accuracy_contract_v1.sql",
+      "bytes": 6594
+    },
+    {
+      "version": "20260912165826",
+      "name": "frontend_performance_successful_sample_median_v2",
+      "file": "20260912165826_frontend_performance_successful_sample_median_v2.sql",
+      "bytes": 3402
+    },
+    {
+      "version": "20260912170931",
+      "name": "release_engineering_control_plane_v1",
+      "file": "20260912170931_release_engineering_control_plane_v1.sql",
+      "bytes": 30774
+    },
+    {
+      "version": "20260912171106",
+      "name": "edge_function_retirement_catalog_v1",
+      "file": "20260912171106_edge_function_retirement_catalog_v1.sql",
+      "bytes": 2139
+    },
+    {
+      "version": "20260912171147",
+      "name": "frontend_performance_success_sample_gate_v3",
+      "file": "20260912171147_frontend_performance_success_sample_gate_v3.sql",
+      "bytes": 3986
+    },
+    {
+      "version": "20260912174814",
+      "name": "reliability_slo_rolling_health_v1",
+      "file": "20260912174814_reliability_slo_rolling_health_v1.sql",
+      "bytes": 8297
+    },
+    {
+      "version": "20260912174928",
+      "name": "public_reliability_warmup_v1",
+      "file": "20260912174928_public_reliability_warmup_v1.sql",
+      "bytes": 2267
+    },
+    {
+      "version": "20260912174954",
+      "name": "production_operational_state_v1",
+      "file": "20260912174954_production_operational_state_v1.sql",
+      "bytes": 4823
+    },
+    {
+      "version": "20260912175211",
+      "name": "public_last_known_good_render_v1",
+      "file": "20260912175211_public_last_known_good_render_v1.sql",
+      "bytes": 4040
+    },
+    {
+      "version": "20260912175318",
+      "name": "public_warmup_retire_and_lkg_freshness_v1",
+      "file": "20260912175318_public_warmup_retire_and_lkg_freshness_v1.sql",
+      "bytes": 2949
+    },
+    {
+      "version": "20260912175541",
+      "name": "remediation_program_control_plane_v1",
+      "file": "20260912175541_remediation_program_control_plane_v1.sql",
+      "bytes": 8063
+    },
+    {
+      "version": "20260912175643",
+      "name": "privacy_retention_governance_v1",
+      "file": "20260912175643_privacy_retention_governance_v1.sql",
+      "bytes": 7885
+    },
+    {
+      "version": "20260912175712",
+      "name": "privacy_retention_column_fix_v1",
+      "file": "20260912175712_privacy_retention_column_fix_v1.sql",
+      "bytes": 4601
+    },
+    {
+      "version": "20260912180410",
+      "name": "public_lkg_publisher_schedule_v1",
+      "file": "20260912180410_public_lkg_publisher_schedule_v1.sql",
+      "bytes": 2725
+    },
+    {
+      "version": "20260912180606",
+      "name": "sheet_writer_slo_and_dr_policy_v1",
+      "file": "20260912180606_sheet_writer_slo_and_dr_policy_v1.sql",
+      "bytes": 6765
+    },
+    {
+      "version": "20260912180722",
+      "name": "register_public_renderer_release_component_v1",
+      "file": "20260912180722_register_public_renderer_release_component_v1.sql",
+      "bytes": 2441
+    },
+    {
+      "version": "20260912180925",
+      "name": "release_component_count_reconcile_v1",
+      "file": "20260912180925_release_component_count_reconcile_v1.sql",
+      "bytes": 750
+    },
+    {
+      "version": "20260912181923",
+      "name": "kds_mobile_stable_fingerprint_v2",
+      "file": "20260912181923_kds_mobile_stable_fingerprint_v2.sql",
+      "bytes": 5439
+    },
+    {
+      "version": "20260912182548",
+      "name": "kds_session_scope_isolation_v1",
+      "file": "20260912182548_kds_session_scope_isolation_v1.sql",
+      "bytes": 4031
+    },
+    {
+      "version": "20260912182714",
+      "name": "restore_kds_snapshot_internal_execute_v1",
+      "file": "20260912182714_restore_kds_snapshot_internal_execute_v1.sql",
+      "bytes": 311
+    },
+    {
+      "version": "20260912182813",
+      "name": "release_manifest_ui_kds_fix_batch_v1b",
+      "file": "20260912182813_release_manifest_ui_kds_fix_batch_v1b.sql",
+      "bytes": 2325
+    },
+    {
+      "version": "20260912183519",
+      "name": "storage_retention_enforcement_v1",
+      "file": "20260912183519_storage_retention_enforcement_v1.sql",
+      "bytes": 6404
+    },
+    {
+      "version": "20260912183754",
+      "name": "register_storage_retention_worker_r6",
+      "file": "20260912183754_register_storage_retention_worker_r6.sql",
+      "bytes": 3092
+    },
+    {
+      "version": "20260912184014",
+      "name": "update_remediation_evidence_r6",
+      "file": "20260912184014_update_remediation_evidence_r6.sql",
+      "bytes": 2185
+    },
+    {
+      "version": "20260913035048",
+      "name": "admin_login_preview_v13_release_tracking",
+      "file": "20260913035048_admin_login_preview_v13_release_tracking.sql",
+      "bytes": 2095
+    },
+    {
+      "version": "20260913040039",
+      "name": "admin_login_preview_direct_fit_v14_release_control",
+      "file": "20260913040039_admin_login_preview_direct_fit_v14_release_control.sql",
+      "bytes": 1410
+    },
+    {
+      "version": "20260913062832",
+      "name": "public_site_settings_least_privilege_v2",
+      "file": "20260913062832_public_site_settings_least_privilege_v2.sql",
+      "bytes": 2057
+    },
+    {
+      "version": "20260913063031",
+      "name": "freeze_sunday_public_lkg_release_alignment",
+      "file": "20260913063031_freeze_sunday_public_lkg_release_alignment.sql",
+      "bytes": 3851
+    },
+    {
+      "version": "20260913063246",
+      "name": "public_site_settings_contract_add_updated_at",
+      "file": "20260913063246_public_site_settings_contract_add_updated_at.sql",
+      "bytes": 1915
+    },
+    {
+      "version": "20260913063424",
+      "name": "freeze_sunday_public_runtime_v18_release_alignment",
+      "file": "20260913063424_freeze_sunday_public_runtime_v18_release_alignment.sql",
+      "bytes": 3059
+    },
+    {
+      "version": "20260913065031",
+      "name": "replace_public_settings_view_with_rls_cache",
+      "file": "20260913065031_replace_public_settings_view_with_rls_cache.sql",
+      "bytes": 6085
+    },
+    {
+      "version": "20260913081245",
+      "name": "kds_bff_bound_login_v1",
+      "file": "20260913081245_kds_bff_bound_login_v1.sql",
+      "bytes": 2323
+    },
+    {
+      "version": "20260913154355",
+      "name": "admin_runtime_site_settings_projection_v1",
+      "file": "20260913154355_admin_runtime_site_settings_projection_v1.sql",
+      "bytes": 4103
+    },
+    {
+      "version": "20260913160212",
+      "name": "revoke_public_order_archive_access",
+      "file": "20260913160212_revoke_public_order_archive_access.sql",
+      "bytes": 359
+    },
+    {
+      "version": "20260913160959",
+      "name": "privacy_least_privilege_phase2",
+      "file": "20260913160959_privacy_least_privilege_phase2.sql",
+      "bytes": 1052
+    },
+    {
+      "version": "20260913194739",
+      "name": "revoke_raw_site_settings_public_read_v1",
+      "file": "20260913194739_revoke_raw_site_settings_public_read_v1.sql",
+      "bytes": 530
+    },
+    {
+      "version": "20260913201302",
+      "name": "temporary_dr_migration_export_v1",
+      "file": "20260913201302_temporary_dr_migration_export_v1.sql",
+      "bytes": 1512
+    }
+  ]
+}

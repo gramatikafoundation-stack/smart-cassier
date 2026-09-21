@@ -1,0 +1,19 @@
+{
+  "scope": "supabase-security-hygiene",
+  "project_ref": "yybhpmjuywjxqurrrrxl",
+  "date": "2026-09-17",
+  "preflight": {
+    "project_status": "ACTIVE_HEALTHY",
+    "postgres_version": "17.6.1.166",
+    "pg_net_version": "0.20.4",
+    "pg_net_relocatable": false,
+    "pg_net_extension_schema": "public",
+    "pg_net_object_schema": "net",
+    "public_tables_without_rls": 0,
+    "sheet_writer_lease_policy": "sheet_writer_lease_no_direct_access",
+    "storage_payment_proofs_public": false,
+    "security_definer_public_execute_findings": 0,
+    "cron_pg_net_callers_run_as": "postgres"
+  },
+  "planned_change": "Revoke direct net schema/function/table/sequence privileges from PUBLIC, anon, authenticated while preserving postgres, service_role, supabase_functions_admin. Do not move or reinstall non-relocatable pg_net."
+}

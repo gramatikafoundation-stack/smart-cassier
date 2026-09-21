@@ -1,0 +1,78 @@
+name: Public Performance OCR and RUM Gate
+
+on:
+  pull_request:
+    paths:
+      - 'apps/public/api/render-inp.js'
+      - 'apps/public/api/render-a11y.js'
+      - 'apps/public/api/render-a11y-v2.js'
+      - 'apps/public/api/render-a11y-v3.js'
+      - 'apps/public/tests/performance-browser-gate.mjs'
+      - 'apps/public/tests/rum-v3-gate.mjs'
+      - 'apps/public/tests/ocr-runtime-gate.cjs'
+      - 'apps/public/tests/ocr-browser-gate.mjs'
+      - 'supabase/functions/rohmat-public-element-runtime-v64/index.ts'
+      - 'supabase/migrations/20260917184346_extend_public_rum_performance_metrics_b2.sql'
+      - '.github/workflows/public-performance-rum-gate.yml'
+  push:
+    branches: [freeze-prep]
+    paths:
+      - 'apps/public/api/render-inp.js'
+      - 'apps/public/api/render-a11y.js'
+      - 'apps/public/api/render-a11y-v2.js'
+      - 'apps/public/api/render-a11y-v3.js'
+      - 'apps/public/tests/performance-browser-gate.mjs'
+      - 'apps/public/tests/rum-v3-gate.mjs'
+      - 'supabase/functions/rohmat-public-element-runtime-v64/index.ts'
+      - '.github/workflows/public-performance-rum-gate.yml'
+  workflow_dispatch:
+
+jobs:
+  source-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Batch 2 source contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check apps/public/api/render-inp.js
+          node --check apps/public/api/render-a11y.js
+          node --check apps/public/api/render-a11y-v2.js
+          node --check apps/public/api/render-a11y-v3.js
+          node --check apps/public/tests/performance-browser-gate.mjs
+          node --check apps/public/tests/rum-v3-gate.mjs
+          node --check apps/public/tests/ocr-runtime-gate.cjs
+          node --check apps/public/tests/ocr-browser-gate.mjs
+          node apps/public/tests/ocr-runtime-gate.cjs
+          node <<'NODE'
+          const fs=require('fs');
+          const rum=fs.readFileSync('supabase/functions/rohmat-public-element-runtime-v64/index.ts','utf8');
+          const mig=fs.readFileSync('supabase/migrations/20260917184346_extend_public_rum_performance_metrics_b2.sql','utf8');
+          for(const marker of ['rum-v3-20260918-b2','v57-rum-v3-b2','LONGTASK','OCRMS','OCRFAIL','rowStage','rowViewport']) if(!rum.includes(marker)) throw Error('rum_marker:'+marker);
+          for(const metric of ['LONGTASK','OCRMS','OCRFAIL']) if(!mig.includes("'"+metric+"'")) throw Error('migration_metric:'+metric);
+          console.log('PUBLIC_PERFORMANCE_RUM_SOURCE_GATE_PASS=1');
+          NODE
+
+  browser-certification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium test runtime
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Verify RUM v3 attribution and privacy
+        run: node apps/public/tests/rum-v3-gate.mjs
+      - name: Verify desktop and mobile interaction performance
+        run: node apps/public/tests/performance-browser-gate.mjs
+      - name: Verify OCR reads and passes under five seconds
+        run: node apps/public/tests/ocr-browser-gate.mjs

@@ -1,0 +1,67 @@
+{
+  "schema_version": 2,
+  "scope": "supabase-security-hygiene",
+  "project_ref": "yybhpmjuywjxqurrrrxl",
+  "captured_at": "2026-09-17T05:45:00Z",
+  "project_status": "ACTIVE_HEALTHY",
+  "verified_controls": {
+    "public_tables_without_rls": 0,
+    "private_sheet_writer_lease_policy": "sheet_writer_lease_no_direct_access",
+    "security_definer_missing_explicit_search_path": 0,
+    "public_security_definer_functions_with_public_anon_authenticated_execute": 0,
+    "public_views_security_invoker": true,
+    "payment_proofs_bucket_public": false,
+    "public_site_uses_modern_publishable_key": true,
+    "public_site_exposes_service_role": false,
+    "internal_pg_net_cron_jobs_latest_status": "succeeded",
+    "supabase_security_advisor_new_findings_from_maintenance": 0,
+    "vercel_public_runtime_errors_last_hour": 0
+  },
+  "storage": {
+    "public_buckets": ["menu-images", "rohmat-assets", "rohmat-static"],
+    "private_buckets": ["rohmat-payment-proofs"],
+    "payment_proof_read_model": "admin-gated only"
+  },
+  "pg_net": {
+    "version": "0.20.4",
+    "extension_catalog_schema": "public",
+    "objects_schema": "net",
+    "extension_owner": "supabase_admin",
+    "relocatable": false,
+    "production_dependencies": [
+      "capture_latest_public_lkg",
+      "dispatch_sheet_sync_event",
+      "invoke_public_lkg_publisher",
+      "invoke_public_warmup",
+      "invoke_reliability_probe",
+      "invoke_sheet_sync_worker",
+      "invoke_storage_retention_worker"
+    ],
+    "attempted_direct_revoke_effective": false,
+    "reason_not_force_moved": "The connected postgres role cannot SET ROLE supabase_admin, pg_net is non-relocatable, and live postgres-owned SECURITY DEFINER jobs depend on net.*. Drop/recreate or catalog manipulation was rejected as unsafe for production.",
+    "advisor_status": "WARN extension_in_public remains",
+    "recommended_escalation": "Supabase Support / privileged platform operation if clearing the advisor warning is required."
+  },
+  "auth": {
+    "auth_users": 1,
+    "password_users": 1,
+    "leaked_password_protection": false,
+    "advisor_status": "WARN auth_leaked_password_protection remains",
+    "automation_status": "Not changeable through available Supabase connector; strict dashboard browser automation did not start; Opera browser connector was not connected.",
+    "plan_note": "Official Supabase documentation states leaked password protection is available on Pro Plan and above."
+  },
+  "api_keys": {
+    "modern_publishable_key_active": true,
+    "legacy_anon_key_active": true,
+    "legacy_anon_key_action": "not disabled because cross-surface Admin/KDS/integration dependency has not been proven absent"
+  },
+  "residual_advisor_findings": [
+    "extension_in_public: pg_net",
+    "auth_leaked_password_protection"
+  ],
+  "rollback": {
+    "branch": "public-supabase-security-baseline-20260917",
+    "anchor_commit": "30bc6a5ae39044ab313067bebee7633a74a1ba3c",
+    "note": "No effective pg_net privilege mutation remained after verification; rollback branch preserves the audited repository state."
+  }
+}

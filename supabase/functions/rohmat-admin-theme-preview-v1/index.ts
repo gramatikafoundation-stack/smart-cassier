@@ -1,0 +1,19 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+const U='https://yybhpmjuywjxqurrrrxl.supabase.co';
+const K='sb_publishable_bnlE_eqvn5Ib0UEnaUunHw_mKyq7dgd';
+const BACKUP='public:admin-theme-preview-v4-captured';
+const PRELUDE=`(()=>{'use strict';if(!window.__rohmatAdminStaticCssV1){window.__rohmatAdminStaticCssV1={append(id,css){if(document.getElementById(id))return;let s=document.getElementById('rohmatAdminStaticCssV1');if(!s){s=document.createElement('style');s.id='rohmatAdminStaticCssV1';document.head.appendChild(s)}s.appendChild(document.createTextNode('\\n/* '+id+' */\\n'+String(css||'')));const m=document.createElement('meta');m.id=id;m.dataset.rohmatCssConsolidated='v1';document.head.appendChild(m)}}}})();\n`;
+let memo:Promise<string>|null=null;
+function patchLegacyThemePreview(src:string){
+  const oldClick="document.addEventListener('click',e=>{const apply=e.target.closest('#applyTheme'),draft=e.target.closest('#saveDraft');if(apply||draft){e.preventDefault();e.stopImmediatePropagation();action(apply?'published':'draft',apply||draft);return}if(e.target.closest('[data-theme],[data-device],[data-pview],#compareTheme,#customTheme'))schedule()},true);";
+  const newClick="document.addEventListener('click',e=>{if(e.target.closest('[data-theme],[data-device],[data-pview],#compareTheme,#customTheme'))schedule()},true);";
+  if(!src.includes(oldClick))throw new Error('theme_action_intercept_patch_mismatch');
+  return src
+    .replace(oldClick,newClick)
+    .replace('14 KATEGORI TEMA','14 KATEGORI VISUAL PER TEMA')
+    .replace('Semua kategori berubah sebagai satu paket desain','17 tema semuanya siap diterapkan; setiap tema membawa 14 kategori visual')
+    .replace('Konten dan identitas elemen dikunci saat pergantian Tema. Hanya 14 kategori desain di atas yang boleh berubah.','17 tema tersedia dan siap diterapkan. Angka 14 di atas adalah kategori visual yang berubah di dalam setiap tema; konten dan data tetap dipertahankan.');
+}
+function consolidate(src:string){const id='admin-content-lock-cleanup-v54';const safe=id.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');const re=new RegExp("const s=document\\.createElement\\('style'\\);s\\.id='"+safe+"';s\\.textContent=([\\s\\S]*?);document\\.head\\.appendChild\\(s\\)");let hit=0;const out=src.replace(re,(_m,expr)=>{hit++;return "window.__rohmatAdminStaticCssV1.append('"+id+"',"+expr+");"});return hit===1?PRELUDE+patchLegacyThemePreview(out):src}
+async function body(){if(memo)return memo;memo=(async()=>{const r=await fetch(U+'/rest/v1/runtime_asset_backups?select=content&name=eq.'+encodeURIComponent(BACKUP)+'&limit=1',{headers:{apikey:K,Authorization:'Bearer '+K},cache:'no-store'});if(!r.ok)throw new Error('backup_unavailable_'+r.status);const a=await r.json(),c=a?.[0]?.content;if(typeof c!=='string'||c.length<15000)throw new Error('backup_invalid');return consolidate(c)})();return memo}
+Deno.serve(async(req:Request)=>{if(req.method!=='GET'&&req.method!=='HEAD')return new Response('Method Not Allowed',{status:405});try{const c=await body();return new Response(req.method==='HEAD'?null:c,{status:200,headers:{'content-type':'application/javascript; charset=utf-8','cache-control':'no-store','etag':'"rohmat-admin-theme-preview-v1-v8"','access-control-allow-origin':'*','cross-origin-resource-policy':'cross-origin','x-content-type-options':'nosniff','x-rohmat-theme-preview':'v10-canonical-actions'}})}catch(e){return new Response('/* theme preview unavailable */',{status:503,headers:{'content-type':'application/javascript; charset=utf-8','cache-control':'no-store','x-rohmat-theme-preview-error':String((e as Error)?.message||e).slice(0,100)}})}});

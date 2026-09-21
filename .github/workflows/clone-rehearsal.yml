@@ -1,0 +1,50 @@
+name: Master Prototype Rehearsal
+
+on:
+  push:
+    branches:
+      - release/master-clone-v1-freeze-20260919
+    paths:
+      - 'prototype/**'
+      - 'apps/**'
+      - 'supabase/**'
+      - 'integrations/google-sheets/**'
+      - '.github/workflows/clone-rehearsal.yml'
+  pull_request:
+    paths:
+      - 'prototype/**'
+      - 'apps/**'
+      - 'supabase/**'
+      - 'integrations/google-sheets/**'
+      - '.github/workflows/clone-rehearsal.yml'
+
+jobs:
+  zero-source-edit-rehearsal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate tenant A
+        run: node prototype/validate-config.mjs prototype/rehearsal-a.json | tee /tmp/tenant-a-validation.json
+      - name: Validate tenant B
+        run: node prototype/validate-config.mjs prototype/rehearsal-b.json | tee /tmp/tenant-b-validation.json
+      - name: Generate tenant provision plans
+        run: |
+          node prototype/provision-plan.mjs prototype/rehearsal-a.json > /tmp/tenant-a-plan.json
+          node prototype/provision-plan.mjs prototype/rehearsal-b.json > /tmp/tenant-b-plan.json
+      - name: Run two-tenant static rehearsal
+        run: node prototype/rehearse.mjs prototype/rehearsal-a.json prototype/rehearsal-b.json | tee /tmp/prototype-rehearsal.json
+      - name: Assert master-prototype contract
+        run: |
+          grep -q '"ok": true' /tmp/tenant-a-validation.json
+          grep -q '"ok": true' /tmp/tenant-b-validation.json
+          grep -q '"source_edits_required": false' /tmp/tenant-a-plan.json
+          grep -q '"source_clone_required": false' /tmp/tenant-a-plan.json
+          grep -q '"database_project_clone_required": false' /tmp/tenant-a-plan.json
+          grep -q '"tenancy_mode": "shared_database_rls"' /tmp/tenant-a-plan.json
+          grep -q '"ok": true' /tmp/prototype-rehearsal.json
+          grep -q '"shared_supabase_project": true' /tmp/prototype-rehearsal.json
+          grep -q '"source_edits_required": false' /tmp/prototype-rehearsal.json
+          git diff --exit-code -- apps supabase integrations prototype

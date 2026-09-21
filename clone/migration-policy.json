@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "contract": "master-clone-tenant-migration-policy-v1",
+  "source_glob": "supabase/migrations/*.sql",
+  "mode": "replay_history_then_tenant_finalization",
+  "exclude_exact": [
+    "20260918192858_smart_digital_indonesia_platform_foundation_v1.sql",
+    "20260918192947_smart_digital_indonesia_platform_hardening_v1.sql",
+    "20260919053827_create_rdc_recovery_channel.sql",
+    "20260919053901_secure_rdc_recovery_rest_policies.sql"
+  ],
+  "exclude_reason": {
+    "20260918192858_smart_digital_indonesia_platform_foundation_v1.sql": "control-plane metadata belongs outside tenant operational databases",
+    "20260918192947_smart_digital_indonesia_platform_hardening_v1.sql": "control-plane hardening follows the excluded platform tables",
+    "20260919053827_create_rdc_recovery_channel.sql": "developer recovery tooling is not a restaurant tenant feature",
+    "20260919053901_secure_rdc_recovery_rest_policies.sql": "developer recovery tooling is not a restaurant tenant feature"
+  },
+  "finalization": {
+    "generator": "clone/generate-finalization-sql.mjs",
+    "purpose": "replace historical tenant-specific URLs/health assumptions with the clone manifest and disable legacy direct/public compatibility paths"
+  },
+  "invariants": [
+    "do not edit historical production migrations",
+    "do not replay SDB/SDI control-plane rows into tenant projects",
+    "do not provision RDC developer recovery channel into tenant projects",
+    "run tenant finalization after migration replay and before enabling cron/traffic",
+    "signed table QR must be enabled before production acceptance",
+    "generated SQL must not contain Rohmat production project ref, domains, spreadsheet id, or merchant identity",
+    "pg_net must be installed in extensions before historical migration replay"
+  ],
+  "pre_bootstrap": {
+    "sql": "clone/pre-bootstrap.sql",
+    "run_before_history_replay": true,
+    "purpose": "install pg_net in extensions before historical create-extension migration can default to public"
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "scope": "rohmat-public-monitoring-rum",
+  "recorded_at": "2026-09-17T04:45:00Z",
+  "rollback_branch": "public-rum-baseline-20260917",
+  "runtime": {
+    "edge_function": "rohmat-public-element-runtime-v64",
+    "version": 56,
+    "runtime_header": "v56-rum-v2-a11y31",
+    "quality_header": "v35",
+    "rum_header": "v2-web-vitals-6.2.2",
+    "release_id": "rum-v2-20260917-a11y31",
+    "client_runtime": "v35",
+    "source_commit": "4f7b339a58a120fe0791fed8d33b6aad6ad32abd",
+    "web_vitals_library": "6.2.2"
+  },
+  "metrics": ["VIEW", "LCP", "CLS", "INP", "FCP", "TTFB", "JSERR"],
+  "dimensions": [
+    "release_id",
+    "runtime_version",
+    "route_stage",
+    "navigation_type",
+    "viewport_class",
+    "effective_type",
+    "save_data",
+    "metric_source",
+    "path"
+  ],
+  "route_stages": ["home", "menu", "checkout", "success", "unknown"],
+  "metric_sources": ["web-vitals-6.2.2", "native-fallback-v2", "client-counter-v2", "unknown"],
+  "ingestion_security": {
+    "origin_allowlist": "rohmat-pesan-bayar-publik*.vercel.app",
+    "max_payload_bytes": 6144,
+    "service_role_browser_exposure": false,
+    "rls_enabled": true,
+    "public_select_policy": false,
+    "upsert_key": ["view_token", "metric"]
+  },
+  "database": {
+    "table": "public.public_rum_samples",
+    "retention_days": 90,
+    "retention_cron_job": "public-rum-retention-90d",
+    "retention_schedule_utc": "17 3 * * *",
+    "release_metric_index": "public_rum_samples_release_metric_measured_idx",
+    "release_stage_metric_index": "public_rum_samples_release_stage_metric_idx",
+    "legacy_metric_constraint_removed": true,
+    "view_metric_supported": true
+  },
+  "verification": {
+    "production_release": "rum-v2-20260917-a11y31",
+    "production_runtime": "v35",
+    "real_browser_loads": 5,
+    "view_samples": 5,
+    "view_good_samples": 5,
+    "fcp_samples": 5,
+    "ttfb_samples": 5,
+    "synthetic_constraint_probe_removed": true,
+    "legacy_rows_preserved": true,
+    "legacy_data_separated_by_release_id": true
+  },
+  "known_limits": {
+    "short_load_probe_did_not_finalize": ["LCP", "CLS", "INP"],
+    "note": "Final LCP/CLS/INP require sufficiently long or terminating real sessions. Do not infer those values from short validation loads."
+  },
+  "scope_guards": {
+    "ui_changed": false,
+    "menu_changed": false,
+    "prices_changed": false,
+    "checkout_changed": false,
+    "ocr_changed": false,
+    "order_backend_changed": false,
+    "seo_changed": false,
+    "admin_changed": false,
+    "kds_changed": false
+  }
+}

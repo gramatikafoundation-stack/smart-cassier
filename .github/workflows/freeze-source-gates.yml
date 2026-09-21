@@ -1,0 +1,195 @@
+name: Freeze Source Gates
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [release/master-clone-v1-freeze-20260919]
+  pull_request:
+    branches: [freeze-prep]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Required source exists
+        run: |
+          test -f apps/public/api/render.js
+          test -f apps/public/vercel.json
+          test -f apps/admin/api/render.js
+          test -f apps/admin/vercel.json
+          test -f apps/kds/api/kds.js
+          test -f apps/kds/vercel.json
+          test -f supabase/migrations/20260913_kds_bff_bound_login_v1.sql
+          test -f supabase/migrations/20260913_privacy_least_privilege_phase2.sql
+          test -f supabase/functions/rohmat-kds-api/index.ts
+          test -f supabase/functions/rohmat-admin-render/index.ts
+          test -f supabase/functions/create-order/index.ts
+          test -f supabase/functions/create-order-v6/index.ts
+          test -f supabase/functions/admin-media-upload/index.ts
+          test -f supabase/functions/rohmat-secure-api-v1/index.ts
+          test -f supabase/functions/rohmat-qris-download/index.ts
+          test -f supabase/functions/rohmat-admin-cashier-loader-v1/index.ts
+          test -f supabase/functions/rohmat-admin-database-ui-v1/index.ts
+          test -f supabase/functions/rohmat-admin-kds-ui-v1/index.ts
+          test -f supabase/functions/rohmat-admin-style-runtime-v59/index.ts
+          test -f supabase/functions/rohmat-admin-visual-editor-v1/index.ts
+          test -f supabase/functions/rohmat-admin-theme-preview-v1/index.ts
+          test -f supabase/functions/rohmat-smart-cashier-embed-v1/index.ts
+          test -f supabase/functions/rohmat-public-production-v21/index.ts
+          test -f supabase/functions/rohmat-public-element-runtime-v64/index.ts
+          test -f supabase/functions/rohmat-env-capability-check-v1/index.ts
+          test -f supabase/functions/rohmat-static-publisher-v1/index.ts
+          test -f supabase/functions/rohmat-sheet-sync-worker-v1/index.ts
+          test -f supabase/functions/rohmat-sheet-sync-dispatch-v1/index.ts
+          test -f supabase/functions/rohmat-smart-cashier-v1/index.ts
+          test -f prototype/tenant.config.schema.json
+          test -f prototype/validate-config.mjs
+          test -f prototype/provision-plan.mjs
+          test -f prototype/rehearse.mjs
+          test -f prototype/rehearsal-a.json
+          test -f prototype/rehearsal-b.json
+          test -f integrations/google-sheets/master-writer-v1/Code.gs
+          test -f docs/rohmat-master-prototype-v1-freeze-20260920.md
+          test -f ops/canonical-edge-functions-v1.json
+          test -f apps/kds/api/config.js
+          test -f apps/kds/tenant-runtime.js
+          test -f supabase/migrations/20260920070606_master_prototype_admin_tenant_scope_v1.sql
+          test -f supabase/migrations/20260920071300_master_prototype_origin_tenant_membership_guard_v1.sql
+          test -f supabase/migrations/20260920074542_master_prototype_final_freeze_activation_v1.sql
+          test -f supabase/migrations/20260920082326_master_prototype_final_pgnet_acl_and_resolver_v1.sql
+          test -f supabase/migrations/20260920083235_master_prototype_remove_reference_kds_legacy_bridge_v1.sql
+      - name: JavaScript syntax
+        run: |
+          node --check apps/public/api/render.js
+          node --check apps/admin/api/render.js
+          node --check apps/kds/api/kds.js
+          node --check prototype/validate-config.mjs
+          node --check prototype/provision-plan.mjs
+          node --check prototype/rehearse.mjs
+          node --check apps/kds/api/config.js
+          node --check apps/kds/tenant-runtime.js
+      - name: Edge Function type/syntax check
+        run: |
+          deno check supabase/functions/rohmat-kds-api/index.ts
+          deno check supabase/functions/rohmat-admin-render/index.ts
+          deno check supabase/functions/create-order/index.ts
+          deno check supabase/functions/create-order-v6/index.ts
+          deno check supabase/functions/admin-media-upload/index.ts
+          deno check supabase/functions/rohmat-secure-api-v1/index.ts
+          deno check supabase/functions/rohmat-qris-download/index.ts
+          deno check supabase/functions/rohmat-admin-cashier-loader-v1/index.ts
+          deno check supabase/functions/rohmat-admin-database-ui-v1/index.ts
+          deno check supabase/functions/rohmat-admin-kds-ui-v1/index.ts
+          deno check supabase/functions/rohmat-admin-style-runtime-v59/index.ts
+          deno check supabase/functions/rohmat-admin-visual-editor-v1/index.ts
+          deno check supabase/functions/rohmat-admin-theme-preview-v1/index.ts
+          deno check supabase/functions/rohmat-smart-cashier-embed-v1/index.ts
+          deno check supabase/functions/rohmat-public-production-v21/index.ts
+          deno check supabase/functions/rohmat-public-element-runtime-v64/index.ts
+          deno check supabase/functions/rohmat-env-capability-check-v1/index.ts
+          deno check supabase/functions/rohmat-static-publisher-v1/index.ts
+          deno check supabase/functions/rohmat-sheet-sync-worker-v1/index.ts
+          deno check supabase/functions/rohmat-sheet-sync-dispatch-v1/index.ts
+          deno check supabase/functions/rohmat-smart-cashier-v1/index.ts
+      - name: Native security headers
+        run: |
+          for f in apps/public/vercel.json apps/admin/vercel.json apps/kds/vercel.json; do
+            grep -q "Strict-Transport-Security" "$f"
+            grep -q "X-Content-Type-Options" "$f"
+            grep -q "Referrer-Policy" "$f"
+            grep -q "Permissions-Policy" "$f"
+          done
+          # Public CSP is request-nonce based and therefore canonical in the renderer,
+          # not duplicated as a static Vercel header.
+          grep -q "Content-Security-Policy" apps/public/api/render.js
+          grep -q "nonce-" apps/public/api/render.js
+          # Admin CSP is request-specific in the renderer, so a static Vercel CSP
+          # would conflict with the renderer policy and nonce/runtime origins.
+          grep -q "Content-Security-Policy" apps/admin/api/render.js
+          grep -q "Content-Security-Policy" apps/kds/vercel.json
+          grep -q "X-Frame-Options" apps/public/vercel.json
+          grep -q "X-Frame-Options" apps/admin/vercel.json
+          grep -q "frame-ancestors 'none'" apps/kds/vercel.json
+      - name: Architecture contract
+        run: |
+          test -f docs/ROHMAT_ARCHITECTURE.md
+          grep -q "single source of truth" docs/ROHMAT_ARCHITECTURE.md
+          grep -q "apps/admin/" apps/admin/vercel.json
+          grep -q "apps/public/" apps/public/vercel.json
+          grep -q "apps/kds/" apps/kds/vercel.json
+          grep -q "ignoreCommand" apps/admin/vercel.json
+          grep -q "ignoreCommand" apps/public/vercel.json
+          grep -q "ignoreCommand" apps/kds/vercel.json
+
+      - name: Secretless frontend source contract
+        run: |
+          ! grep -R "SUPABASE_SERVICE_ROLE_KEY" apps
+          ! grep -R "service_role" apps
+          grep -q "rohmat-admin-render" apps/admin/api/render.js
+          grep -q "master-prototype-v1" apps/admin/api/render.js
+      - name: Public LKG-first contract
+        run: |
+          grep -q "PUBLIC_LKG_PATH" apps/public/api/render.js
+          grep -q "stale-while-revalidate" apps/public/api/render.js
+          grep -q "rohmat-ocr-smart-v6" apps/public/api/render.js
+          grep -q "OCR_HARD_DEADLINE_MS=4950" apps/public/api/render.js
+          grep -q "rohmat-cart-qris-runtime-v72" apps/public/api/render.js
+      - name: KDS HttpOnly BFF contract
+        run: |
+          grep -q "getSetCookie" apps/kds/api/kds.js
+          ! grep -R "localStorage.*token\|token.*localStorage" apps/kds
+      - name: Master prototype tenant contract
+        run: |
+          node prototype/validate-config.mjs prototype/rehearsal-a.json > /tmp/tenant-a-validation.json
+          node prototype/validate-config.mjs prototype/rehearsal-b.json > /tmp/tenant-b-validation.json
+          node prototype/provision-plan.mjs prototype/rehearsal-a.json > /tmp/tenant-a-plan.json
+          node prototype/rehearse.mjs prototype/rehearsal-a.json prototype/rehearsal-b.json > /tmp/prototype-rehearsal.json
+          grep -q '"ok": true' /tmp/tenant-a-validation.json
+          grep -q '"ok": true' /tmp/tenant-b-validation.json
+          grep -q '"contract": "master-prototype-tenant-provision-plan-v1"' /tmp/tenant-a-plan.json
+          grep -q '"source_edits_required": false' /tmp/tenant-a-plan.json
+          grep -q '"source_clone_required": false' /tmp/tenant-a-plan.json
+          grep -q '"database_project_clone_required": false' /tmp/tenant-a-plan.json
+          grep -q '"tenancy_mode": "shared_database_rls"' /tmp/tenant-a-plan.json
+          grep -q '"ok": true' /tmp/prototype-rehearsal.json
+          grep -q '"shared_supabase_project": true' /tmp/prototype-rehearsal.json
+
+      - name: Tenant isolation runtime contract
+        run: |
+          grep -Eq "MASTER_PROTOTYPE_STRICT|MASTER_CLONE_STRICT" apps/public/lib/tenant-config.js
+          grep -Eq "MASTER_PROTOTYPE_STRICT|MASTER_CLONE_STRICT" apps/admin/api/render.js
+          grep -Eq "MASTER_PROTOTYPE_STRICT|MASTER_CLONE_STRICT" apps/kds/api/kds.js
+          grep -Eq "MASTER_PROTOTYPE_STRICT|MASTER_CLONE_STRICT" apps/kds/api/config.js
+          grep -q "SDB_TENANT_ID" apps/public/lib/tenant-config.js
+          grep -q "SDB_TENANT_ID" apps/admin/api/render.js
+          grep -q "SDB_TENANT_ID" apps/kds/api/kds.js
+          grep -q "SDB_TENANT_ID" apps/kds/api/config.js
+          grep -q "ADMIN_RENDERER_URL" apps/admin/api/render.js
+          grep -q "PUBLIC_LKG_PATH" apps/public/api/render.js
+          grep -q "KDS_BFF_URL" apps/kds/api/kds.js
+          grep -q "master_prototype_tenant_context" supabase/functions/rohmat-kds-api/index.ts
+          ! grep -q "master_prototype_runtime_context" supabase/functions/rohmat-kds-api/index.ts
+          grep -q "__SDB_TENANT_CONFIG_READY" apps/kds/design-runtime.js
+          ! grep -q "yybhpmjuywjxqurrrrxl" apps/kds/design-runtime.js
+          ! grep -q "yybhpmjuywjxqurrrrxl" apps/kds/tenant-runtime.js
+          ! grep -q "ROHMAT NASI UDUK" apps/kds/app.js
+          ! grep -q "ROHMAT NASI UDUK" apps/kds/index.html
+          ! grep -q "ROHMAT NASI UDUK" apps/kds/login.html
+
+      - name: Canonical reporting contract
+        run: |
+          grep -q '"DASHBOARD"' prototype/tenant.example.json
+          grep -q '"PEMESAN"' prototype/tenant.example.json
+          grep -q '"PESANAN"' prototype/tenant.example.json
+          grep -q '"MENU & STOK"' prototype/tenant.example.json
+          grep -q '"KEUANGAN"' prototype/tenant.example.json
+          grep -q "SDB_TENANT_ID" integrations/google-sheets/master-writer-v1/Code.gs
+          grep -q "VERSION: 4" integrations/google-sheets/master-writer-v1/Code.gs
+

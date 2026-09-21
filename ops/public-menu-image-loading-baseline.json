@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "scope": "rohmat-public-menu-image-loading",
+  "canonical_domain": "https://rohmat-pesan-bayar-publik.vercel.app/",
+  "parent_production_baseline_commit": "32e29198ef082c1e91454314d0d08a9f8ec327cb",
+  "production_branch": "freeze-prep",
+  "strategy": {
+    "name": "adaptive-native-menu-image-priority-v1",
+    "production_marker": "rohmat-menu-loading-v1",
+    "implementation_location": "Supabase Storage rohmat-static/public-lkg-v1.html cards() markup",
+    "custom_intersection_observer": false,
+    "custom_image_loader_runtime": false,
+    "decode": "async",
+    "desktop": {"viewport": ">= 881px", "grid_columns": 3, "eager_high_images": 3},
+    "tablet": {"viewport": "561px-880px", "grid_columns": 2, "eager_high_images": 2},
+    "mobile": {"viewport": "<= 560px", "grid_columns": 1, "eager_high_images": 1},
+    "remaining_images": {"loading": "lazy", "fetchpriority": "low"},
+    "category_behavior": "Priority index is recalculated against each filtered category list, so the visible first row of every category receives the same adaptive treatment.",
+    "renderer_behavior": "The old blanket renderer replacement from bare menu img markup to loading=lazy no longer matches the LKG markup, so X-Rohmat-Public-Perf no longer reports menu-images-lazy."
+  },
+  "asset_audit": {
+    "visible_available_images": 36,
+    "total_bytes": 7559312,
+    "average_bytes": 209981,
+    "min_bytes": 8146,
+    "max_bytes": 292715,
+    "p50_bytes": 224322,
+    "p75_bytes": 263824.5,
+    "p95_bytes": 290455,
+    "first_1_bytes": 227650,
+    "first_2_bytes": 484676,
+    "first_3_bytes": 733234,
+    "first_6_bytes": 1489525,
+    "after_first_6_bytes": 6069787,
+    "high_priority_share_percent": {"desktop": 9.7, "tablet": 6.41, "mobile": 3.01},
+    "deferred_share_percent": {"desktop": 90.3, "tablet": 93.59, "mobile": 96.99},
+    "note": "This maintenance optimizes loading strategy only. Image file compression, format conversion, and visual content were intentionally not changed."
+  },
+  "lkg": {
+    "bytes_before": 92364,
+    "etag_before": "4b9abaab0c8cd8231b0064eb9a6589b6",
+    "bytes_after_batch_1": 92648,
+    "etag_after_batch_1": "8fdfceed5c3d7bac990d61478c1c3e2b",
+    "bytes_final": 92648,
+    "etag_final": "eb4d1731c96dc8aab71248a91b09aa1f",
+    "backup_before_loading_patch": "backups/public-lkg-v1-before-menu-loading-2026-09-16T18-10-46-642Z.html",
+    "backup_before_breakpoint_alignment": "backups/public-lkg-v1-before-menu-loading-breakpoints-2026-09-16T18-16-16-777Z.html",
+    "breakpoint_alignment": "881/561 mirrors inclusive CSS max-width 880/560 boundaries exactly."
+  },
+  "live_validation": {
+    "http_status": 200,
+    "adaptive_marker_present": true,
+    "live_breakpoints": "881/561",
+    "loading_attribute_present": true,
+    "fetchpriority_attribute_present": true,
+    "decoding_async_present": true,
+    "old_blanket_menu_images_lazy_flag_present": false,
+    "image_css_unchanged": "4:3 media frame with object-fit: contain; full/uncropped image policy preserved",
+    "vercel_runtime_errors_last_30m": 0,
+    "post_change_rum": {
+      "runtime": "v34",
+      "samples": 5,
+      "cls_p50": 0.003,
+      "cls_p75": 0.054,
+      "cls_p95": 0.055,
+      "cls_good_samples": 5,
+      "fcp_p75_ms": 1244,
+      "lcp_p75_ms": 1244,
+      "ttfb_p75_ms": 786.7,
+      "js_error_samples": 0,
+      "js_error_total": 0,
+      "interpretation": "These samples validate general load/regression safety; they are not presented as direct per-menu-image resource timing evidence."
+    },
+    "dom_automation": {
+      "local_chromium_status": "blocked_by_environment_policy",
+      "local_chromium_error": "net::ERR_BLOCKED_BY_ADMINISTRATOR",
+      "fallback_evidence": "Live Vercel HTML source plus deterministic matchMedia markup and external browser load samples were used."
+    }
+  },
+  "temporary_maintenance_cleanup": {
+    "test_function": "rohmat-xhtml-test-v1",
+    "restored_to_original_410_gone": true,
+    "restored_version": 16,
+    "temporary_diagnostic_rows_remaining": 0
+  },
+  "protected_unmodified_dimensions": [
+    "menu image files and URLs",
+    "menu data, prices, categories and availability",
+    "menu image CSS and object-fit contain behavior",
+    "home hero loading strategy",
+    "order flow",
+    "QRIS and OCR",
+    "Supabase order backend",
+    "KDS",
+    "Admin/Studio",
+    "runtime v55",
+    "INP, CLS and CSS-stack source baselines"
+  ],
+  "rollback_branch": "public-menu-loading-baseline-20260917",
+  "maintenance_rule": "Future public maintenance must treat this adaptive 881/561 native loading strategy and the final LKG ETag as the latest menu-image-loading baseline unless a newer verified baseline explicitly supersedes it."
+}

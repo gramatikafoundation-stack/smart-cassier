@@ -1,0 +1,61 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/portal", "destination": "/apps/portal/index.html" },
+
+    { "source": "/robots.txt", "destination": "/apps/public/api/robots" },
+    { "source": "/sitemap.xml", "destination": "/apps/public/api/sitemap" },
+    { "source": "/manifest.webmanifest", "destination": "/apps/public/api/manifest" },
+    { "source": "/favicon.ico", "destination": "/apps/public/api/brand-assets?kind=favicon" },
+    { "source": "/apple-touch-icon.png", "destination": "/apps/public/api/brand-assets?kind=apple" },
+    { "source": "/icon-192.png", "destination": "/apps/public/api/brand-assets?kind=icon192" },
+    { "source": "/icon-512.png", "destination": "/apps/public/api/brand-assets?kind=icon512" },
+    { "source": "/og-image.png", "destination": "/apps/public/api/brand-assets?kind=og" },
+    { "source": "/ocr-worker.js", "destination": "/apps/public/api/ocr-worker" },
+    { "source": "/runtime-lifecycle.js", "destination": "/apps/public/api/render-seo-brand?rohmat_runtime=lifecycle" },
+
+    { "source": "/dapur", "destination": "/apps/kds/index.html" },
+    { "source": "/dapur/login", "destination": "/apps/kds/login.html" },
+    { "source": "/kds", "destination": "/apps/kds/index.html" },
+    { "source": "/kds/login", "destination": "/apps/kds/login.html" },
+    { "source": "/api/kds", "destination": "/apps/kds/api/kds" },
+    { "source": "/api/kds/config", "destination": "/apps/kds/api/config" },
+
+    { "source": "/styles.css", "destination": "/apps/kds/styles.css" },
+    { "source": "/cashier-gate.css", "destination": "/apps/kds/cashier-gate.css" },
+    { "source": "/menu-media.css", "destination": "/apps/kds/menu-media.css" },
+    { "source": "/quantity2.js", "destination": "/apps/kds/quantity2.js" },
+    { "source": "/fast-nav.js", "destination": "/apps/kds/fast-nav.js" },
+    { "source": "/design-runtime.js", "destination": "/apps/kds/design-runtime.js" },
+    { "source": "/app.js", "destination": "/apps/kds/app.js" },
+    { "source": "/menu-media.js", "destination": "/apps/kds/menu-media.js" },
+    { "source": "/cashier-required-receipt.js", "destination": "/apps/kds/cashier-required-receipt.js" },
+    { "source": "/print-hide.js", "destination": "/apps/kds/print-hide.js" },
+    { "source": "/login.html", "destination": "/apps/kds/login.html" },
+    { "source": "/login.js", "destination": "/apps/kds/login.js" },
+    { "source": "/tenant-runtime.js", "destination": "/apps/kds/tenant-runtime.js" },
+    { "source": "/quantity.js", "destination": "/apps/kds/quantity.js" },
+    { "source": "/instant.js", "destination": "/apps/kds/instant.js" },
+    { "source": "/perf.js", "destination": "/apps/kds/perf.js" },
+    { "source": "/ux.js", "destination": "/apps/kds/ux.js" },
+    { "source": "/cashier-native-stepper.js", "destination": "/apps/kds/cashier-native-stepper.js" },
+
+    { "source": "/studio", "destination": "/apps/admin/api/render" },
+    { "source": "/admin", "destination": "/apps/admin/api/render" },
+    { "source": "/api/admin/(.*)", "destination": "/apps/admin/api/$1" },
+
+    { "source": "/", "destination": "/apps/public/api/render-seo-brand" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "no-referrer" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=()" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "project_ref": "yybhpmjuywjxqurrrrxl",
+  "captured_for_release": "rohmat-prod-2026-09-14-r19-zero-cost-dr-reconcile",
+  "policy": {
+    "scope": "critical long-lived public runtime assets only",
+    "exclude_payment_proofs": true,
+    "payment_proof_reason": "Payment-proof binaries are sensitive ephemeral records governed by the 90-day Storage retention policy; duplicating them into a long-lived DR bundle would undermine retention governance.",
+    "fail_closed": true
+  },
+  "base_menu_url": "https://yybhpmjuywjxqurrrrxl.supabase.co/storage/v1/object/public/rohmat-assets/menu-cache",
+  "menu_ids": [
+    "ampela-ati",
+    "aqua",
+    "ayam-goreng",
+    "babat-sapi",
+    "bandeng-presto",
+    "bebek-super",
+    "empal-sapi",
+    "es-jeruk",
+    "es-teh",
+    "jeruk-hangat",
+    "jus-alpukat",
+    "jus-apel",
+    "jus-belimbing",
+    "jus-buah-naga",
+    "jus-jambu",
+    "jus-mangga",
+    "jus-melon",
+    "jus-mix",
+    "jus-sirsat",
+    "jus-stroberi",
+    "jus-tomat",
+    "jus-wortel",
+    "kepala-ayam",
+    "kepala-bebek",
+    "kopi",
+    "limpa-sapi",
+    "nasi-putih",
+    "nasi-uduk",
+    "paru-sapi",
+    "pete",
+    "tahu",
+    "teh-hangat",
+    "telor-dadar",
+    "tempe",
+    "terong",
+    "usus-ayam"
+  ],
+  "additional_assets": [
+    {
+      "name": "qris-current.jpg",
+      "url": "https://yybhpmjuywjxqurrrrxl.supabase.co/storage/v1/object/public/rohmat-assets/qris/2026-09-08/dedb0242-1d2a-4519-b181-3baf03e415eb.jpg"
+    },
+    {
+      "name": "public-lkg-v1.html",
+      "url": "https://yybhpmjuywjxqurrrrxl.supabase.co/storage/v1/object/public/rohmat-static/public-lkg-v1.html"
+    }
+  ],
+  "expected_asset_count": 38
+}

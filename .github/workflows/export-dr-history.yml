@@ -1,0 +1,37 @@
+name: Export DR History Snapshot
+
+on:
+  push:
+    branches: [freeze-prep]
+    paths:
+      - 'scripts/export-dr-history.mjs'
+      - '.github/workflows/export-dr-history.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: freeze-prep
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Export sanitized migration replay snapshot
+        env:
+          DR_EXPORT_TOKEN: rohmat-dr-export-temporary-v1
+          DR_EXPORT_URL: https://yybhpmjuywjxqurrrrxl.supabase.co/functions/v1/rohmat-svg-test-v1
+        run: node scripts/export-dr-history.mjs
+      - name: Commit replay snapshot
+        run: |
+          git config user.name 'rohmat-freeze-bot'
+          git config user.email 'rohmat-freeze-bot@users.noreply.github.com'
+          git add supabase/restore
+          git diff --cached --quiet && exit 0
+          git commit -m 'dr: capture sanitized production migration replay snapshot'
+          git push origin HEAD:freeze-prep

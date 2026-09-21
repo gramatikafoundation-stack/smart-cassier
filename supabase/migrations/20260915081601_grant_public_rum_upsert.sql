@@ -1,0 +1,1 @@
+grant update on table public.public_rum_samples to service_role;

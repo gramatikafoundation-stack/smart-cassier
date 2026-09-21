@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "merchant_slug": "clone-rehearsal-a",
+  "business_name": "Kedai Arunika",
+  "merchant_name": "Kedai Arunika",
+  "merchant_name_acknowledged": true,
+  "locale": "id-ID",
+  "currency": "IDR",
+  "timezone": "Asia/Jakarta",
+  "public_url": "https://arunika-public.example.test",
+  "admin_url": "https://arunika-admin.example.test",
+  "kds_url": "https://arunika-kds.example.test",
+  "qris_asset": "storage://merchant-static/qris.png",
+  "table_count": 12,
+  "table_qr_secret_mode": "generate-per-clone",
+  "require_table_qr_signature": true,
+  "menu_seed": "clone/menu.example.json",
+  "admin_owner_email": "owner-a@example.test",
+  "supabase_project_ref": "rehearsalaprojectref",
+  "spreadsheet_target": "REHEARSAL-A-SHEETS",
+  "storage": { "static_bucket": "merchant-static", "payment_bucket": "payment-proofs" },
+  "sheets": { "start_year": 2026, "years": 5, "expected_tabs": ["DASHBOARD", "PEMESAN", "PESANAN", "MENU & STOK", "KEUANGAN"] }
+}

@@ -1,0 +1,35 @@
+[
+  {
+    "id": "menu-nasi-uduk",
+    "name": "Nasi Uduk",
+    "category": "Nasi",
+    "price": 12000,
+    "description": "Menu utama contoh untuk proses bootstrap clone.",
+    "image_url": "",
+    "is_visible": true,
+    "is_available": true,
+    "display_order": 10
+  },
+  {
+    "id": "menu-ayam-goreng",
+    "name": "Ayam Goreng",
+    "category": "Lauk",
+    "price": 15000,
+    "description": "Lauk contoh.",
+    "image_url": "",
+    "is_visible": true,
+    "is_available": true,
+    "display_order": 20
+  },
+  {
+    "id": "menu-es-teh",
+    "name": "Es Teh",
+    "category": "Minuman",
+    "price": 5000,
+    "description": "Minuman contoh.",
+    "image_url": "",
+    "is_visible": true,
+    "is_available": true,
+    "display_order": 30
+  }
+]

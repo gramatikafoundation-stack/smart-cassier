@@ -1,0 +1,59 @@
+name: Public OCR <5s Gate
+
+on:
+  push:
+    branches:
+      - freeze-prep
+      - 'maintenance/public-ocr-*'
+    paths:
+      - 'apps/public/api/render-inp.js'
+      - 'apps/public/api/ocr-worker.js'
+      - 'apps/public/tests/ocr-runtime-gate.cjs'
+      - 'apps/public/tests/ocr-browser-gate.mjs'
+      - 'apps/public/vercel.json'
+      - '.github/workflows/public-ocr-5s-gate.yml'
+  pull_request:
+    branches:
+      - freeze-prep
+    paths:
+      - 'apps/public/api/render-inp.js'
+      - 'apps/public/api/ocr-worker.js'
+      - 'apps/public/tests/ocr-runtime-gate.cjs'
+      - 'apps/public/tests/ocr-browser-gate.mjs'
+      - 'apps/public/vercel.json'
+      - '.github/workflows/public-ocr-5s-gate.yml'
+  workflow_dispatch:
+
+jobs:
+  source-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate syntax
+        run: |
+          set -euo pipefail
+          node --check apps/public/api/render-inp.js
+          node --check apps/public/api/ocr-worker.js
+          node --check apps/public/tests/ocr-runtime-gate.cjs
+          node --check apps/public/tests/ocr-browser-gate.mjs
+      - name: Validate OCR transforms and lifecycle contract
+        run: node apps/public/tests/ocr-runtime-gate.cjs
+
+  chromium-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium test runtime
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Verify OCR reads and passes under five seconds
+        run: node apps/public/tests/ocr-browser-gate.mjs

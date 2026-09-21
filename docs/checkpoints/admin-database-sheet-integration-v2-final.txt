@@ -1,0 +1,1 @@
+Final verified baseline commit lineage for Admin DATABASE ↔ Google Sheets integration v2.

@@ -1,0 +1,1 @@
+#cashPayNow.cashPayLocked:disabled{background:#f4f4f4!important;color:#111!important;border:1px solid #111!important;box-shadow:none!important;filter:grayscale(1)!important;opacity:.58!important;cursor:not-allowed!important}#cashPayNow:not(:disabled){filter:none!important;opacity:1!important;cursor:pointer!important}

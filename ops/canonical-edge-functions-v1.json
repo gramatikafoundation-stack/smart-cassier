@@ -1,0 +1,212 @@
+{
+  "schema_version": 2,
+  "contract": "master-prototype-canonical-edge-functions-v1",
+  "source": "private.release_component_registry + freeze-source-gates",
+  "generated_for": "ROHMAT MASTER PROTOTIPE v1 / SMART DIGITAL FOR BUSINESS",
+  "policy": {
+    "deployment_scope": "platform_once",
+    "tenant_provisioning": "configuration_and_tenant_data_only_no_edge_redeploy",
+    "source_clone": "forbidden",
+    "supabase_project_clone": "forbidden",
+    "destructive_cleanup": "forbidden_until_dependency_audit_passes",
+    "tenant_context": "all tenant-facing canonical endpoints must resolve explicit tenant context and fail closed after cutover",
+    "compatibility_rule": "reference-tenant compatibility assets may remain but are not provisioned as tenant-specific copies"
+  },
+  "functions": [
+    {
+      "slug": "rohmat-smart-cashier-embed-v1",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-admin-cashier-loader-v1",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-admin-database-ui-v1",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-admin-kds-ui-v1",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-admin-render",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-admin-style-runtime-v59",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-admin-visual-editor-v1",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-admin-theme-preview-v1",
+      "lifecycle": "canonical",
+      "critical": false,
+      "note": "rollback/reference only; canonical renderer owns apply flow",
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "admin-media-upload",
+      "lifecycle": "canonical-candidate",
+      "critical": true,
+      "note": "required by Admin media flow; release registry entry must be reconciled before final tag",
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-kds-api",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-kds-production-v2",
+      "lifecycle": "compatibility",
+      "critical": false,
+      "deployment_scope": "compatibility_or_retired",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "create-order-v6",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "create-order",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-public-production-v21",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-public-element-runtime-v64",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-qris-download",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-env-capability-check-v1",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-static-publisher-v1",
+      "lifecycle": "compatibility-locked",
+      "critical": false,
+      "note": "Production endpoint is intentionally maintenance-locked (HTTP 403). Do not provision the legacy LKG mutator into new tenants.",
+      "deployment_scope": "compatibility_or_retired",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-secure-api-v1",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-sheet-sync-dispatch-v1",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-sheet-sync-worker-v1",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-smart-cashier-v1",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-html-test-v1",
+      "lifecycle": "canonical-maintenance",
+      "critical": true,
+      "note": "Historical slug retained for compatibility; endpoint is the authenticated payment-proof retention worker. GET/HEAD remain 410.",
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-svg-test-v1",
+      "lifecycle": "retired",
+      "critical": false,
+      "deployment_scope": "compatibility_or_retired",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-xhtml-test-v1",
+      "lifecycle": "retired",
+      "critical": false,
+      "deployment_scope": "compatibility_or_retired",
+      "tenant_provisioning": "no_redeploy"
+    },
+    {
+      "slug": "rohmat-admin-order-history-v1",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy",
+      "note": "Tenant-bound Admin Database history endpoint."
+    },
+    {
+      "slug": "rohmat-sheet-writer-data-v1",
+      "lifecycle": "canonical",
+      "critical": true,
+      "deployment_scope": "platform",
+      "tenant_provisioning": "no_redeploy",
+      "note": "Tenant-bound authoritative Google Sheets snapshot endpoint."
+    }
+  ]
+}

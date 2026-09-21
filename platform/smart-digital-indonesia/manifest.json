@@ -1,0 +1,51 @@
+{
+  "platform": {
+    "name": "SMART DIGITAL INDONESIA",
+    "slug": "smart-digital-indonesia",
+    "architecture": "organization_project_per_tenant",
+    "currentSupabaseOrganization": {
+      "id": "hbpcwsvpxzhqznoxxndn",
+      "name": "gramatikafoundation@gmail.com's Org",
+      "desiredDisplayName": "SMART DIGITAL INDONESIA"
+    }
+  },
+  "cloneTemplate": {
+    "key": "rohmat-master-v1",
+    "name": "Rohmat UMKM Clone Master",
+    "sourceRepo": "gramatikafoundation-stack/Rohmat-Master",
+    "sourceBranch": "freeze-prep",
+    "supabaseIsolation": "project_per_tenant",
+    "vercelTopology": "three_projects_per_tenant",
+    "apps": [
+      "public",
+      "admin",
+      "kds"
+    ]
+  },
+  "tenants": [
+    {
+      "slug": "rohmat-nasi-uduk",
+      "name": "Rohmat Nasi Uduk",
+      "status": "active",
+      "role": "reference_tenant",
+      "resources": {
+        "supabaseProject": "yybhpmjuywjxqurrrrxl",
+        "githubRepo": "gramatikafoundation-stack/Rohmat-Master",
+        "vercel": {
+          "public": {
+            "id": "prj_3JC9wVT3viMvinKvdG6hBucDhEGY",
+            "name": "rohmat-pesan-bayar-publik"
+          },
+          "admin": {
+            "id": "prj_CIEgIyyKRSrYahxDLkiK6m78wZ9Y",
+            "name": "studio-pengelola-rohmat"
+          },
+          "kds": {
+            "id": "prj_vv1eioBBQdyto7a0QdRz3v2F3oFW",
+            "name": "rohmat-kds-printer"
+          }
+        }
+      }
+    }
+  ]
+}

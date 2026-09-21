@@ -1,0 +1,2 @@
+alter table public.public_rum_samples drop constraint if exists public_rum_samples_metric_check;
+alter table public.public_rum_samples add constraint public_rum_samples_metric_check check (metric = any (array['LCP','CLS','INP','FCP','TTFB','JSERR']::text[]));

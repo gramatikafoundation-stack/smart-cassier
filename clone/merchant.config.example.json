@@ -1,0 +1,30 @@
+{
+  "schema_version": 2,
+  "merchant_slug": "example-merchant",
+  "business_name": "Example Merchant",
+  "merchant_name": "Example Merchant",
+  "merchant_name_acknowledged": true,
+  "locale": "id-ID",
+  "currency": "IDR",
+  "timezone": "Asia/Jakarta",
+  "public_url": "https://example-public.vercel.app",
+  "admin_url": "https://example-admin.vercel.app",
+  "kds_url": "https://example-kds.vercel.app",
+  "qris_asset": "storage://merchant-static/qris.png",
+  "table_count": 20,
+  "table_qr_secret_mode": "generate-per-clone",
+  "require_table_qr_signature": true,
+  "menu_seed": "clone/menu.example.json",
+  "admin_owner_email": "owner@example.com",
+  "supabase_project_ref": "replace-at-provisioning",
+  "spreadsheet_target": "replace-at-provisioning",
+  "storage": {
+    "static_bucket": "merchant-static",
+    "payment_bucket": "payment-proofs"
+  },
+  "sheets": {
+    "start_year": 2026,
+    "years": 5,
+    "expected_tabs": ["DASHBOARD", "PEMESAN", "PESANAN", "MENU & STOK", "KEUANGAN"]
+  }
+}

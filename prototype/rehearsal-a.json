@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "tenant_id": "22222222-2222-4222-8222-222222222222",
+  "tenant_slug": "tenant-a",
+  "business_name": "Tenant A",
+  "merchant_name": "Tenant A",
+  "merchant_name_acknowledged": true,
+  "locale": "id-ID",
+  "currency": "IDR",
+  "timezone": "Asia/Jakarta",
+  "public_url": "https://tenant-a-public.example.com",
+  "admin_url": "https://tenant-a-admin.example.com",
+  "kds_url": "https://tenant-a-kds.example.com",
+  "qris_asset": "tenant://tenant-a/qris.png",
+  "table_count": 20,
+  "require_table_qr_signature": true,
+  "menu_seed": "prototype/menu.example.json",
+  "admin_owner_email": "owner-a@example.com",
+  "spreadsheet_target": "sheet-tenant-a",
+  "storage": {
+    "namespace": "tenant-a",
+    "static_bucket": "merchant-static",
+    "payment_bucket": "payment-proofs"
+  },
+  "sheets": {
+    "start_year": 2026,
+    "years": 5,
+    "expected_tabs": [
+      "DASHBOARD",
+      "PEMESAN",
+      "PESANAN",
+      "MENU & STOK",
+      "KEUANGAN"
+    ]
+  }
+}

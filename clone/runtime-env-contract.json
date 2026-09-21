@@ -1,0 +1,65 @@
+{
+  "schema_version": 2,
+  "contract": "master-clone-runtime-env-v2",
+  "rule": "tenant-specific runtime values come from provisioning configuration; secrets never live in source",
+  "apps": {
+    "public": {
+      "required": [
+        "MASTER_CLONE_STRICT",
+        "PUBLIC_ORIGIN",
+        "SUPABASE_URL",
+        "PUBLIC_LKG_PATH",
+        "BUSINESS_NAME"
+      ],
+      "optional": [
+        "TENANT_LOCALE",
+        "TENANT_CURRENCY",
+        "TENANT_TIMEZONE",
+        "PUBLIC_DESCRIPTION",
+        "PUBLIC_CUISINE"
+      ]
+    },
+    "admin": {
+      "required": [
+        "MASTER_CLONE_STRICT",
+        "ADMIN_RENDERER_URL",
+        "ADMIN_CASHIER_LOADER_URL",
+        "SUPABASE_ORIGIN",
+        "BUSINESS_NAME"
+      ]
+    },
+    "kds": {
+      "required": [
+        "MASTER_CLONE_STRICT",
+        "KDS_BFF_URL",
+        "SUPABASE_URL",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "BUSINESS_NAME",
+        "TENANT_LOCALE",
+        "TENANT_CURRENCY",
+        "TENANT_TIMEZONE"
+      ]
+    }
+  },
+  "edge_secrets_required": [
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "TABLE_QR_SIGNING_SECRET",
+    "MAINTENANCE_TOKEN_SHA256",
+    "SHEETS_WRITER_URL",
+    "SHEETS_WRITER_SECRET"
+  ],
+  "edge_env_required": [
+    "SUPABASE_URL",
+    "SUPABASE_PUBLISHABLE_KEY",
+    "BUSINESS_NAME",
+    "PUBLIC_ORIGIN",
+    "ADMIN_ORIGIN",
+    "KDS_ORIGIN",
+    "PUBLIC_ALLOWED_ORIGINS",
+    "ADMIN_ALLOWED_ORIGINS",
+    "KDS_ALLOWED_ORIGINS",
+    "PUBLIC_STATIC_BUCKET",
+    "PAYMENT_PROOF_BUCKET",
+    "ASSET_BUCKET"
+  ]
+}

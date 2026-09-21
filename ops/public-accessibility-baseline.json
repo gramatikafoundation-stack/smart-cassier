@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "scope": "rohmat-public-accessibility",
+  "canonical_domain": "https://rohmat-pesan-bayar-publik.vercel.app/",
+  "production_branch": "freeze-prep",
+  "production_commit": "f2cd047e69ac87a5a1b76682ed9a4df30eb51f5a",
+  "production_deployment_id": "dpl_8mjkp9q8GJNR2xn8dfZbfxgDddaB",
+  "production_a11y_header": "wcag22-aa-v3.1",
+  "production_a11y_target": "keyboard-screenreader-touch-contrast-focus-motion-spa-semantics",
+  "rollback_branch": "public-a11y-baseline-20260917-0947",
+  "layers": {
+    "v1": {
+      "path": "apps/public/api/render-a11y.js",
+      "responsibilities": [
+        "server-rendered skip link",
+        "server-rendered polite live region",
+        "keyboard-focusable service radios",
+        "visible focus treatment",
+        "SPA route focus management",
+        "dialog accessible naming and focus return",
+        "dynamic status announcements",
+        "form required and invalid state announcements",
+        "QRIS descriptive alt text",
+        "one broad app MutationObserver for dynamic SPA reconciliation"
+      ]
+    },
+    "v2": {
+      "path": "apps/public/api/render-a11y-v2.js",
+      "responsibilities": [
+        "44px quantity touch targets",
+        "44px add-to-cart touch target minimum",
+        "reduced-motion suppression",
+        "native radio checked-state synchronization",
+        "cart total accessible label",
+        "payment-proof format and size help text"
+      ],
+      "broad_mutation_observer": false
+    },
+    "v3_1": {
+      "path": "apps/public/api/render-a11y-v3.js",
+      "responsibilities": [
+        "dynamic SPA document titles",
+        "primary level-1 heading semantics per view",
+        "main landmark aria-labelledby",
+        "menu-card aria-labelledby",
+        "quantity group accessible names",
+        "sold-out menu accessible names",
+        "order-summary heading semantics",
+        "payment and QRIS region semantics",
+        "send button OCR description",
+        "native required state for table selection",
+        "success order-code accessible label",
+        "placeholder contrast"
+      ],
+      "broad_mutation_observer": false
+    }
+  },
+  "key_contrast_checks": {
+    "accent_A85E34_on_white": 4.87,
+    "accent_A85E34_on_FFFDF8": 4.79,
+    "muted_6D6A63_on_FFFDF8": 5.31,
+    "focus_10291F_on_white": 15.45,
+    "ocr_muted_65716B_on_white": 5.09,
+    "body_24362F_on_FFFDF8": 12.57
+  },
+  "protected_prior_maintenance": {
+    "technical_seo": "robots.txt and sitemap.xml remain dedicated endpoints before the SPA catch-all",
+    "menu_image_loading": "adaptive 3/2/1 loading marker remains present",
+    "inp": "render-inp remains the base renderer below accessibility wrappers",
+    "cls": "critical layout style remains unchanged",
+    "ocr_and_payment": "business logic and OCR validation rules unchanged"
+  },
+  "production_validation": {
+    "homepage_http_status": 200,
+    "robots_http_status": 200,
+    "robots_content_type": "text/plain; charset=utf-8",
+    "sitemap_http_status": 200,
+    "sitemap_content_type": "application/xml; charset=utf-8",
+    "runtime_error_or_fatal_logs_last_hour": 0,
+    "skip_link_server_rendered": true,
+    "live_region_server_rendered": true,
+    "a11y_broad_mutation_observers": 1
+  },
+  "validation_limitations": "No formal WCAG conformance certification is claimed. The Opera browser connector was not connected, so a full manual assistive-technology and keyboard walkthrough could not be automated in this maintenance session. Validation used live production HTML/headers, source inspection, deployment state, key color contrast calculations, runtime logs, and regression checks of SEO and prior production markers.",
+  "maintenance_rule": "Future public changes must preserve the server-rendered skip link, focus visibility, native keyboard operation, SPA heading/landmark semantics, live announcements, minimum touch targets, reduced-motion behavior, proof/OCR descriptions, and the single-observer accessibility budget unless a verified replacement improves them without regression."
+}

@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rohmat-master.local/schema/merchant.config.schema.json",
+  "title": "Master Clone Merchant Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "merchant_slug",
+    "business_name",
+    "merchant_name",
+    "merchant_name_acknowledged",
+    "locale",
+    "currency",
+    "timezone",
+    "public_url",
+    "admin_url",
+    "kds_url",
+    "qris_asset",
+    "table_count",
+    "table_qr_secret_mode",
+    "require_table_qr_signature",
+    "menu_seed",
+    "admin_owner_email",
+    "supabase_project_ref",
+    "spreadsheet_target",
+    "storage",
+    "sheets"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "merchant_slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "minLength": 3, "maxLength": 48 },
+    "business_name": { "type": "string", "minLength": 2, "maxLength": 100 },
+    "merchant_name": { "type": "string", "minLength": 2, "maxLength": 100 },
+    "merchant_name_acknowledged": { "type": "boolean" },
+    "locale": { "type": "string", "pattern": "^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$", "minLength": 2, "maxLength": 32 },
+    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+    "timezone": { "type": "string", "minLength": 3, "maxLength": 64 },
+    "public_url": { "type": "string", "pattern": "^https://[^/]+/?$" },
+    "admin_url": { "type": "string", "pattern": "^https://[^/]+/?$" },
+    "kds_url": { "type": "string", "pattern": "^https://[^/]+/?$" },
+    "qris_asset": { "type": "string", "minLength": 1 },
+    "table_count": { "type": "integer", "minimum": 1, "maximum": 200 },
+    "table_qr_secret_mode": { "enum": ["generate-per-clone", "external-secret"] },
+    "require_table_qr_signature": { "const": true },
+    "menu_seed": { "type": "string", "pattern": "^clone/.+\\.json$" },
+    "admin_owner_email": { "type": "string", "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$" },
+    "supabase_project_ref": { "type": "string", "minLength": 8, "maxLength": 64 },
+    "spreadsheet_target": { "type": "string", "minLength": 3, "maxLength": 160 },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["static_bucket", "payment_bucket"],
+      "properties": {
+        "static_bucket": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,62}$" },
+        "payment_bucket": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,62}$" }
+      }
+    },
+    "sheets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start_year", "years", "expected_tabs"],
+      "properties": {
+        "start_year": { "type": "integer", "minimum": 2026, "maximum": 2100 },
+        "years": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "expected_tabs": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": { "enum": ["DASHBOARD", "PEMESAN", "PESANAN", "MENU & STOK", "KEUANGAN"] }
+        }
+      }
+    }
+  }
+}

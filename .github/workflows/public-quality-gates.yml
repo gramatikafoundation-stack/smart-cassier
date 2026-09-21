@@ -1,0 +1,133 @@
+name: Public Canonical & Browser UX Gates
+
+on:
+  push:
+    branches: [freeze-prep]
+    paths:
+      - 'dr/storage-backup/2026-09-14/public-lkg-v1.html'
+      - '.github/workflows/public-quality-gates.yml'
+  workflow_dispatch:
+
+jobs:
+  canonical-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit canonical production snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs');
+          const path='dr/storage-backup/2026-09-14/public-lkg-v1.html';
+          const html=fs.readFileSync(path,'utf8');
+          const fail=(m)=>{throw new Error(m)};
+          const count=(s,re)=>(s.match(re)||[]).length;
+          if(!/^<!doctype html>/i.test(html)) fail('missing_doctype');
+          for(const marker of ['rohmat-public-element-runtime-v64','rohmat-cart-qris-runtime-v72','rohmat-ocr-smart-v6','OCR_FAST_DEADLINE_MS=4800']) {
+            if(count(html,new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'))<1) fail('marker_missing:'+marker);
+          }
+          // Current canonical snapshot contains nine purposeful observers across independent runtime modules.
+          // Guard against observer growth; runtime behavior is validated separately in Playwright.
+          const observers=count(html,/new\s+MutationObserver\s*\(/g),MAX_MUTATION_OBSERVERS=9;
+          if(observers>MAX_MUTATION_OBSERVERS) fail('mutation_observer_budget_exceeded:'+observers+'/'+MAX_MUTATION_OBSERVERS);
+          if(/\beval\s*\(|new\s+Function\s*\(/.test(html)) fail('dynamic_code_execution');
+          if(/javascript\s*:/i.test(html)) fail('javascript_url');
+          const styles=[...html.matchAll(/<style(?:\s[^>]*)?>([\s\S]*?)<\/style>/gi)].map(m=>m[1]);
+          if(!styles.length) fail('no_styles');
+          function balancedCss(css){
+            let depth=0,quote='',comment=false;
+            for(let i=0;i<css.length;i++){
+              const c=css[i],n=css[i+1];
+              if(comment){if(c==='*'&&n==='/'){comment=false;i++;}continue;}
+              if(!quote&&c==='/'&&n==='*'){comment=true;i++;continue;}
+              if(quote){if(c==='\\'){i++;continue;}if(c===quote)quote='';continue;}
+              if(c==='"'||c==="'"){quote=c;continue;}
+              if(c==='{')depth++; else if(c==='}'&&--depth<0)return false;
+            }
+            return depth===0&&!quote&&!comment;
+          }
+          for(let i=0;i<styles.length;i++) if(!balancedCss(styles[i])) fail('unbalanced_css_block:'+i);
+          if(!/@media\s*\(max-width\s*:\s*760px\)/i.test(html)) fail('missing_tablet_mobile_breakpoint');
+          if(!/@media\s*\(max-width\s*:\s*500px\)/i.test(html)) fail('missing_phone_breakpoint');
+          if(!/:focus-visible/.test(html)) fail('missing_focus_visible_styles');
+          const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)].map(m=>m[1]);
+          const tmp=require('os').tmpdir();
+          const cp=require('child_process');
+          scripts.forEach((src,i)=>{
+            const f=`${tmp}/rohmat-inline-${i}.js`;
+            fs.writeFileSync(f,src);
+            cp.execFileSync(process.execPath,['--check',f],{stdio:'inherit'});
+          });
+          const external=[...html.matchAll(/<script[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi)].map(m=>m[1]);
+          const result={ok:true,bytes:Buffer.byteLength(html),style_blocks:styles.length,inline_scripts:scripts.length,external_scripts:external,mutation_observers:observers,mutation_observer_budget:MAX_MUTATION_OBSERVERS,focus_visible:true,mobile_breakpoints:true,css_balanced:true,inline_js_syntax:true};
+          fs.writeFileSync('/tmp/public-canonical-audit.json',JSON.stringify(result,null,2));
+          console.log(JSON.stringify(result,null,2));
+          console.log('PUBLIC_CANONICAL_AUDIT_PASS=1');
+          NODE
+
+  browser-ux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Production browser UX smoke — desktop and mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > rohmat-browser-ux.cjs <<'NODE'
+          const {chromium}=require('playwright');
+          const assert=(v,m)=>{if(!v)throw new Error(m)};
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const cases=[
+              {name:'desktop',viewport:{width:1366,height:900}},
+              {name:'mobile',viewport:{width:390,height:844},isMobile:true,hasTouch:true}
+            ];
+            for(const c of cases){
+              const ctx=await browser.newContext({viewport:c.viewport,isMobile:!!c.isMobile,hasTouch:!!c.hasTouch,locale:'id-ID'});
+              const page=await ctx.newPage();
+              const pageErrors=[];
+              page.on('pageerror',e=>pageErrors.push(String(e)));
+              const r=await page.goto('https://rohmat-pesan-bayar-publik.vercel.app',{waitUntil:'domcontentloaded',timeout:30000});
+              assert(r&&r.status()===200,`${c.name}:http_${r&&r.status()}`);
+              await page.waitForTimeout(1500);
+              assert((await page.title()).includes('Rohmat Nasi Uduk'),`${c.name}:bad_title`);
+              const state=await page.evaluate(()=>({
+                buttons:[...document.querySelectorAll('button')].filter(x=>x.offsetParent!==null).length,
+                focusables:[...document.querySelectorAll('button,a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(x=>x.offsetParent!==null).length,
+                openDialogs:document.querySelectorAll('dialog[open]').length,
+                scrollWidth:document.documentElement.scrollWidth,
+                innerWidth:window.innerWidth,
+                hasMain:!!document.querySelector('main,#app,.hero'),
+                hasFocusVisible:CSS.supports('selector(:focus-visible)')
+              }));
+              assert(state.hasMain,`${c.name}:missing_main`);
+              assert(state.buttons>=1,`${c.name}:no_visible_buttons`);
+              assert(state.focusables>=1,`${c.name}:no_focusable_controls`);
+              assert(state.openDialogs===0,`${c.name}:dialog_open_on_load`);
+              assert(state.scrollWidth<=state.innerWidth+2,`${c.name}:horizontal_overflow:${state.scrollWidth}/${state.innerWidth}`);
+              const focused=[];
+              for(let i=0;i<12;i++){
+                await page.keyboard.press('Tab');
+                focused.push(await page.evaluate(()=>document.activeElement?.tagName||''));
+              }
+              assert(focused.some(x=>['BUTTON','A','INPUT','SELECT','TEXTAREA'].includes(x)),`${c.name}:keyboard_focus_missing`);
+              assert(pageErrors.length===0,`${c.name}:page_errors:${pageErrors.join('|')}`);
+              console.log(c.name,JSON.stringify({state,focused:[...new Set(focused)]}));
+              await ctx.close();
+            }
+            await browser.close();
+            console.log('PUBLIC_BROWSER_UX_PASS=1');
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+          node ./rohmat-browser-ux.cjs
+          rm -f rohmat-browser-ux.cjs

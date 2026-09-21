@@ -1,0 +1,38 @@
+name: KDS Secure Candidate
+
+on:
+  push:
+    branches: [kds-secure-candidate]
+  pull_request:
+    paths:
+      - 'apps/kds/**'
+      - '.github/workflows/kds-secure-candidate.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: JavaScript syntax
+        run: |
+          node --check apps/kds/app.js
+          node --check apps/kds/login.js
+          node --check apps/kds/api/kds.js
+      - name: Security source gates
+        run: |
+          ! grep -R "gramatikafoundation@gmail.com" apps/kds
+          ! grep -R "rohmat-kds-session-v1" apps/kds
+          ! grep -R "localStorage.*token\|token.*localStorage" apps/kds
+          ! grep -R "/rest/v1/rpc/" apps/kds
+          ! grep -R "sb_publishable_" apps/kds
+      - name: HttpOnly BFF contract exists
+        run: |
+          grep -Eq "credentials:[[:space:]]*['\"]same-origin['\"]" apps/kds/app.js
+          grep -Eq "credentials:[[:space:]]*['\"]same-origin['\"]" apps/kds/login.js
+          grep -q "KDS_BFF_URL" apps/kds/api/kds.js
+          grep -q "Content-Security-Policy" apps/kds/vercel.json
+          grep -q "accept-language" apps/kds/api/kds.js
+          grep -q "sec-ch-ua-platform" apps/kds/api/kds.js

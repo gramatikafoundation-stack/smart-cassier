@@ -3,23 +3,23 @@
   "rewrites": [
     { "source": "/portal", "destination": "/apps/portal/index.html" },
 
-    { "source": "/robots.txt", "destination": "/apps/public/api/robots" },
-    { "source": "/sitemap.xml", "destination": "/apps/public/api/sitemap" },
-    { "source": "/manifest.webmanifest", "destination": "/apps/public/api/manifest" },
-    { "source": "/favicon.ico", "destination": "/apps/public/api/brand-assets?kind=favicon" },
-    { "source": "/apple-touch-icon.png", "destination": "/apps/public/api/brand-assets?kind=apple" },
-    { "source": "/icon-192.png", "destination": "/apps/public/api/brand-assets?kind=icon192" },
-    { "source": "/icon-512.png", "destination": "/apps/public/api/brand-assets?kind=icon512" },
-    { "source": "/og-image.png", "destination": "/apps/public/api/brand-assets?kind=og" },
-    { "source": "/ocr-worker.js", "destination": "/apps/public/api/ocr-worker" },
-    { "source": "/runtime-lifecycle.js", "destination": "/apps/public/api/render-seo-brand?rohmat_runtime=lifecycle" },
+    { "source": "/robots.txt", "destination": "/api/public-robots" },
+    { "source": "/sitemap.xml", "destination": "/api/public-sitemap" },
+    { "source": "/manifest.webmanifest", "destination": "/api/public-manifest" },
+    { "source": "/favicon.ico", "destination": "/api/public-brand-assets?kind=favicon" },
+    { "source": "/apple-touch-icon.png", "destination": "/api/public-brand-assets?kind=apple" },
+    { "source": "/icon-192.png", "destination": "/api/public-brand-assets?kind=icon192" },
+    { "source": "/icon-512.png", "destination": "/api/public-brand-assets?kind=icon512" },
+    { "source": "/og-image.png", "destination": "/api/public-brand-assets?kind=og" },
+    { "source": "/ocr-worker.js", "destination": "/api/public-ocr-worker" },
+    { "source": "/runtime-lifecycle.js", "destination": "/api/public-render-seo-brand?rohmat_runtime=lifecycle" },
 
     { "source": "/dapur", "destination": "/apps/kds/index.html" },
     { "source": "/dapur/login", "destination": "/apps/kds/login.html" },
     { "source": "/kds", "destination": "/apps/kds/index.html" },
     { "source": "/kds/login", "destination": "/apps/kds/login.html" },
-    { "source": "/api/kds", "destination": "/apps/kds/api/kds" },
-    { "source": "/api/kds/config", "destination": "/apps/kds/api/config" },
+    { "source": "/api/kds", "destination": "/api/kds-handler" },
+    { "source": "/api/kds/config", "destination": "/api/kds-config" },
 
     { "source": "/styles.css", "destination": "/apps/kds/styles.css" },
     { "source": "/cashier-gate.css", "destination": "/apps/kds/cashier-gate.css" },
@@ -40,11 +40,11 @@
     { "source": "/ux.js", "destination": "/apps/kds/ux.js" },
     { "source": "/cashier-native-stepper.js", "destination": "/apps/kds/cashier-native-stepper.js" },
 
-    { "source": "/studio", "destination": "/apps/admin/api/render" },
-    { "source": "/admin", "destination": "/apps/admin/api/render" },
-    { "source": "/api/admin/(.*)", "destination": "/apps/admin/api/$1" },
+    { "source": "/studio", "destination": "/api/admin-render" },
+    { "source": "/admin", "destination": "/api/admin-render" },
+    { "source": "/api/admin/render", "destination": "/api/admin-render" },
 
-    { "source": "/", "destination": "/apps/public/api/render-seo-brand" }
+    { "source": "/", "destination": "/api/public-render-seo-brand" }
   ],
   "headers": [
     {

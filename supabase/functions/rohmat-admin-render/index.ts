@@ -62,6 +62,9 @@ function tenantize(raw:string,ctx:TenantCtx){
   ).replace(
     "headers:{'Content-Type':'application/json','X-Requested-With':'RohmatAdmin','X-SDB-Tenant-ID':TENANT}",
     "headers:{'Content-Type':'application/json','X-Requested-With':'RohmatAdmin','X-SDB-Tenant-ID':TENANT,apikey:KEY,Authorization:'Bearer '+KEY}"
+  ).replace(
+    "sessionStorage.setItem(LS,j.token);await enter()",
+    "try{sessionStorage.setItem(LS,j.token)}catch{}const dashboard=await rpc('admin_console_snapshot',{p_token:j.token});if(!dashboard.ok)throw Error(dashboard.error||'Dashboard tidak dapat dimuat');data=dashboard;try{await hydrateThemeCatalog()}catch(e){toast(e.message||'Katalog tema gagal dimuat',true)}applyStudioTheme();render()"
   );
   const bootstrap='<script id="sdb-tenant-bootstrap-v1">window.__SDB_TENANT_ID__='+JSON.stringify(ctx.tenant_id)+';<\/script>';
   if(!out.includes('sdb-tenant-bootstrap-v1'))out=out.replace('<head>','<head>'+bootstrap);

@@ -45,6 +45,8 @@ export default async function handler(req, res) {
 
   const headers = {
     'content-type': 'application/json',
+    'apikey': String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || ''),
+    'authorization': 'Bearer ' + String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || ''),
     'origin': projectOrigin,
     'sec-fetch-site': 'same-origin',
     'user-agent': String(req.headers['user-agent'] || 'Master-KDS-Proxy'),

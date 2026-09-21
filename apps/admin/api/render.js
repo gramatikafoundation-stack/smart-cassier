@@ -85,7 +85,9 @@ async function refreshShell(renderer) {
       signal: controller.signal,
       headers: {
         Accept: 'application/json',
-        'x-sdb-tenant-id': tenantId
+        'x-sdb-tenant-id': tenantId,
+        apikey: String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || ''),
+        Authorization: 'Bearer ' + String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '')
       }
     });
     const payload = await upstream.json();

@@ -56,6 +56,13 @@ function tenantize(raw:string,ctx:TenantCtx){
     .split('__SDB_BUSINESS_UPPER__').join(businessName.toUpperCase())
     .split('__SDB_BUSINESS_NAME__').join(businessName)
     .split('__SDB_ADMIN_TITLE__').join('Studio Pengelola '+businessName);
+  out=out.replace(
+    "const API='"+supabaseOrigin+"/functions/v1/rohmat-secure-api-v1',TENANT=",
+    "const API='"+supabaseOrigin+"/functions/v1/rohmat-secure-api-v1',KEY="+JSON.stringify(K)+",TENANT="
+  ).replace(
+    "headers:{'Content-Type':'application/json','X-Requested-With':'RohmatAdmin','X-SDB-Tenant-ID':TENANT}",
+    "headers:{'Content-Type':'application/json','X-Requested-With':'RohmatAdmin','X-SDB-Tenant-ID':TENANT,apikey:KEY,Authorization:'Bearer '+KEY}"
+  );
   const bootstrap='<script id="sdb-tenant-bootstrap-v1">window.__SDB_TENANT_ID__='+JSON.stringify(ctx.tenant_id)+';<\/script>';
   if(!out.includes('sdb-tenant-bootstrap-v1'))out=out.replace('<head>','<head>'+bootstrap);
   if(ctx.tenant_slug==='rohmat-nasi-uduk'&&!out.includes('legacy-gateway-marker: Studio Pengelola Rohmat')){

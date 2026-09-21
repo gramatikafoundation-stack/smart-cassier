@@ -4,7 +4,7 @@
   "private": true,
   "description": "Unified Multi-User Single Deployment for Rohmat Nasi Uduk Platform (Public Storefront, Kitchen Display System, Admin Studio)",
   "main": "apps/portal/index.html",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'Unified build complete'",

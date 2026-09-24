@@ -18,6 +18,16 @@ function origin(value) {
   }
 }
 
+function absoluteHttps(value) {
+  try {
+    const u = new URL(String(value || '').trim());
+    if (u.protocol !== 'https:' || u.username || u.password) throw new Error('https_required');
+    return u.href;
+  } catch {
+    return '';
+  }
+}
+
 export function getPublicTenantConfig(env = process.env) {
   const strict = env.MASTER_PROTOTYPE_STRICT === '1' || env.MASTER_CLONE_STRICT === '1';
   const required = ['SDB_TENANT_ID','PUBLIC_ORIGIN','BUSINESS_NAME'];
@@ -46,7 +56,8 @@ export function getPublicTenantConfig(env = process.env) {
     locale,
     ogLocale: locale.replace('-', '_'),
     cuisine,
-    socialImage: publicOrigin + '/og-image.png'
+    socialImage: publicOrigin + '/og-image.png',
+    heroImageUrl: absoluteHttps(env.HERO_IMAGE_URL)
   };
 }
 
@@ -73,12 +84,11 @@ function requestOrigin(req) {
 
 export async function resolvePublicTenantConfig(req, env = process.env) {
   const direct = getPublicTenantConfig(env);
-  if (direct.ok && direct.tenantId) return direct;
-
   const supabaseUrl = origin(env.SUPABASE_URL);
   const publishableKey = clean(env.SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_ANON_KEY, '', 500);
   const requestedOrigin = requestOrigin(req);
   if (!supabaseUrl || !publishableKey || !requestedOrigin) {
+    if (direct.ok && direct.tenantId) return direct;
     return { ...direct, ok:false, missing:[...new Set([...(direct.missing||[]), !publishableKey?'SUPABASE_PUBLISHABLE_KEY':'', !requestedOrigin?'REQUEST_ORIGIN':''].filter(Boolean))] };
   }
 
@@ -130,9 +140,11 @@ export async function resolvePublicTenantConfig(req, env = process.env) {
       ogLocale:locale.replace('-', '_'),
       cuisine,
       socialImage:canonicalOrigin + '/og-image.png',
+      heroImageUrl:absoluteHttps(resolved.hero_image_url),
       resolvedBy:'origin'
     };
   } catch {
+    if (direct.ok && direct.tenantId) return { ...direct, resolvedBy:'environment-fallback' };
     return { ...direct, ok:false, missing:['TENANT_ORIGIN_RESOLUTION'] };
   }
 }

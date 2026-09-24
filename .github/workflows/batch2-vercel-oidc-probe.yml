@@ -19,7 +19,7 @@ jobs:
       - name: Obtain short-lived Vercel CI credentials
         uses: vercel/setup-turborepo-remote-cache-action@v1.0.0
         with:
-          team: team_ZpgMfDYGskDACkOuneXhRdPG
+          team: gramatikafoundation-3204
       - name: Probe whether short-lived credential can read project
         shell: bash
         env:

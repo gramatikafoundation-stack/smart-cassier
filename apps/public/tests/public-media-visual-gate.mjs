@@ -76,7 +76,7 @@ async function main(){
     const canonical=menu.filter(x=>x.src.startsWith('https://xrepmvbccalzhlcznrff.supabase.co/storage/v1/object/public/rohmat-assets/menu-cache/')).length;
     const badNatural=menu.filter(x=>x.w<1||x.h<1);
     const badDecoding=menu.filter(x=>x.decoding!=='async');
-    const badFit=menu.filter(x=>x.fit!=='cover');
+    const badFit=menu.filter(x=>x.fit!=='contain');
     console.log('MEDIA_PRESENTATION_PROBE',JSON.stringify({sample:menu.slice(0,3),unique:unique.size,canonical,badNatural:badNatural.length,badDecoding:badDecoding.length,badFit:badFit.length}));
     if(unique.size!==36||canonical!==36||badNatural.length||badDecoding.length||badFit.length)fail('menu_media_contract_'+JSON.stringify({unique:unique.size,canonical,badNatural:badNatural.length,badDecoding:badDecoding.length,badFit:badFit.length}));
     await page.waitForTimeout(500);

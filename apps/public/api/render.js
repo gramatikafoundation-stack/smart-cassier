@@ -91,6 +91,7 @@ function tenantizeRuntimeHtml(html, tenantId, businessName, heroImageUrl = '') {
   } else {
     out = out.replace(/(<body\b[^>]*>)/i, match => match + tenantBusinessMarker);
   }
+  out = out.replace(/"business_name":"[^"]*"/, '"business_name":' + JSON.stringify(safeBusiness));
   out = out.replace(/"merchant_name":"[^"]*"/, '"merchant_name":' + JSON.stringify(safeBusiness));
   const hero = String(heroImageUrl || '').trim();
   if (/^https:\/\//i.test(hero)) {

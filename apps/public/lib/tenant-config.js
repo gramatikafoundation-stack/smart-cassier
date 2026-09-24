@@ -118,11 +118,7 @@ export async function resolvePublicTenantConfig(req, env = process.env) {
     const canonicalOrigin = origin(resolved.public_origin) || requestedOrigin;
     const locale = clean(resolved.locale, FALLBACK.locale, 32);
     const businessName = clean(resolved.business_name, 'Business', 100);
-    const description = clean(
-      env.PUBLIC_DESCRIPTION,
-      `Pesan menu ${businessName} secara online dengan cepat, praktis, dan aman.`,
-      220
-    );
+    const description = `Pesan menu ${businessName} secara online dengan cepat, praktis, dan aman.`;
     const cuisine = clean(env.PUBLIC_CUISINE, FALLBACK.cuisine, 80);
     return {
       tenantId:String(resolved.tenant_id),

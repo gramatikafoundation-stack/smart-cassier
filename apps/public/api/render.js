@@ -78,13 +78,24 @@ function secureHtml(html, nonce) {
   return html.replace(/<script(?=\s|>)/g, `<script nonce="${nonce}"`).replace(/<style(?=\s|>)/g, `<style nonce="${nonce}"`);
 }
 
-function tenantizeRuntimeHtml(html, tenantId, businessName) {
+function tenantizeRuntimeHtml(html, tenantId, businessName, heroImageUrl = '') {
   const safeTenant = String(tenantId || '').trim();
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(safeTenant)) {
     throw new Error('invalid_tenant_id');
   }
-  const tenantBusinessMarker = '<span data-tenant-business hidden>' + escapeHtml(businessName || 'Business') + '</span>';
-  let out = html.includes('data-tenant-business') ? html : html.replace(/(<body\b[^>]*>)/i, match => match + tenantBusinessMarker);
+  const safeBusiness = String(businessName || 'Business').trim() || 'Business';
+  const tenantBusinessMarker = '<span data-tenant-business hidden>' + escapeHtml(safeBusiness) + '</span>';
+  let out = html;
+  if (/<span\s+data-tenant-business\s+hidden>[^<]*<\/span>/i.test(out)) {
+    out = out.replace(/<span\s+data-tenant-business\s+hidden>[^<]*<\/span>/i, tenantBusinessMarker);
+  } else {
+    out = out.replace(/(<body\b[^>]*>)/i, match => match + tenantBusinessMarker);
+  }
+  out = out.replace(/"merchant_name":"[^"]*"/, '"merchant_name":' + JSON.stringify(safeBusiness));
+  const hero = String(heroImageUrl || '').trim();
+  if (/^https:\/\//i.test(hero)) {
+    out = out.replace(/"hero_image_url":"[^"]*"/, '"hero_image_url":' + JSON.stringify(hero));
+  }
   out = out.replace(
     /site_settings_public_v2\?select=([^"'\s]+?)&id=eq\.1&limit=1/g,
     (_m, fields) => `tenant_site_settings_public_v1?select=${fields}&tenant_id=eq.${safeTenant}&limit=1`
@@ -150,6 +161,7 @@ export default async function handler(req, res) {
   const base = String(process.env.SUPABASE_URL).trim().replace(/\/$/, '');
   const lkgPath = String(process.env.PUBLIC_LKG_PATH).trim();
   const businessName = String(tenant.businessName || 'Business').trim();
+  const heroImageUrl = String(tenant.heroImageUrl || '').trim();
   const supabaseOrigin = new URL(base).origin;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 2500);
@@ -159,7 +171,7 @@ export default async function handler(req, res) {
     const html = await upstream.text();
     const valid = upstream.ok && html.length >= MIN_LKG_BYTES && REQUIRED_MARKERS.every(marker => html.includes(marker));
     if (!valid) throw new Error('invalid_lkg');
-    const tenantized = tenantizeRuntimeHtml(html, tenantId, businessName);
+    const tenantized = tenantizeRuntimeHtml(html, tenantId, businessName, heroImageUrl);
     const optimized = optimizeHtml(tenantized);
     const patched = injectPublicPatch(optimized.html);
     const body = secureHtml(patched, nonce);
@@ -182,6 +194,7 @@ export default async function handler(req, res) {
     res.setHeader('X-Rohmat-Public-CDN', 'vercel-60-swr60');
     res.setHeader('X-Rohmat-Public-Fix', 'menu-reference-v6-70x41-natural-juice-v7');
     res.setHeader('X-Rohmat-Public-Perf', optimized.flags.join(',') || 'baseline');
+    res.setHeader('X-Rohmat-Public-Canonical-Identity', heroImageUrl ? 'resolver-brand+hero-v2' : 'resolver-brand-v2');
     res.setHeader('X-Rohmat-Public-Bytes-Saved', String(Math.max(0, html.length - optimized.html.length)));
     if (req.method === 'HEAD') return res.end();
     return res.end(body);

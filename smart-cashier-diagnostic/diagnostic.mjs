@@ -41,18 +41,22 @@ async function run() {
     if (name in globalThis) continue;
     try { globalThis[name] = w[name]; } catch {}
   }
-  globalThis.window = w;
-  globalThis.document = w.document;
-  globalThis.navigator = w.navigator;
-  globalThis.location = w.location;
-  globalThis.history = w.history;
-  globalThis.localStorage = w.localStorage;
-  globalThis.sessionStorage = w.sessionStorage;
-  globalThis.BroadcastChannel = w.BroadcastChannel;
-  globalThis.matchMedia = w.matchMedia;
-  globalThis.ResizeObserver = w.ResizeObserver;
-  globalThis.IntersectionObserver = w.IntersectionObserver;
-  globalThis.crypto = w.crypto;
+  const bindGlobal = (name, value) => {
+    try { Object.defineProperty(globalThis, name, { value, configurable:true, writable:true }); }
+    catch { try { globalThis[name] = value; } catch {} }
+  };
+  bindGlobal("window", w);
+  bindGlobal("document", w.document);
+  bindGlobal("navigator", w.navigator);
+  bindGlobal("location", w.location);
+  bindGlobal("history", w.history);
+  bindGlobal("localStorage", w.localStorage);
+  bindGlobal("sessionStorage", w.sessionStorage);
+  bindGlobal("BroadcastChannel", w.BroadcastChannel);
+  bindGlobal("matchMedia", w.matchMedia);
+  bindGlobal("ResizeObserver", w.ResizeObserver);
+  bindGlobal("IntersectionObserver", w.IntersectionObserver);
+  bindGlobal("crypto", w.crypto);
 
   process.on("uncaughtException", e => console.error("UNCAUGHT", e?.stack || e));
   process.on("unhandledRejection", e => console.error("UNHANDLED_REJECTION", e?.stack || e));

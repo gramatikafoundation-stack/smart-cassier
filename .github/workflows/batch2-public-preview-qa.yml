@@ -41,8 +41,12 @@ jobs:
           node --input-type=module --check < apps/public/lib/runtime-lifecycle.js
           node --input-type=module --check < apps/public/lib/render-lifecycle.js
           node --input-type=module --check < apps/public/lib/render-runtime-architecture.js
+          node --input-type=module --check < apps/public/api/brand-assets.js
+          node --input-type=module --check < apps/public/api/manifest.js
           node apps/public/tests/runtime-architecture-gate.mjs
           node apps/public/tests/runtime-memory-stress-gate.mjs
+          node apps/public/tests/lifecycle-browser-gate.mjs
+          node apps/public/tests/lifecycle-checkout-gate.mjs
           cp apps/public/lib/runtime-lifecycle.js /tmp/runtime-lifecycle.mjs
           SUPABASE_URL='https://xrepmvbccalzhlcznrff.supabase.co' SDB_TENANT_ID='d8bb901c-7399-485b-8743-b319fde148ac' node --input-type=module <<'NODE'
           import handler from 'file:///tmp/runtime-lifecycle.mjs';
@@ -58,6 +62,16 @@ jobs:
           await handler(req,res);
           if(status!==200||!body.includes('__rohmatRumV3')||headers['x-rohmat-runtime']!=='v67-canonical-fallback+lifecycle-or-rum') throw new Error('canonical_fallback_gate_failed');
           console.log('BATCH2_RUNTIME_CANONICAL_FALLBACK_PASS=1');
+          NODE
+          MASTER_PROTOTYPE_STRICT=1 SDB_TENANT_ID='d8bb901c-7399-485b-8743-b319fde148ac' SUPABASE_URL='https://xrepmvbccalzhlcznrff.supabase.co' PUBLIC_ORIGIN='https://smart-cassier.vercel.app' BUSINESS_NAME='Rohmat Nasi Uduk' node --input-type=module <<'NODE'
+          import handler from './apps/public/api/manifest.js';
+          const headers={};let status=0,body='';
+          const req={method:'GET',headers:{host:'smart-cassier.vercel.app'}};
+          const res={set statusCode(v){status=v},get statusCode(){return status},setHeader(k,v){headers[k.toLowerCase()]=v},end(v=''){body=String(v);return v}};
+          await handler(req,res);
+          const m=JSON.parse(body);
+          if(status!==200||m.short_name!=='Rohmat Nasi Uduk'||!m.name.startsWith('Rohmat Nasi Uduk')||body.includes('Warung Nasi')) throw new Error('manifest_brand_gate_failed');
+          console.log('BATCH2_MANIFEST_BRAND_PASS=1');
           NODE
           echo "BATCH2_SOURCE_LIFECYCLE_PASS=1"
       - name: Check deployment credential

@@ -1,0 +1,87 @@
+name: Batch 2 Public Preview QA
+
+on:
+  push:
+    branches: [batch2-public-recovery-20260924]
+    paths:
+      - '.github/workflows/batch2-public-preview-qa.yml'
+      - 'apps/public/**'
+      - 'api/public-*.js'
+      - 'vercel.json'
+      - 'package.json'
+  workflow_dispatch:
+
+jobs:
+  preview-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: team_ZpgMfDYGskDACkOuneXhRdPG
+      VERCEL_PROJECT_ID: prj_5xph62xWBNqRRR3MZ3bgA0qZU9NK
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate deployment credential
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${VERCEL_TOKEN:-}" || { echo "BATCH2_VERCEL_TOKEN_MISSING=1"; exit 1; }
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+      - name: Deploy full preview
+        id: deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="$(vercel deploy --yes --token "$VERCEL_TOKEN" --scope gramatikafoundation-3204)"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "BATCH2_PREVIEW_URL=$URL"
+      - name: Allow tenant QA alias registration
+        run: sleep 180
+      - name: Public preview canonical identity gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="${{ steps.deploy.outputs.url }}"
+          vercel curl / --deployment "$URL" --token "$VERCEL_TOKEN" --scope gramatikafoundation-3204 -- --silent --show-error --fail > /tmp/root.html
+          node <<'NODE'
+          const fs=require('fs');
+          const h=fs.readFileSync('/tmp/root.html','utf8');
+          const fail=m=>{throw new Error(m)};
+          if(!h.includes('Rohmat Nasi Uduk')) fail('brand_missing');
+          if(h.includes('Warung Nasi')) fail('legacy_brand_remains');
+          if(!h.includes('/rohmat-assets/hero/rohmat-nasi-uduk-hero-v1.jpg')) fail('canonical_hero_missing');
+          if(!h.includes("st.mode==='dine-in'?'checked':''")) fail('dine_checked_first_render_missing');
+          if(!h.includes("st.mode==='take-away'?'checked':''")) fail('take_checked_first_render_missing');
+          if(!h.includes('rohmat-public-a11y-v3')) fail('a11y_v3_missing');
+          console.log(JSON.stringify({ok:true,bytes:Buffer.byteLength(h),brand:true,hero:true,radio_first_render:true,a11y:true}));
+          console.log('BATCH2_PUBLIC_IDENTITY_A11Y_PASS=1');
+          NODE
+      - name: Runtime lifecycle gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="${{ steps.deploy.outputs.url }}"
+          PATHQ='/runtime-lifecycle.js?upstream=https%3A%2F%2Fxrepmvbccalzhlcznrff.supabase.co%2Ffunctions%2Fv1%2Frohmat-public-element-runtime-v64%3Ftenant%3Dd8bb901c-7399-485b-8743-b319fde148ac'
+          vercel curl "$PATHQ" --deployment "$URL" --token "$VERCEL_TOKEN" --scope gramatikafoundation-3204 -- --silent --show-error --fail > /tmp/runtime.js
+          node <<'NODE'
+          const fs=require('fs');const s=fs.readFileSync('/tmp/runtime.js','utf8');
+          for(const m of ['__rohmatPublicUXV17','__rohmatPublicDesignV24','__rohmatRumV3']) if(!s.includes(m)) throw new Error('runtime_marker_missing:'+m);
+          console.log(JSON.stringify({ok:true,bytes:Buffer.byteLength(s),full_runtime:true}));
+          console.log('BATCH2_RUNTIME_PASS=1');
+          NODE
+      - name: Source syntax and lifecycle regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check apps/public/api/render.js
+          node --check apps/public/lib/tenant-config.js
+          node --check apps/public/lib/runtime-lifecycle.js
+          node --check apps/public/lib/render-lifecycle.js
+          node --check apps/public/lib/render-runtime-architecture.js
+          node apps/public/tests/runtime-architecture-gate.mjs
+          node apps/public/tests/runtime-memory-stress-gate.mjs
+          echo "BATCH2_SOURCE_LIFECYCLE_PASS=1"

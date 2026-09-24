@@ -178,8 +178,8 @@ export default async function handler(req, res) {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
-    res.setHeader('CDN-Cache-Control', 'public, s-maxage=60, stale-while-revalidate=60');
-    res.setHeader('Vercel-CDN-Cache-Control', 'public, s-maxage=60, stale-while-revalidate=60');
+    res.setHeader('CDN-Cache-Control', 'public, s-maxage=300, stale-while-revalidate=60');
+    res.setHeader('Vercel-CDN-Cache-Control', 'public, s-maxage=300, stale-while-revalidate=60');
     res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
@@ -191,7 +191,7 @@ export default async function handler(req, res) {
     res.setHeader('X-Rohmat-Public-OCR', 'smart-v6-target4s-fallback4.5-hard4.95-v77');
     res.setHeader('X-Rohmat-Public-CSP', 'nonce-v2-script-style');
     res.setHeader('X-Rohmat-Public-Bundle-Min', String(MIN_LKG_BYTES));
-    res.setHeader('X-Rohmat-Public-CDN', 'vercel-60-swr60');
+    res.setHeader('X-Rohmat-Public-CDN', 'vercel-300-swr60');
     res.setHeader('X-Rohmat-Public-Fix', 'menu-reference-v6-70x41-natural-juice-v7');
     res.setHeader('X-Rohmat-Public-Perf', optimized.flags.join(',') || 'baseline');
     res.setHeader('X-Rohmat-Public-Canonical-Identity', heroImageUrl ? 'resolver-brand+hero-v2' : 'resolver-brand-v2');

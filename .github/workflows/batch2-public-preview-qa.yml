@@ -24,14 +24,49 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Validate deployment credential
+      - name: Source syntax and lifecycle regression
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${VERCEL_TOKEN:-}" || { echo "BATCH2_VERCEL_TOKEN_MISSING=1"; exit 1; }
+          node --check apps/public/api/render.js
+          node --check apps/public/lib/tenant-config.js
+          node --check apps/public/lib/runtime-lifecycle.js
+          node --check apps/public/lib/render-lifecycle.js
+          node --check apps/public/lib/render-runtime-architecture.js
+          node apps/public/tests/runtime-architecture-gate.mjs
+          node apps/public/tests/runtime-memory-stress-gate.mjs
+          SUPABASE_URL='https://xrepmvbccalzhlcznrff.supabase.co' SDB_TENANT_ID='d8bb901c-7399-485b-8743-b319fde148ac' node --input-type=module <<'NODE'
+          import handler from './apps/public/lib/runtime-lifecycle.js';
+          globalThis.fetch=async url=>{
+            if(String(url)!=='https://xrepmvbccalzhlcznrff.supabase.co/functions/v1/rohmat-public-element-runtime-v64?tenant=d8bb901c-7399-485b-8743-b319fde148ac') throw new Error('canonical_fallback_url_mismatch:'+url);
+            const body='/* __rohmatRumV3 */'+'x'.repeat(5200)+"rohmatRuntime='rum-only-batch1-v1'";
+            return new Response(body,{status:200,headers:{'x-rohmat-runtime-mode':'rum-only'}});
+          };
+          const headers={};
+          const req={method:'GET',url:'/runtime-lifecycle.js',query:{}};
+          let status=0,body='';
+          const res={set statusCode(v){status=v},get statusCode(){return status},setHeader(k,v){headers[k.toLowerCase()]=v},end(v=''){body=String(v);return v}};
+          await handler(req,res);
+          if(status!==200||!body.includes('__rohmatRumV3')||headers['x-rohmat-runtime']!=='v67-canonical-fallback+lifecycle-or-rum') throw new Error('canonical_fallback_gate_failed');
+          console.log('BATCH2_RUNTIME_CANONICAL_FALLBACK_PASS=1');
+          NODE
+          echo "BATCH2_SOURCE_LIFECYCLE_PASS=1"
+      - name: Check deployment credential
+        id: credential
+        shell: bash
+        run: |
+          if [ -n "${VERCEL_TOKEN:-}" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "BATCH2_VERCEL_TOKEN_AVAILABLE=1"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "BATCH2_VERCEL_TOKEN_MISSING_PREVIEW_SKIPPED=1"
+          fi
       - name: Install Vercel CLI
+        if: steps.credential.outputs.available == 'true'
         run: npm install --global vercel@latest
       - name: Deploy full preview
+        if: steps.credential.outputs.available == 'true'
         id: deploy
         shell: bash
         run: |
@@ -40,8 +75,10 @@ jobs:
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           echo "BATCH2_PREVIEW_URL=$URL"
       - name: Allow tenant QA alias registration
+        if: steps.credential.outputs.available == 'true'
         run: sleep 180
       - name: Public preview canonical identity gate
+        if: steps.credential.outputs.available == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -61,6 +98,7 @@ jobs:
           console.log('BATCH2_PUBLIC_IDENTITY_A11Y_PASS=1');
           NODE
       - name: Runtime lifecycle gate
+        if: steps.credential.outputs.available == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -73,17 +111,4 @@ jobs:
           console.log(JSON.stringify({ok:true,bytes:Buffer.byteLength(s),full_runtime:true}));
           console.log('BATCH2_RUNTIME_PASS=1');
           NODE
-      - name: Source syntax and lifecycle regression
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --check apps/public/api/render.js
-          node --check apps/public/lib/tenant-config.js
-          node --check apps/public/lib/runtime-lifecycle.js
-          node --check apps/public/lib/render-lifecycle.js
-          node --check apps/public/lib/render-runtime-architecture.js
-          node apps/public/tests/runtime-architecture-gate.mjs
-          node apps/public/tests/runtime-memory-stress-gate.mjs
-          echo "BATCH2_SOURCE_LIFECYCLE_PASS=1"
-
-# trigger: batch2-public-preview-qa-v1
+# trigger: batch2-public-preview-qa-v2

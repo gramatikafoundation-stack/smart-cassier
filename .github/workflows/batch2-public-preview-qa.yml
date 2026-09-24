@@ -35,6 +35,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          printf '{"type":"module"}\n' > apps/public/package.json
           node --input-type=module --check < apps/public/api/render.js
           node --input-type=module --check < apps/public/lib/tenant-config.js
           node --input-type=module --check < apps/public/lib/runtime-lifecycle.js

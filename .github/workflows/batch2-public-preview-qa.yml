@@ -28,15 +28,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node --check apps/public/api/render.js
-          node --check apps/public/lib/tenant-config.js
-          node --check apps/public/lib/runtime-lifecycle.js
-          node --check apps/public/lib/render-lifecycle.js
-          node --check apps/public/lib/render-runtime-architecture.js
+          node --input-type=module --check < apps/public/api/render.js
+          node --input-type=module --check < apps/public/lib/tenant-config.js
+          node --input-type=module --check < apps/public/lib/runtime-lifecycle.js
+          node --input-type=module --check < apps/public/lib/render-lifecycle.js
+          node --input-type=module --check < apps/public/lib/render-runtime-architecture.js
           node apps/public/tests/runtime-architecture-gate.mjs
           node apps/public/tests/runtime-memory-stress-gate.mjs
+          cp apps/public/lib/runtime-lifecycle.js /tmp/runtime-lifecycle.mjs
           SUPABASE_URL='https://xrepmvbccalzhlcznrff.supabase.co' SDB_TENANT_ID='d8bb901c-7399-485b-8743-b319fde148ac' node --input-type=module <<'NODE'
-          import handler from './apps/public/lib/runtime-lifecycle.js';
+          import handler from 'file:///tmp/runtime-lifecycle.mjs';
           globalThis.fetch=async url=>{
             if(String(url)!=='https://xrepmvbccalzhlcznrff.supabase.co/functions/v1/rohmat-public-element-runtime-v64?tenant=d8bb901c-7399-485b-8743-b319fde148ac') throw new Error('canonical_fallback_url_mismatch:'+url);
             const body='/* __rohmatRumV3 */'+'x'.repeat(5200)+"rohmatRuntime='rum-only-batch1-v1'";

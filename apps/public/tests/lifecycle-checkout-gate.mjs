@@ -4,16 +4,16 @@ import { chromium } from 'playwright';
 
 // Self-contained fail-closed tenant fixture for local/CI gates.
 process.env.MASTER_PROTOTYPE_STRICT ||= '1';
-process.env.SDB_TENANT_ID ||= 'ad126431-b148-471d-ba62-a7b3a5d0a8c1';
-process.env.SUPABASE_URL ||= 'https://yybhpmjuywjxqurrrrxl.supabase.co';
-process.env.PUBLIC_LKG_PATH ||= '/storage/v1/object/public/rohmat-static/public-lkg-v1.html';
+process.env.SDB_TENANT_ID ||= 'd8bb901c-7399-485b-8743-b319fde148ac';
+process.env.SUPABASE_URL ||= 'https://xrepmvbccalzhlcznrff.supabase.co';
+process.env.PUBLIC_LKG_PATH ||= '/storage/v1/object/public/merchant-static/public-lkg-v1.html';
 process.env.BUSINESS_NAME ||= 'Master Prototype Test Merchant';
 process.env.PUBLIC_ORIGIN ||= 'https://master-prototype-test.invalid';
 process.env.TENANT_LOCALE ||= 'id-ID';
 const { default: renderHandler } = await import('../api/render-seo-brand.js');
 const { default: runtimeHandler } = await import('../lib/runtime-lifecycle.js');
 const PORT=4182,ORIGIN=`http://127.0.0.1:${PORT}`;
-const RUM='https://yybhpmjuywjxqurrrrxl.supabase.co/functions/v1/rohmat-public-element-runtime-v64';
+const RUM='https://xrepmvbccalzhlcznrff.supabase.co/functions/v1/rohmat-public-element-runtime-v64';
 const fail=m=>{throw new Error(m)},sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 function server(){return http.createServer((req,res)=>{const path=(req.url||'').split('?')[0],fn=path==='/runtime-lifecycle.js'?runtimeHandler:renderHandler;Promise.resolve(fn(req,res)).catch(e=>{console.error('LOCAL_HANDLER_ERROR',e);if(!res.headersSent)res.statusCode=500;if(!res.writableEnded)res.end('handler error')})})}

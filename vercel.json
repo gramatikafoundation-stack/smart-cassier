@@ -1,61 +1,245 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/portal", "destination": "/apps/portal/index.html" },
-
-    { "source": "/robots.txt", "destination": "/api/public-robots" },
-    { "source": "/sitemap.xml", "destination": "/api/public-sitemap" },
-    { "source": "/manifest.webmanifest", "destination": "/api/public-manifest" },
-    { "source": "/favicon.ico", "destination": "/api/public-brand-assets?kind=favicon" },
-    { "source": "/apple-touch-icon.png", "destination": "/api/public-brand-assets?kind=apple" },
-    { "source": "/icon-192.png", "destination": "/api/public-brand-assets?kind=icon192" },
-    { "source": "/icon-512.png", "destination": "/api/public-brand-assets?kind=icon512" },
-    { "source": "/og-image.png", "destination": "/api/public-brand-assets?kind=og" },
-    { "source": "/ocr-worker.js", "destination": "/api/public-ocr-worker" },
-    { "source": "/runtime-lifecycle.js", "destination": "/api/public-render-seo-brand?rohmat_runtime=lifecycle" },
-
-    { "source": "/dapur", "destination": "/apps/kds/index.html" },
-    { "source": "/dapur/login", "destination": "/apps/kds/login.html" },
-    { "source": "/kds", "destination": "/apps/kds/index.html" },
-    { "source": "/kds/login", "destination": "/apps/kds/login.html" },
-    { "source": "/api/kds", "destination": "/api/kds-handler" },
-    { "source": "/api/kds/config", "destination": "/api/kds-config" },
-
-    { "source": "/styles.css", "destination": "/apps/kds/styles.css" },
-    { "source": "/cashier-gate.css", "destination": "/apps/kds/cashier-gate.css" },
-    { "source": "/menu-media.css", "destination": "/apps/kds/menu-media.css" },
-    { "source": "/quantity2.js", "destination": "/apps/kds/quantity2.js" },
-    { "source": "/fast-nav.js", "destination": "/apps/kds/fast-nav.js" },
-    { "source": "/design-runtime.js", "destination": "/apps/kds/design-runtime.js" },
-    { "source": "/app.js", "destination": "/apps/kds/app.js" },
-    { "source": "/menu-media.js", "destination": "/apps/kds/menu-media.js" },
-    { "source": "/cashier-required-receipt.js", "destination": "/apps/kds/cashier-required-receipt.js" },
-    { "source": "/print-hide.js", "destination": "/apps/kds/print-hide.js" },
-    { "source": "/login.html", "destination": "/apps/kds/login.html" },
-    { "source": "/login.js", "destination": "/apps/kds/login.js" },
-    { "source": "/tenant-runtime.js", "destination": "/apps/kds/tenant-runtime.js" },
-    { "source": "/quantity.js", "destination": "/apps/kds/quantity.js" },
-    { "source": "/instant.js", "destination": "/apps/kds/instant.js" },
-    { "source": "/perf.js", "destination": "/apps/kds/perf.js" },
-    { "source": "/ux.js", "destination": "/apps/kds/ux.js" },
-    { "source": "/cashier-native-stepper.js", "destination": "/apps/kds/cashier-native-stepper.js" },
-
-    { "source": "/studio", "destination": "/api/admin-render" },
-    { "source": "/admin", "destination": "/api/admin-render" },
-    { "source": "/api/admin/render", "destination": "/api/admin-render" },
-
-    { "source": "/", "destination": "/api/public-render-seo-brand" }
+    {
+      "source": "/portal",
+      "destination": "/apps/portal/index.html"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/api/public-robots"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/public-sitemap"
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "destination": "/api/public-manifest"
+    },
+    {
+      "source": "/favicon.ico",
+      "destination": "/api/public-brand-assets?kind=favicon"
+    },
+    {
+      "source": "/apple-touch-icon.png",
+      "destination": "/api/public-brand-assets?kind=apple"
+    },
+    {
+      "source": "/icon-192.png",
+      "destination": "/api/public-brand-assets?kind=icon192"
+    },
+    {
+      "source": "/icon-512.png",
+      "destination": "/api/public-brand-assets?kind=icon512"
+    },
+    {
+      "source": "/og-image.png",
+      "destination": "/api/public-brand-assets?kind=og"
+    },
+    {
+      "source": "/ocr-worker.js",
+      "destination": "/api/public-ocr-worker"
+    },
+    {
+      "source": "/runtime-lifecycle.js",
+      "destination": "/api/public-render-seo-brand?rohmat_runtime=lifecycle"
+    },
+    {
+      "source": "/dapur",
+      "destination": "/apps/kds/index.html"
+    },
+    {
+      "source": "/dapur/login",
+      "destination": "/apps/kds/login.html"
+    },
+    {
+      "source": "/kds",
+      "destination": "/apps/kds/index.html"
+    },
+    {
+      "source": "/kds/login",
+      "destination": "/apps/kds/login.html"
+    },
+    {
+      "source": "/api/kds",
+      "destination": "/api/kds-handler"
+    },
+    {
+      "source": "/api/kds/config",
+      "destination": "/api/kds-config"
+    },
+    {
+      "source": "/styles.css",
+      "destination": "/apps/kds/styles.css"
+    },
+    {
+      "source": "/cashier-gate.css",
+      "destination": "/apps/kds/cashier-gate.css"
+    },
+    {
+      "source": "/menu-media.css",
+      "destination": "/apps/kds/menu-media.css"
+    },
+    {
+      "source": "/quantity2.js",
+      "destination": "/apps/kds/quantity2.js"
+    },
+    {
+      "source": "/fast-nav.js",
+      "destination": "/apps/kds/fast-nav.js"
+    },
+    {
+      "source": "/design-runtime.js",
+      "destination": "/apps/kds/design-runtime.js"
+    },
+    {
+      "source": "/app.js",
+      "destination": "/apps/kds/app.js"
+    },
+    {
+      "source": "/menu-media.js",
+      "destination": "/apps/kds/menu-media.js"
+    },
+    {
+      "source": "/cashier-required-receipt.js",
+      "destination": "/apps/kds/cashier-required-receipt.js"
+    },
+    {
+      "source": "/print-hide.js",
+      "destination": "/apps/kds/print-hide.js"
+    },
+    {
+      "source": "/login.html",
+      "destination": "/apps/kds/login.html"
+    },
+    {
+      "source": "/login.js",
+      "destination": "/apps/kds/login.js"
+    },
+    {
+      "source": "/tenant-runtime.js",
+      "destination": "/apps/kds/tenant-runtime.js"
+    },
+    {
+      "source": "/quantity.js",
+      "destination": "/apps/kds/quantity.js"
+    },
+    {
+      "source": "/instant.js",
+      "destination": "/apps/kds/instant.js"
+    },
+    {
+      "source": "/perf.js",
+      "destination": "/apps/kds/perf.js"
+    },
+    {
+      "source": "/ux.js",
+      "destination": "/apps/kds/ux.js"
+    },
+    {
+      "source": "/cashier-native-stepper.js",
+      "destination": "/apps/kds/cashier-native-stepper.js"
+    },
+    {
+      "source": "/studio",
+      "destination": "/api/admin-render"
+    },
+    {
+      "source": "/admin",
+      "destination": "/api/admin-render"
+    },
+    {
+      "source": "/api/admin/render",
+      "destination": "/api/admin-render"
+    },
+    {
+      "source": "/",
+      "destination": "/api/public-render-seo-brand"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Referrer-Policy", "value": "no-referrer" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=()" }
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=()"
+        }
+      ]
+    },
+    {
+      "source": "/admin",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
+    },
+    {
+      "source": "/studio",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
+    },
+    {
+      "source": "/kds",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
+    },
+    {
+      "source": "/kds/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
+    },
+    {
+      "source": "/dapur",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
+    },
+    {
+      "source": "/dapur/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
       ]
     }
+  ],
+  "regions": [
+    "sin1"
   ]
 }

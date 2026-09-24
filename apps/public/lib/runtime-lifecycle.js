@@ -2,11 +2,37 @@ const CACHE_MS = 30000;
 const RUNTIME_PATH = '/functions/v1/rohmat-public-element-runtime-v64';
 const memo = new Map();
 
+function canonicalUpstream() {
+  const base = String(process.env.SUPABASE_URL || '').trim().replace(/\/$/, '');
+  const tenant = String(process.env.SDB_TENANT_ID || '').trim();
+  if (!base || !tenant) throw new Error('canonical_tenant_runtime_unavailable');
+  const baseUrl = new URL(base);
+  if (baseUrl.protocol !== 'https:' || !baseUrl.hostname.endsWith('.supabase.co') || baseUrl.username || baseUrl.password) {
+    throw new Error('invalid_canonical_runtime_origin');
+  }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(tenant)) {
+    throw new Error('invalid_canonical_runtime_tenant');
+  }
+  return base + RUNTIME_PATH + '?tenant=' + encodeURIComponent(tenant);
+}
+
 function readUpstream(req) {
   const rawQuery = Array.isArray(req?.query?.upstream) ? req.query.upstream[0] : req?.query?.upstream;
-  const raw = String(rawQuery || new URL(req?.url || '/', 'https://runtime.invalid').searchParams.get('upstream') || '').trim();
+  const requested = String(rawQuery || new URL(req?.url || '/', 'https://runtime.invalid').searchParams.get('upstream') || '').trim();
+  const raw = requested || canonicalUpstream();
   const u = new URL(raw);
-  if (u.protocol !== 'https:' || !u.hostname.endsWith('.supabase.co') || u.pathname !== RUNTIME_PATH || u.username || u.password) {
+  const tenant = String(u.searchParams.get('tenant') || '').trim();
+  const configured = new URL(String(process.env.SUPABASE_URL || '').trim());
+  if (
+    u.protocol !== 'https:' ||
+    configured.protocol !== 'https:' ||
+    !configured.hostname.endsWith('.supabase.co') ||
+    u.origin !== configured.origin ||
+    u.pathname !== RUNTIME_PATH ||
+    u.username ||
+    u.password ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(tenant)
+  ) {
     throw new Error('invalid_tenant_runtime_upstream');
   }
   u.hash = '';
@@ -77,6 +103,13 @@ async function getRuntime(upstream) {
     const response = await fetch(upstream, { cache: 'no-store', signal: controller.signal });
     if (!response.ok) throw new Error(`upstream_${response.status}`);
     const raw = await response.text();
+    const mode = String(response.headers.get('x-rohmat-runtime-mode') || '').toLowerCase();
+    if (mode === 'rum-only') {
+      if (raw.length < 5000 || !raw.includes('__rohmatRumV3') || !raw.includes("rohmatRuntime='rum-only-batch1-v1'")) throw new Error('upstream_rum_invalid');
+      memo.set(upstream, { body: raw, at: now });
+      if (memo.size > 8) memo.delete(memo.keys().next().value);
+      return raw;
+    }
     if (raw.length < 40000 || !raw.includes('__rohmatPublicUXV17') || !raw.includes('__rohmatPublicDesignV24')) throw new Error('upstream_invalid');
     const optimized = optimizeLifecycle(raw);
     memo.set(upstream, { body: optimized.body, at: now });
@@ -101,11 +134,12 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'public, max-age=30, s-maxage=30, stale-while-revalidate=30');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
-    res.setHeader('X-Rohmat-Runtime', 'v65-lifecycle-cleanup');
+    res.setHeader('X-Rohmat-Runtime', 'v68-origin-bound+canonical-fallback+lifecycle-or-rum');
     res.setHeader('X-Rohmat-Lifecycle', 'dialog-observer-owner+design-poll-pause-pagehide-bfcache');
     if (req.method === 'HEAD') return res.end();
     return res.end(body);
   } catch (error) {
+    console.error('[runtime-lifecycle-503]', JSON.stringify({status:503,error:String(error?.message || error).slice(0,160)}));
     res.statusCode = 503;
     res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
     res.setHeader('Cache-Control', 'no-store');

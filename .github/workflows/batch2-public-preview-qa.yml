@@ -85,3 +85,5 @@ jobs:
           node apps/public/tests/runtime-architecture-gate.mjs
           node apps/public/tests/runtime-memory-stress-gate.mjs
           echo "BATCH2_SOURCE_LIFECYCLE_PASS=1"
+
+# trigger: batch2-public-preview-qa-v1

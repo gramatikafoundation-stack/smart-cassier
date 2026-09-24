@@ -24,6 +24,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Install pinned browser QA dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts playwright@1.63.0
+          npx playwright install --with-deps chromium
+          echo "BATCH2_PLAYWRIGHT_READY=1"
       - name: Source syntax and lifecycle regression
         shell: bash
         run: |

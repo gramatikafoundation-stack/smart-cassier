@@ -4,9 +4,9 @@ import { chromium } from 'playwright';
 
 // Self-contained fail-closed tenant fixture for local/CI gates.
 process.env.MASTER_PROTOTYPE_STRICT ||= '1';
-process.env.SDB_TENANT_ID ||= 'ad126431-b148-471d-ba62-a7b3a5d0a8c1';
-process.env.SUPABASE_URL ||= 'https://yybhpmjuywjxqurrrrxl.supabase.co';
-process.env.PUBLIC_LKG_PATH ||= '/storage/v1/object/public/rohmat-static/public-lkg-v1.html';
+process.env.SDB_TENANT_ID ||= 'd8bb901c-7399-485b-8743-b319fde148ac';
+process.env.SUPABASE_URL ||= 'https://xrepmvbccalzhlcznrff.supabase.co';
+process.env.PUBLIC_LKG_PATH ||= '/storage/v1/object/public/merchant-static/public-lkg-v1.html';
 process.env.BUSINESS_NAME ||= 'Master Prototype Test Merchant';
 process.env.PUBLIC_ORIGIN ||= 'https://master-prototype-test.invalid';
 process.env.TENANT_LOCALE ||= 'id-ID';

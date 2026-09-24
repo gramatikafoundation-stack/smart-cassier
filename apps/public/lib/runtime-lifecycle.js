@@ -22,9 +22,12 @@ function readUpstream(req) {
   const raw = requested || canonicalUpstream();
   const u = new URL(raw);
   const tenant = String(u.searchParams.get('tenant') || '').trim();
+  const configured = new URL(String(process.env.SUPABASE_URL || '').trim());
   if (
     u.protocol !== 'https:' ||
-    !u.hostname.endsWith('.supabase.co') ||
+    configured.protocol !== 'https:' ||
+    !configured.hostname.endsWith('.supabase.co') ||
+    u.origin !== configured.origin ||
     u.pathname !== RUNTIME_PATH ||
     u.username ||
     u.password ||
@@ -131,7 +134,7 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'public, max-age=30, s-maxage=30, stale-while-revalidate=30');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
-    res.setHeader('X-Rohmat-Runtime', 'v67-canonical-fallback+lifecycle-or-rum');
+    res.setHeader('X-Rohmat-Runtime', 'v68-origin-bound+canonical-fallback+lifecycle-or-rum');
     res.setHeader('X-Rohmat-Lifecycle', 'dialog-observer-owner+design-poll-pause-pagehide-bfcache');
     if (req.method === 'HEAD') return res.end();
     return res.end(body);

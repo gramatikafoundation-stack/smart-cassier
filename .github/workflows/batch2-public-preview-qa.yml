@@ -47,6 +47,7 @@ jobs:
           node apps/public/tests/runtime-memory-stress-gate.mjs
           node apps/public/tests/lifecycle-browser-gate.mjs
           node apps/public/tests/lifecycle-checkout-gate.mjs
+          node apps/public/tests/public-media-visual-gate.mjs
           cp apps/public/lib/runtime-lifecycle.js /tmp/runtime-lifecycle.mjs
           SUPABASE_URL='https://xrepmvbccalzhlcznrff.supabase.co' SDB_TENANT_ID='d8bb901c-7399-485b-8743-b319fde148ac' node --input-type=module <<'NODE'
           import handler from 'file:///tmp/runtime-lifecycle.mjs';
@@ -60,8 +61,14 @@ jobs:
           let status=0,body='';
           const res={set statusCode(v){status=v},get statusCode(){return status},setHeader(k,v){headers[k.toLowerCase()]=v},end(v=''){body=String(v);return v}};
           await handler(req,res);
-          if(status!==200||!body.includes('__rohmatRumV3')||headers['x-rohmat-runtime']!=='v67-canonical-fallback+lifecycle-or-rum') throw new Error('canonical_fallback_gate_failed');
+          if(status!==200||!body.includes('__rohmatRumV3')||headers['x-rohmat-runtime']!=='v68-origin-bound+canonical-fallback+lifecycle-or-rum') throw new Error('canonical_fallback_gate_failed');
           console.log('BATCH2_RUNTIME_CANONICAL_FALLBACK_PASS=1');
+          const badHeaders={};let badStatus=0;
+          const badReq={method:'GET',url:'/runtime-lifecycle.js',query:{upstream:'https://attacker-project.supabase.co/functions/v1/rohmat-public-element-runtime-v64?tenant=d8bb901c-7399-485b-8743-b319fde148ac'}};
+          const badRes={set statusCode(v){badStatus=v},get statusCode(){return badStatus},setHeader(k,v){badHeaders[k.toLowerCase()]=v},end(v=''){return v}};
+          await handler(badReq,badRes);
+          if(badStatus!==503) throw new Error('runtime_origin_binding_gate_failed');
+          console.log('BATCH2_RUNTIME_ORIGIN_BINDING_PASS=1');
           NODE
           MASTER_PROTOTYPE_STRICT=1 SDB_TENANT_ID='d8bb901c-7399-485b-8743-b319fde148ac' SUPABASE_URL='https://xrepmvbccalzhlcznrff.supabase.co' PUBLIC_ORIGIN='https://smart-cassier.vercel.app' BUSINESS_NAME='Rohmat Nasi Uduk' node --input-type=module <<'NODE'
           import handler from './apps/public/api/manifest.js';

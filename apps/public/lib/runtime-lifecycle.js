@@ -77,6 +77,13 @@ async function getRuntime(upstream) {
     const response = await fetch(upstream, { cache: 'no-store', signal: controller.signal });
     if (!response.ok) throw new Error(`upstream_${response.status}`);
     const raw = await response.text();
+    const mode = String(response.headers.get('x-rohmat-runtime-mode') || '').toLowerCase();
+    if (mode === 'rum-only') {
+      if (raw.length < 5000 || !raw.includes('__rohmatRumV3') || !raw.includes("rohmatRuntime='rum-only-batch1-v1'")) throw new Error('upstream_rum_invalid');
+      memo.set(upstream, { body: raw, at: now });
+      if (memo.size > 8) memo.delete(memo.keys().next().value);
+      return raw;
+    }
     if (raw.length < 40000 || !raw.includes('__rohmatPublicUXV17') || !raw.includes('__rohmatPublicDesignV24')) throw new Error('upstream_invalid');
     const optimized = optimizeLifecycle(raw);
     memo.set(upstream, { body: optimized.body, at: now });
@@ -101,11 +108,12 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'public, max-age=30, s-maxage=30, stale-while-revalidate=30');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
-    res.setHeader('X-Rohmat-Runtime', 'v65-lifecycle-cleanup');
+    res.setHeader('X-Rohmat-Runtime', 'v66-lifecycle-or-rum');
     res.setHeader('X-Rohmat-Lifecycle', 'dialog-observer-owner+design-poll-pause-pagehide-bfcache');
     if (req.method === 'HEAD') return res.end();
     return res.end(body);
   } catch (error) {
+    console.error('[runtime-lifecycle-503]', JSON.stringify({status:503,error:String(error?.message || error).slice(0,160)}));
     res.statusCode = 503;
     res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
     res.setHeader('Cache-Control', 'no-store');

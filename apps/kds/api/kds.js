@@ -1,4 +1,4 @@
-const DEFAULT_UPSTREAM = 'https://yybhpmjuywjxqurrrrxl.supabase.co/functions/v1/rohmat-kds-api';
+const DEFAULT_UPSTREAM = 'https://xrepmvbccalzhlcznrff.supabase.co/functions/v1/rohmat-kds-api';
 
 function firstIp(value) {
   return String(value || '').split(',')[0].trim().slice(0, 80);
@@ -9,6 +9,8 @@ export default async function handler(req, res) {
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  res.setHeader('X-Rohmat-KDS-Region', 'sin1');
 
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');

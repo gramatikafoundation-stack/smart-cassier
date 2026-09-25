@@ -91,6 +91,7 @@ function consolidateCss(html) {
 export function canonicalizeAdminShell(html) {
   let out = ensureCashierIntegration(String(html || ''));
   out = out.split('Warung Nasi').join(BUSINESS_NAME);
+  out = out.split(SUPABASE_ORIGIN + '/functions/v1/admin-media-upload').join('/admin/api/media-upload');
   out = consolidateCss(out);
 
   const v41 = scriptRe('admin-design-system-runtime-v41');

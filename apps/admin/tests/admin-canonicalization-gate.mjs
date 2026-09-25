@@ -47,7 +47,8 @@ const fixture=[
 '<script id="admin-final-links-v50">window.__links=1</script>',
 '<script id="rohmat-visual-editor-loader-v50" src="https://example.supabase.co/functions/v1/rohmat-admin-visual-editor-v1"></script>',
 '</head><body><div>Warung Nasi</div>',
-'<script>const MEDIA="https://example.supabase.co/functions/v1/admin-media-upload";</script>',
+'<script>const U="https://example.supabase.co";const MEDIA=U+\'/functions/v1/admin-media-upload\';</script>',
+'<a href="https://smart-cassier.vercel.app/login">Buka ^</a>',
 '<script id="rohmat-admin-cashier-current-v36" src="https://example.supabase.co/functions/v1/rohmat-admin-cashier-loader-v1"></script><!-- rohmat-admin-smart-cashier-subnav-v30 -->',
 '</body></html>'
 ].join('\n');
@@ -59,7 +60,8 @@ assert.match(out,/name="robots" content="noindex,nofollow,noarchive"/);
 assert.match(out,/src="\/admin\/runtime\/core\.js"/);
 assert.match(out,/src="\/admin\/runtime\/visual-editor\.js"/);
 assert.match(out,/src="\/admin\/runtime\/cashier\.js"/);
-assert.match(out,/\/admin\/api\/media-upload/);
+assert.match(out,/MEDIA='\/admin\/api\/media-upload'/);
+assert.match(out,/href="\/kds\/login"/);
 for(const old of ['admin-design-system-runtime-v41','rohmat-admin-style-runtime-loader-v59','admin-theme14-runtime-v50','admin-fast-navigation-v50','admin-final-links-v50','rohmat-visual-editor-loader-v50','rohmat-admin-cashier-current-v36']) {
   assert.ok(!out.includes('id="'+old+'"'),old);
 }

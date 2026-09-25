@@ -5,6 +5,7 @@ const RENDERER = process.env.ADMIN_RENDERER_URL || DEFAULT_RENDERER;
 const SUPABASE_ORIGIN = process.env.SUPABASE_ORIGIN || new URL(RENDERER).origin;
 const TENANT_ID = String(process.env.SDB_TENANT_ID || '').trim();
 const API_KEY = String(process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || '').trim();
+const CLIENT_KEY = String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
 const TTL_MS = 60_000;
 const cache = new Map();
 
@@ -41,6 +42,30 @@ async function fetchWithTimeout(url, accept = 'application/javascript') {
   }
 }
 
+function normalizeLegacyClientRuntime(body) {
+  let out = String(body || '');
+  out = out.split('https://yybhpmjuywjxqurrrrxl.supabase.co').join(SUPABASE_ORIGIN);
+  if (CLIENT_KEY) out = out.replace(/sb_publishable_[A-Za-z0-9_-]+/g, CLIENT_KEY);
+  return out;
+}
+function normalizeStyleRuntime(body) {
+  let out = normalizeLegacyClientRuntime(body);
+  out = out.replace(/add\('rohmat-admin-cashier-safe-v7',[\s\S]*?\);/g, '');
+  out = out.replace(/add\('rohmat-admin-database-safe-v10',[\s\S]*?\);/g, "add('rohmat-admin-database-safe-v10','/admin/runtime/database-ui.js');");
+  out = out.replace(/add\('rohmat-admin-kds-safe-v6',[\s\S]*?\);/g, '');
+  out = out.split("const PUB='https://rohmat-pesan-bayar-publik.vercel.app/';const KDS='https://rohmat-kds-printer.vercel.app';").join("const PUB='/';const KDS='/kds';");
+  return out;
+}
+function normalizeModuleRuntime(kind, body) {
+  let out = normalizeLegacyClientRuntime(body);
+  if (kind === 'database-ui') {
+    out = out.replace(/https:\/\/[A-Za-z0-9.-]+\.supabase\.co\/functions\/v1\/rohmat-admin-order-history-v1/g, '/admin/api/order-history');
+  } else if (kind === 'cashier') {
+    out = out.replace(/https:\/\/[A-Za-z0-9.-]+\.supabase\.co\/functions\/v1\/rohmat-smart-cashier-v1/g, '/admin/api/smart-cashier');
+  }
+  return out;
+}
+
 const NAVIGATION_RUNTIME = "(()=>{'use strict';if(window.__rohmatAdminCanonicalNavigationV60)return;window.__rohmatAdminCanonicalNavigationV60=1;let queued=false;" +
 "function patchLinks(){document.querySelectorAll('a[href]').forEach(a=>{const raw=a.getAttribute('href')||'',txt=(a.textContent||'').trim().toLowerCase();let u;try{u=new URL(raw,location.origin)}catch{return}const kds=txt.includes('kds')||/(?:^|\\\\/)(?:kds|dapur)(?:\\\\/|$)/i.test(u.pathname);if(!kds)return;const login=/\\\\/login(?:\\\\/)?$/i.test(u.pathname)||txt.includes('login');const next=login?'/kds/login':'/kds';if(a.getAttribute('href')!==next)a.setAttribute('href',next);if(a.target==='_blank')a.setAttribute('rel','noopener noreferrer')})}" +
 "function active(b){const nav=b&&b.closest('.subnav');if(!nav)return;nav.querySelectorAll('button[data-sub]').forEach(x=>x.classList.toggle('on',x===b))}" +
@@ -75,17 +100,19 @@ async function coreBody() {
   const styleUrl = SUPABASE_ORIGIN + '/functions/v1/rohmat-admin-style-runtime-v59?tenant=' + encodeURIComponent(TENANT_ID) + '&v=58';
   const style = await fetchWithTimeout(styleUrl);
   if (style.body.includes('admin runtime baseline unavailable')) throw new Error('style_runtime_unavailable');
-  return buildCanonicalCoreFromHtml(html, style.body);
+  return buildCanonicalCoreFromHtml(html, normalizeStyleRuntime(style.body));
 }
 async function moduleBody(kind) {
   if (kind === 'core') return coreBody();
   const map = {
     'visual-editor': 'rohmat-admin-visual-editor-v1?tenant=' + encodeURIComponent(TENANT_ID) + '&v=20',
-    cashier: 'rohmat-admin-cashier-loader-v1?tenant=' + encodeURIComponent(TENANT_ID) + '&v=36'
+    cashier: 'rohmat-admin-cashier-loader-v1?tenant=' + encodeURIComponent(TENANT_ID) + '&v=36',
+    'database-ui': 'rohmat-admin-database-ui-v1?tenant=' + encodeURIComponent(TENANT_ID) + '&v=19'
   };
   const path = map[kind];
   if (!path) throw new Error('unknown_runtime_kind');
-  return (await fetchWithTimeout(SUPABASE_ORIGIN + '/functions/v1/' + path)).body;
+  const body = (await fetchWithTimeout(SUPABASE_ORIGIN + '/functions/v1/' + path)).body;
+  return normalizeModuleRuntime(kind, body);
 }
 async function cached(kind) {
   const now = Date.now();
@@ -107,6 +134,7 @@ function kindOf(req) {
   if (path.endsWith('/core.js')) return 'core';
   if (path.endsWith('/visual-editor.js')) return 'visual-editor';
   if (path.endsWith('/cashier.js')) return 'cashier';
+  if (path.endsWith('/database-ui.js')) return 'database-ui';
   return '';
 }
 
@@ -122,7 +150,7 @@ export default async function handler(req, res) {
     return res.end('/* admin runtime configuration unavailable */');
   }
   const kind = kindOf(req);
-  if (!['core', 'visual-editor', 'cashier'].includes(kind)) {
+  if (!['core', 'visual-editor', 'cashier', 'database-ui'].includes(kind)) {
     res.statusCode = 404;
     return res.end('not_found');
   }

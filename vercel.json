@@ -142,6 +142,18 @@
       "destination": "/apps/kds/cashier-native-stepper.js"
     },
     {
+      "source": "/admin/runtime/core.js",
+      "destination": "/api/admin-runtime?kind=core"
+    },
+    {
+      "source": "/admin/runtime/visual-editor.js",
+      "destination": "/api/admin-runtime?kind=visual-editor"
+    },
+    {
+      "source": "/admin/runtime/cashier.js",
+      "destination": "/api/admin-runtime?kind=cashier"
+    },
+    {
       "source": "/studio",
       "destination": "/api/admin-render"
     },

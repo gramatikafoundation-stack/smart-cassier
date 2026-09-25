@@ -1,4 +1,4 @@
-const DEFAULT_RENDERER='https://yybhpmjuywjxqurrrrxl.supabase.co/functions/v1/rohmat-admin-render?mode=optimized';
+const DEFAULT_RENDERER='https://xrepmvbccalzhlcznrff.supabase.co/functions/v1/rohmat-admin-render?mode=optimized';
 const RENDERER=process.env.ADMIN_RENDERER_URL||DEFAULT_RENDERER;
 const SUPABASE_ORIGIN=process.env.SUPABASE_ORIGIN||new URL(RENDERER).origin;
 const TENANT_ID=String(process.env.SDB_TENANT_ID||'').trim();

@@ -5,7 +5,9 @@ if(files.length<2){console.error('usage: node prototype/rehearse.mjs tenant-a.js
 const configs=files.map(f=>JSON.parse(fs.readFileSync(f,'utf8')));
 const [a,b]=configs;
 const TABS=JSON.stringify(['DASHBOARD','PEMESAN','PESANAN','MENU & STOK','KEUANGAN']);
+const surfaceTopology=c=>{const n=new Set([c.public_url,c.admin_url,c.kds_url]).size;return n===1||n===3};
 const checks={
+  valid_surface_topology:surfaceTopology(a)&&surfaceTopology(b),
   distinct_tenant_ids:a.tenant_id!==b.tenant_id,
   distinct_slugs:a.tenant_slug!==b.tenant_slug,
   distinct_public_origins:a.public_url!==b.public_url,
@@ -19,5 +21,5 @@ const checks={
   source_edits_required:false
 };
 const ok=Object.entries(checks).every(([key,value])=>key==='source_edits_required'?value===false:value===true);
-console.log(JSON.stringify({ok,contract:'master-prototype-two-tenant-static-rehearsal-v1',platform_supabase_project_ref:'yybhpmjuywjxqurrrrxl',checks},null,2));
+console.log(JSON.stringify({ok,contract:'master-prototype-two-tenant-static-rehearsal-v2',platform_supabase_project_ref:'xrepmvbccalzhlcznrff',checks},null,2));
 if(!ok)process.exit(1);

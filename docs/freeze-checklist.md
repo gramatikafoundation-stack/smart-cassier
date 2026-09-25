@@ -1,3 +1,5 @@
+> **Historical notice (2026-09-25):** This checklist records the former split-deployment/pre-unified freeze program. The current release authority is `gramatikafoundation-stack/smart-cassier`, Vercel `smart-cassier`, and Supabase `xrepmvbccalzhlcznrff`. Use `docs/batch5-integrated-freeze-20260925.md` and `ops/production-manifest.md` for the active freeze gate. Historical evidence below is preserved for auditability.
+
 # Rohmat Freeze Checklist
 
 Master may be tagged only when every required gate below passes. This checklist is intentionally fail-closed: a gate stays open until production or an isolated rehearsal proves it.

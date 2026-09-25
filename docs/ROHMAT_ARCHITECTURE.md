@@ -1,42 +1,38 @@
-# Rohmat Architecture Contract
+# SMART CASSIER Architecture Contract
 
-## Canonical roles
+## Canonical authorities
 
-- **GitHub `gramatikafoundation-stack/Rohmat-Master`** is the single source of truth for application source, Vercel configuration, Supabase Edge Function source, migrations, release metadata, and rollback references. The active integration branch is `freeze-prep`.
-- **Vercel** is deployment/runtime only. Canonical projects:
-  - Admin: `studio-pengelola-rohmat` from `apps/admin`
-  - Public: `rohmat-pesan-bayar-publik` from `apps/public`
-  - KDS: `rohmat-kds-printer` from `apps/kds`
-- **Supabase project `yybhpmjuywjxqurrrrxl`** is the operational backend/source of truth for database, auth/session, RLS, RPC/API, Edge Functions, design-system state, orders, menu, settings, and sync workers.
-- **Google Sheets** is reporting mirror only. It is not authoritative storage.
-- **PostHog** is analytics/monitoring only. It is not application state.
-- **Figma** is design/UX reference only. Production changes must land in GitHub before release.
+- **GitHub**: `gramatikafoundation-stack/smart-cassier` is the source/release authority.
+- **Vercel**: project `prj_5xph62xWBNqRRR3MZ3bgA0qZU9NK` (`smart-cassier`) is the unified web runtime.
+- **Supabase**: `xrepmvbccalzhlcznrff` (`smart-cassier-platform`, `ap-southeast-1`) is the operational data/auth/RLS/RPC/Edge Function source of truth.
+- **Google Sheets**: reporting mirror only; never authoritative application state.
+- **PostHog**: observability/analytics only.
+- **Figma**: design reference only; release changes must land in Git first.
+
+## Unified surface topology
+
+Canonical origin: `https://smart-cassier.vercel.app`.
+
+| Surface | Canonical route | Boundary |
+| --- | --- | --- |
+| Public | `/` | Public ordering/runtime |
+| Admin | `/admin` | Management studio; noindex; session-gated operations |
+| KDS | `/kds` | Kitchen display; noindex; same-origin HttpOnly BFF |
+| KDS login | `/kds/login` | KDS authentication |
+| KDS BFF | `/api/kds` | Same-origin privileged boundary |
+
+The reference tenant currently uses one unified origin for all three surfaces. Tenant configuration validation supports either one unified origin or three distinct origins, but never an ambiguous two-origin topology.
+
+## Multi-tenant boundary
+
+Tenant resolution is explicit and fail-closed. Operational queries must carry or resolve a tenant identifier and remain tenant-scoped. Current tenancy enforcement is active (`enforce_client_rls=true`). New tenants reuse canonical source and shared platform infrastructure; they do not require source edits, source clones, or separate Supabase projects.
+
+## Security boundary
+
+Frontend source under `apps/**` must never contain the Supabase service-role secret. Privileged database/storage operations remain behind tenant-aware RPCs/Edge Functions. KDS privileged sessions remain server-side/HttpOnly. Public bootstrap data comes only from least-privilege projections/resolvers.
 
 ## Release path
 
-`audit → edit source → commit/PR → preview/runtime verification → production → release baseline`
+`audit → edit source → deterministic source gates → browser/stress gates → merge main → exact-main Vercel production deploy → canonical cross-surface E2E → freeze evidence`
 
-Direct production-only edits are emergency recovery steps and must be reconciled back to GitHub immediately.
-
-## Deployment isolation
-
-A change to one app must not trigger unnecessary deploys of the other apps.
-
-- `apps/admin/**` → Admin only
-- `apps/public/**` → Public only
-- `apps/kds/**` → KDS only
-- root package/lock changes may trigger all affected apps
-
-## Backend boundary
-
-Frontend code under `apps/**` must not contain Supabase service-role secrets or become a second database/backend. Privileged operations stay behind Supabase RPC/Edge Functions.
-
-## Canonical URLs
-
-- Admin: https://studio-pengelola-rohmat.vercel.app/
-- Public: https://rohmat-pesan-bayar-publik.vercel.app/
-- KDS: https://rohmat-kds-printer.vercel.app/
-
-## Non-canonical Vercel projects
-
-Diagnostic, preview, path-test, base64-test, replica, and other historical projects are not production authorities. Do not point canonical domains at them except for a documented recovery action. Deletion is intentionally not automated because it is destructive.
+Batch 5 CI is defined in `.github/workflows/batch5-integrated-freeze-gate.yml`.

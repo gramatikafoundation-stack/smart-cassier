@@ -1,5 +1,5 @@
 const vm=require('vm'),fs=require('fs');
-const LKG='https://yybhpmjuywjxqurrrrxl.supabase.co/storage/v1/object/public/rohmat-static/public-lkg-v1.html';
+const LKG='https://xrepmvbccalzhlcznrff.supabase.co/storage/v1/object/public/merchant-static/public-lkg-v1.html';
 const INP='apps/public/api/render-inp.js',WORKER='apps/public/api/ocr-worker.js',VERCEL='apps/public/vercel.json';
 const fail=m=>{throw new Error(m)},inp=fs.readFileSync(INP,'utf8'),worker=fs.readFileSync(WORKER,'utf8'),vercel=fs.readFileSync(VERCEL,'utf8');
 function c(src,n){const m=src.match(new RegExp(`const\\s+${n}\\s*=\\s*(\"(?:\\\\.|[^\"\\\\])*\")\\s*;`));if(!m)fail('constant_missing:'+n);return JSON.parse(m[1])}

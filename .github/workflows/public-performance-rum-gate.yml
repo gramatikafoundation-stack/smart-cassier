@@ -35,7 +35,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
+      - name: Prepare Public ESM context
+        shell: bash
+        run: printf '{"type":"module"}\\n' > apps/public/package.json
       - name: Validate Batch 2 source contract
         shell: bash
         run: |
@@ -65,10 +68,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
+      - name: Prepare Public ESM context
+        shell: bash
+        run: printf '{"type":"module"}\\n' > apps/public/package.json
       - name: Install Chromium test runtime
         run: |
-          npm install --no-save playwright@1.55.0
+          npm install --no-save --no-package-lock --ignore-scripts playwright@1.63.0
           npx playwright install --with-deps chromium
       - name: Verify RUM v3 attribution and privacy
         run: node apps/public/tests/rum-v3-gate.mjs

@@ -1,26 +1,39 @@
-# Rohmat Master
+# SMART CASSIER — Rohmat Master Prototype
 
-Canonical source, deployment contracts, and clone-ready architecture for the Rohmat Nasi Uduk platform.
+Canonical source for the unified SMART DIGITAL FOR BUSINESS cashier platform.
 
-## Status
+## Current authority
 
-**Freeze preparation in progress.** The current working branch is `freeze-prep`. The `main` branch must not be treated as Master Clone v1.0 until all freeze gates pass.
+- Repository: `gramatikafoundation-stack/smart-cassier`
+- Canonical branch: `main`
+- Vercel project: `smart-cassier` (`prj_5xph62xWBNqRRR3MZ3bgA0qZU9NK`)
+- Canonical origin: `https://smart-cassier.vercel.app`
+- Supabase project: `smart-cassier-platform` (`xrepmvbccalzhlcznrff`, `ap-southeast-1`)
+- Reference tenant: `warung-nasi`
+- Surface routing: Public `/`, Admin `/admin`, KDS `/kds`
+- Deployment region: Vercel `sin1`
 
-## Target architecture
+Historical repositories, deployments, and the former `yybhpmjuywjxqurrrrxl` backend are retained only as recovery/history evidence. They are not current production authority.
 
-- `apps/public` — customer ordering and payment storefront
+## Architecture
+
+The platform uses one canonical source and one shared multi-tenant runtime. Tenant-specific differences are configuration/data, not source forks.
+
+- `apps/public` — customer ordering/payment surface
 - `apps/admin` — management studio
 - `apps/kds` — kitchen display system
-- `supabase` — migrations, Edge Functions, policies, and database contracts
-- `clone` — merchant-specific provisioning configuration only
-- `tests` — smoke, security, contract, and clone-rehearsal tests
-- `ops` — production manifest, rollback references, and release runbooks
-- `docs` — architecture and freeze-readiness documentation
+- `supabase` — migrations and Edge Function source
+- `prototype` — tenant validation and provisioning rehearsal
+- `tests` — integrated freeze gates
+- `ops` — production/release/security records
+- `docs` — architecture and release evidence
 
-## Clone principle
+## Release rule
 
-Master source must remain unchanged when creating a new merchant clone. Merchant-specific differences are provided only through provisioning/configuration, including business name, URLs, menu data, QRIS, table QR codes, owner bootstrap, Supabase destination, and spreadsheet destination.
+A production freeze is valid only after the integrated Batch 5 gates pass: source/contract, tenant isolation, browser stress, mobile/tablet/desktop, Public→Admin→KDS data contract, cache semantics, asset/link scan, security review, rollback rehearsal, and canonical production validation.
 
-## Freeze rule
+The release path is:
 
-`MASTER CLONE v1.0` may be tagged only after Public reliability, KDS HttpOnly BFF, native security headers, least-privilege data contracts, Git/CI-CD, DR restore, two independent clone rehearsals, and the final end-to-end audit all pass.
+`audit → surgical patch → branch/CI → review/merge → exact-main production deploy → canonical E2E → freeze evidence`
+
+See `docs/batch5-integrated-freeze-20260925.md` for the current gate record.

@@ -60,7 +60,8 @@ assert.match(realtime,/mode:'connecting'/);
 assert.match(realtime,/staleAfterMs/);
 assert.match(realtime,/reconnectAfterMs/);
 assert.doesNotThrow(()=>new Function(realtime));
-assert.match(vendor,/2\.117\.1/);\nassert.match(vendor,/realtime-js\//);
+assert.match(vendor,/2\.117\.1/);
+assert.match(vendor,/realtime-js\//);
 assert.match(vendor,/window\.RohmatRealtimeClient/);
 assert.doesNotThrow(()=>new Function(vendor));
 

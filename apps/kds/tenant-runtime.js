@@ -14,7 +14,7 @@ function apply(){
 
 window.__SDB_TENANT_CONFIG_READY=(async()=>{
   try{
-    const r=await fetch('/api/config',{cache:'no-store',credentials:'same-origin'});
+    const r=await fetch('/api/kds/config',{cache:'no-store',credentials:'same-origin'});
     if(r.ok){
       const n=await r.json();
       for(const k of Object.keys(defaults))if(n?.[k]!=null&&String(n[k]).trim())current[k]=n[k];

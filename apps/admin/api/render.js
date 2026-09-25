@@ -26,7 +26,6 @@ const REQUIRED_MARKERS = [
 
 let memoryCache = null;
 let inflight = null;
-let brandCache = null;
 
 function inlineScriptHashes(html) {
   const hashes = [];
@@ -59,28 +58,6 @@ function contentSecurityPolicy(body) {
   ].join('; ');
 }
 
-async function resolveTenantBusinessName(signal) {
-  if (brandCache && Date.now() - brandCache.storedAt < MEMORY_TTL_MS) return brandCache.name;
-  const tenantId = String(process.env.SDB_TENANT_ID || '').trim();
-  const key = String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
-  if (!tenantId || !key) return BUSINESS_NAME;
-  try {
-    const url = SUPABASE_ORIGIN + '/rest/v1/tenant_site_settings_public_v1?select=business_name&tenant_id=eq.' + encodeURIComponent(tenantId) + '&limit=1';
-    const response = await fetch(url, {
-      cache: 'no-store',
-      signal,
-      headers: { apikey: key, Authorization: 'Bearer ' + key, Accept: 'application/json' }
-    });
-    const rows = await response.json().catch(() => []);
-    const name = response.ok ? String(rows?.[0]?.business_name || '').trim().slice(0, 100) : '';
-    if (name) {
-      brandCache = { name, storedAt: Date.now() };
-      return name;
-    }
-  } catch {}
-  return BUSINESS_NAME;
-}
-
 function ensureCashierIntegration(html) {
   let out = html.includes(NAV_NEW) ? html : html.replace(NAV_OLD, NAV_NEW);
   out = out.replace(/<script\b[^>]*\bid=["']rohmat-admin-cashier-(?:loader|current)-v\d+["'][^>]*>[\s\S]*?<\/script>(?:<!-- rohmat-admin-smart-cashier-subnav-v\d+ -->)?/gi, '');
@@ -111,10 +88,12 @@ function consolidateCss(html) {
   return out.replace(foundation, (_m, open, css, close) => open + css + '\n' + extras.join('\n') + close);
 }
 
-export function canonicalizeAdminShell(html, businessName = BUSINESS_NAME) {
+export function canonicalizeAdminShell(html) {
   let out = ensureCashierIntegration(String(html || ''));
-  out = out.replace(/Warung Nasi/gi, businessName);
+  out = out.split('Warung Nasi').join(BUSINESS_NAME);
   out = out.split(SUPABASE_ORIGIN + '/functions/v1/admin-media-upload').join('/admin/api/media-upload');
+  out = out.replace(/MEDIA=U\+'\/functions\/v1\/admin-media-upload'/g, "MEDIA='/admin/api/media-upload'");
+  out = out.split('https://smart-cassier.vercel.app/login').join('/kds/login');
   out = consolidateCss(out);
 
   const v41 = scriptRe('admin-design-system-runtime-v41');
@@ -164,8 +143,7 @@ async function refreshShell(renderer) {
     if (!validateRendererPayload(upstream.ok, payload, html)) {
       throw new Error('invalid_admin_renderer_response');
     }
-    const businessName = await resolveTenantBusinessName(controller.signal);
-    const body = canonicalizeAdminShell(html, businessName);
+    const body = canonicalizeAdminShell(html);
     if (!body.includes(NAV_NEW) || !body.includes('rohmat-admin-smart-cashier-subnav-v30')) {
       throw new Error('cashier_integration_missing');
     }
@@ -174,7 +152,6 @@ async function refreshShell(renderer) {
       source: String(payload?.source || 'renderer-full'),
       contract: String(payload?.contract || 'admin-shell-compatible'),
       rendererIntegrity: String(payload?.integrity || 'legacy-compatible'),
-      businessName,
       storedAt: Date.now()
     };
     memoryCache = next;
@@ -204,7 +181,7 @@ async function getShell(renderer) {
 export default async function handler(req, res) {
   const strict = process.env.MASTER_PROTOTYPE_STRICT === '1' || process.env.MASTER_CLONE_STRICT === '1';
   const tenantId = String(process.env.SDB_TENANT_ID || '').trim();
-  if (strict && (!tenantId || !process.env.ADMIN_RENDERER_URL || !process.env.SUPABASE_ORIGIN)) {
+  if (strict && (!tenantId || !process.env.ADMIN_RENDERER_URL || !process.env.SUPABASE_ORIGIN || !process.env.BUSINESS_NAME)) {
     res.statusCode = 503;
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Cache-Control', 'no-store');
@@ -235,7 +212,6 @@ export default async function handler(req, res) {
     res.setHeader('X-Rohmat-Admin-Cashier', 'canonical-same-origin-v60');
     res.setHeader('X-Rohmat-Admin-Runtime', 'canonical-core-v60');
     res.setHeader('X-Rohmat-Admin-Security', 'secure-api-v5-retained');
-    res.setHeader('X-Rohmat-Admin-Brand', shell.businessName ? 'tenant-source-v60' : 'environment-fallback');
     res.setHeader('Content-Security-Policy', contentSecurityPolicy(shell.body));
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');

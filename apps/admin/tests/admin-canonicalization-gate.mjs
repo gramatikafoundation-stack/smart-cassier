@@ -77,5 +77,6 @@ assert.match(core,/window\.__v50=1/);
 assert.match(core,/window\.__v59=1/);
 assert.match(core,/rohmatAdminCanonicalNavigationV60/);
 assert.match(core,/rohmatAdminCanonicalRuntime="v60"/);
+assert.doesNotThrow(()=>new Function(core));
 assert.doesNotMatch(core,/rohmat-kds-printer\.vercel\.app/);
 console.log('BATCH3_ADMIN_CANONICALIZATION_GATE_PASS=1');

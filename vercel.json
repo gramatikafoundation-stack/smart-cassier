@@ -154,6 +154,22 @@
       "destination": "/api/admin-runtime?kind=cashier"
     },
     {
+      "source": "/admin/runtime/database-ui.js",
+      "destination": "/api/admin-runtime?kind=database-ui"
+    },
+    {
+      "source": "/admin/api/order-history",
+      "destination": "/api/admin-edge?kind=order-history"
+    },
+    {
+      "source": "/admin/api/smart-cashier",
+      "destination": "/api/admin-edge?kind=smart-cashier"
+    },
+    {
+      "source": "/admin/api/media-upload",
+      "destination": "/api/admin-edge?kind=media-upload"
+    },
+    {
       "source": "/studio",
       "destination": "/api/admin-render"
     },

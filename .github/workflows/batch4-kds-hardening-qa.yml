@@ -1,0 +1,24 @@
+name: Batch 4 KDS Hardening QA
+on:
+  push:
+    branches: [batch4-kds-hardening-realtime-20260925]
+permissions:
+  contents: read
+jobs:
+  kds-source-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: KDS hardening regression gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          node apps/kds/tests/batch4-kds-hardening-gate.mjs
+          node --input-type=module --check < apps/kds/app.js
+          node --input-type=module --check < apps/kds/tenant-runtime.js
+          node --input-type=module --check < apps/kds/login.js
+          echo "BATCH4_KDS_SOURCE_PASS=1"

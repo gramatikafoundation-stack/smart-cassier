@@ -20,5 +20,7 @@ jobs:
           node --input-type=module --check < apps/admin/api/render.js
           node --input-type=module --check < apps/admin/api/runtime.js
           node --input-type=module --check < api/admin-runtime.js
+          node --input-type=module --check < apps/admin/api/edge.js
+          node --input-type=module --check < api/admin-edge.js
           node apps/admin/tests/admin-canonicalization-gate.mjs
           echo "BATCH3_ADMIN_SOURCE_PASS=1"

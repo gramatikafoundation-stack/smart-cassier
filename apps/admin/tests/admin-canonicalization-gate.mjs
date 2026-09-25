@@ -9,11 +9,25 @@ process.env.SUPABASE_ANON_KEY='test-anon-jwt';
 
 const renderSrc=fs.readFileSync(new URL('../api/render.js',import.meta.url),'utf8');
 const runtimeSrc=fs.readFileSync(new URL('../api/runtime.js',import.meta.url),'utf8');
+const edgeSrc=fs.readFileSync(new URL('../api/edge.js',import.meta.url),'utf8');
+const vercel=JSON.parse(fs.readFileSync(new URL('../../../vercel.json',import.meta.url),'utf8'));
 assert.match(renderSrc,/secure-api-v5-retained/);
 assert.match(renderSrc,/script-src 'self'/);
 assert.doesNotMatch(renderSrc,/script-src 'self' \$\{SUPABASE_ORIGIN\}/);
 assert.match(runtimeSrc,/canonical runtime v60/);
 assert.match(runtimeSrc,/same-origin-proxy-v60/);
+assert.match(runtimeSrc,/database-ui/);
+assert.match(runtimeSrc,/\/admin\/api\/order-history/);
+assert.match(runtimeSrc,/\/admin\/api\/smart-cashier/);
+assert.match(edgeSrc,/same-origin-v60/);
+assert.match(edgeSrc,/rohmat-admin-order-history-v1/);
+assert.match(edgeSrc,/rohmat-smart-cashier-v1/);
+assert.match(edgeSrc,/admin-media-upload/);
+const routes=new Map(vercel.rewrites.map(x=>[x.source,x.destination]));
+assert.equal(routes.get('/admin/runtime/database-ui.js'),'/api/admin-runtime?kind=database-ui');
+assert.equal(routes.get('/admin/api/order-history'),'/api/admin-edge?kind=order-history');
+assert.equal(routes.get('/admin/api/smart-cashier'),'/api/admin-edge?kind=smart-cashier');
+assert.equal(routes.get('/admin/api/media-upload'),'/api/admin-edge?kind=media-upload');
 
 const renderMod=await import('data:text/javascript;base64,'+Buffer.from(renderSrc).toString('base64'));
 const runtimeMod=await import('data:text/javascript;base64,'+Buffer.from(runtimeSrc).toString('base64'));
@@ -44,6 +58,7 @@ assert.match(out,/name="robots" content="noindex,nofollow,noarchive"/);
 assert.match(out,/src="\/admin\/runtime\/core\.js"/);
 assert.match(out,/src="\/admin\/runtime\/visual-editor\.js"/);
 assert.match(out,/src="\/admin\/runtime\/cashier\.js"/);
+assert.match(out,/\/admin\/api\/media-upload/);
 for(const old of ['admin-design-system-runtime-v41','rohmat-admin-style-runtime-loader-v59','admin-theme14-runtime-v50','admin-fast-navigation-v50','admin-final-links-v50','rohmat-visual-editor-loader-v50','rohmat-admin-cashier-current-v36']) {
   assert.ok(!out.includes('id="'+old+'"'),old);
 }
@@ -59,4 +74,5 @@ assert.match(core,/window\.__v50=1/);
 assert.match(core,/window\.__v59=1/);
 assert.match(core,/rohmatAdminCanonicalNavigationV60/);
 assert.match(core,/rohmatAdminCanonicalRuntime="v60"/);
+assert.doesNotMatch(core,/rohmat-kds-printer\.vercel\.app/);
 console.log('BATCH3_ADMIN_CANONICALIZATION_GATE_PASS=1');

@@ -38,13 +38,13 @@ for(const p of ['/styles.css','/app.js','/tenant-runtime.js','/realtime-vendor.j
 assert.match(index,/name="robots" content="noindex,nofollow,noarchive"/);
 assert.match(login,/name="robots" content="noindex,nofollow,noarchive"/);
 assert.match(index,/data-tenant-business/);
-assert.match(index,/tenant-runtime\\.js\\?v=3/);
+assert.match(index,/tenant-runtime\.js\?v=3/);
 assert.match(index,/realtime-vendor\.js\?v=1/);
 assert.match(index,/realtime\.js\?v=1/);
 assert.match(index,/role="tablist"/);
 assert.match(index,/role="tabpanel"/);
 assert.match(index,/class="skipLink"/);
-assert.match(login,/tenant-runtime\\.js\\?v=3/);
+assert.match(login,/tenant-runtime\.js\?v=3/);
 
 for(const old of ['POLL_ACTIVE_MS=2000','POLL_CASHIER_MS=5000','POLL_IDLE_MS=8000','POLL_STOCK_MS=10000'])assert.ok(!app.includes(old),old);
 assert.match(app,/POLL_REALTIME_MS=45000/);

@@ -6,7 +6,7 @@ const fmt = v => v ? new Date(v).toLocaleString(tenant().locale||'id-ID',{timeZo
 const today = v => v && new Date(v).toLocaleDateString('en-CA',{timeZone:tenant().timezone||'Asia/Jakarta'}) === new Date().toLocaleDateString('en-CA',{timeZone:tenant().timezone||'Asia/Jakarta'});
 
 let snap={orders:[],menu:[]}, current='orders', syncBusy=false, syncPromise=null, lastSig='', timer=null;
-const POLL_ACTIVE_MS=2000,POLL_CASHIER_MS=5000,POLL_IDLE_MS=8000,POLL_STOCK_MS=10000;
+const POLL_FALLBACK_ACTIVE_MS=4000,POLL_FALLBACK_CASHIER_MS=8000,POLL_FALLBACK_IDLE_MS=15000,POLL_FALLBACK_STOCK_MS=20000,POLL_REALTIME_MS=45000,POLL_REALTIME_CASHIER_MS=60000;
 let cashSnap=null,cashBusy=false,cashPromise=null,cashSig='',cashCat='Semua',cashMode='dine-in',cashPay='cash',cart={};
 const cashDraft={name:'',table:'',note:'',cash:'',qrisOk:false};
 
@@ -42,7 +42,7 @@ function card(o,stage){
 function lane(title,desc,list,stage){return '<section class="lane"><div class="lh"><div><h2>'+title+'</h2><p>'+desc+'</p></div><span class="count">'+list.length+' tiket</span></div><div class="cards">'+(list.length?list.map(o=>card(o,stage)).join(''):'<div class="empty">Belum ada pesanan.</div>')+'</div></section>'}
 function classify(){const o=snap.orders||[];return{n:o.filter(x=>(x.payment_status==='submitted'&&x.order_status==='payment_review')||(x.payment_status==='verified'&&x.order_status==='confirmed')),p:o.filter(x=>x.order_status==='preparing'||x.order_status==='ready'),d:o.filter(x=>x.order_status==='completed'&&today(x.completed_at||x.updated_at))}}
 function hasActiveOrders(){const {n,p}=classify();return n.length>0||p.length>0}
-function pollDelay(){if(current==='cashier')return POLL_CASHIER_MS;if(current==='stock')return POLL_STOCK_MS;return hasActiveOrders()?POLL_ACTIVE_MS:POLL_IDLE_MS}
+function pollDelay(){const rt=window.__ROHMAT_KDS_REALTIME__;if(rt?.connected)return current==='cashier'?Math.max(POLL_REALTIME_CASHIER_MS,Number(rt.safetyPollMs||0)):Math.max(POLL_REALTIME_MS,Number(rt.safetyPollMs||0));if(current==='cashier')return POLL_FALLBACK_CASHIER_MS;if(current==='stock')return POLL_FALLBACK_STOCK_MS;return hasActiveOrders()?POLL_FALLBACK_ACTIVE_MS:POLL_FALLBACK_IDLE_MS}
 function stopPolling(){if(timer){clearTimeout(timer);timer=null}}
 function schedulePolling(delay=pollDelay()){stopPolling();if(document.hidden)return;timer=setTimeout(async()=>{if(document.hidden)return;try{if(current==='cashier')await cashLoad(false);else await refresh(false)}finally{schedulePolling()}},delay)}
 async function syncCurrent(manual=false){if(current==='cashier')return cashLoad(manual);return refresh(manual)}
@@ -57,8 +57,9 @@ async function refresh(manual=false,afterBusy=false){
     const d=await rpc('kds_snapshot');
     const sig=JSON.stringify([(d.orders||[]).map(o=>[o.id,o.order_status,o.payment_status,o.updated_at,o.preparing_at,o.ready_at,o.completed_at]),(d.menu||[]).map(m=>[m.id,m.is_available])]);
     snap=d;if(sig!==lastSig){lastSig=sig;renderOrders();renderStock()}
-    $('sync').textContent='● Live · '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  }catch(error){$('sync').textContent='● Gangguan';if(manual)toast(error.message||'Gagal memperbarui')}})();
+    document.dispatchEvent(new CustomEvent('rohmat:kds-snapshot',{detail:{ok:true,at:Date.now(),surface:'orders'}}));
+    if(!window.__ROHMAT_KDS_REALTIME__)$('sync').textContent='● Sinkron · '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+  }catch(error){document.dispatchEvent(new CustomEvent('rohmat:kds-snapshot',{detail:{ok:false,at:Date.now(),surface:'orders'}}));$('sync').dataset.syncState='error';$('sync').textContent='● Gangguan';if(manual)toast(error.message||'Gagal memperbarui')}})();
   syncPromise=task;
   try{return await task}finally{if(syncPromise===task)syncPromise=null;syncBusy=false;if(manual){b.disabled=false;b.textContent='↻ Perbarui'}}
 }
@@ -96,7 +97,9 @@ async function cashLoad(manual=false,afterBusy=false){
     const next=await cashier({action:'snapshot'}),nextSig=cashSignature(next),changed=nextSig!==cashSig;
     cashSnap=next;
     if(changed||manual||!$('cashierRoot').dataset.ready){cashSig=nextSig;cashRender();$('cashierRoot').dataset.ready='1'}
+    document.dispatchEvent(new CustomEvent('rohmat:kds-snapshot',{detail:{ok:true,at:Date.now(),surface:'cashier'}}));
   }catch(error){
+    document.dispatchEvent(new CustomEvent('rohmat:kds-snapshot',{detail:{ok:false,at:Date.now(),surface:'cashier'}}));
     if(!cashSnap)$('cashierRoot').innerHTML='<div class="cashBad"><b>Smart Cashier gagal dimuat.</b><br>'+esc(error.message||error)+'</div>';
     if(manual)toast(error.message)
   }})();
@@ -105,10 +108,13 @@ async function cashLoad(manual=false,afterBusy=false){
 }
 async function cashCreate(){cashRemember();const msg=$('cashMsg'),btn=$('cashPayNow'),sel=cashSelected(),table=cashMode==='dine-in'?Number(cashDraft.table||0):null,cash=cashPay==='cash'?Number(cashDraft.cash||0):null;if(!sel.length)return;if(cashMode==='dine-in'&&!(table>=1&&table<=20)){msg.innerHTML='<div class="cashBad">Pilih nomor meja terlebih dahulu.</div>';return}if(cashPay==='cash'&&cash<cashTotal()){msg.innerHTML='<div class="cashBad">Uang diterima masih kurang.</div>';return}if(cashPay==='qris_cashier'&&!cashDraft.qrisOk){msg.innerHTML='<div class="cashBad">Konfirmasi pembayaran QRIS terlebih dahulu.</div>';return}btn.disabled=true;btn.textContent='Memproses…';try{const j=await cashier({action:'create_order',source:'cashier_kds',customerName:cashDraft.name,serviceMode:cashMode,tableNumber:table,items:sel.map(x=>({menuId:x.m.id,quantity:x.q})),paymentMethod:cashPay,cashReceived:cash,note:cashDraft.note});msg.innerHTML='<div class="cashOk">Pesanan '+esc(j.order?.public_order_code||'')+' berhasil dikirim ke dapur.</div>';cart={};Object.assign(cashDraft,{name:'',table:'',note:'',cash:'',qrisOk:false});cashRender();stopPolling();await Promise.all([cashLoad(false,true),refresh(false,true)]);schedulePolling();toast('Pesanan berhasil dibuat dari Smart Cashier')}catch(error){msg.innerHTML='<div class="cashBad">'+esc(error.message||error)+'</div>';btn.disabled=false;btn.textContent='Bayar & Kirim ke Dapur'}}
 
+function syncTabA11y(){
+  document.querySelectorAll('.tab').forEach(x=>{const on=x.dataset.tab===current;x.classList.toggle('on',on);x.setAttribute('aria-selected',on?'true':'false');x.tabIndex=on?0:-1})
+}
 function switchTab(tab){
   if(current===tab)return;
   current=tab;
-  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.tab===tab));
+  syncTabA11y();
   document.dispatchEvent(new Event('rohmat:kds-page'));
   $('ordersTab').hidden=tab!=='orders';$('cashierTab').hidden=tab!=='cashier';$('stockTab').hidden=tab!=='stock';
   stopPolling();
@@ -117,8 +123,12 @@ function switchTab(tab){
 async function logout(){try{await call({action:'logout'})}catch{}location.replace('/kds/login')}
 
 async function boot(){
-  try{await call({action:'session'});$('app').hidden=false;await refresh(false);schedulePolling()}
-  catch{location.replace('/kds/login')}
+  try{
+    await Promise.all([call({action:'session'}),window.__SDB_TENANT_CONFIG_READY||Promise.resolve()]);
+    $('app').hidden=false;syncTabA11y();await refresh(false);
+    document.dispatchEvent(new CustomEvent('rohmat:kds-session-ready'));
+    schedulePolling();
+  }catch{location.replace('/kds/login')}
 }
 
 document.addEventListener('click',async e=>{const tab=e.target.closest('[data-tab]');if(tab)return switchTab(tab.dataset.tab);const a=e.target.closest('[data-act]');if(a){a.disabled=true;try{await act(a.dataset.id,a.dataset.act)}catch(error){toast(error.message||'Aksi gagal')}finally{a.disabled=false}return}const pr=e.target.closest('[data-proof]');if(pr)return showProof(pr.dataset.proof);const pi=e.target.closest('[data-print]');if(pi)return printOne(pi.dataset.print);const st=e.target.closest('[data-stock]');if(st){st.disabled=true;try{await stock(st.dataset.stock,st.dataset.next==='1')}catch(error){toast(error.message||'Gagal')}finally{st.disabled=false}}});

@@ -162,6 +162,22 @@ Deno.serve(async(req:Request)=>{
   const action=String(body?.action||"");
   const fp=await deviceFingerprint(req);
 
+  if(action==="brand"){
+    if(!secureSameOrigin(req,ctx))return out(origin,403,{ok:false,error:"csrf_rejected"},requestId,ctx);
+    const r=await sb.from("tenant_site_settings_public_v1")
+      .select("business_name,updated_at,typography,design_system")
+      .eq("tenant_id",ctx.tenant_id)
+      .limit(1)
+      .maybeSingle();
+    const businessName=String(r.data?.business_name||ctx.business_name||ctx.merchant_name||"Business").trim().slice(0,120);
+    const kdsDesign=r.data?{
+      updated_at:r.data.updated_at||null,
+      typography:r.data.typography&&typeof r.data.typography==="object"?r.data.typography:{},
+      design_system:r.data.design_system&&typeof r.data.design_system==="object"?r.data.design_system:{}
+    }:null;
+    return out(origin,200,{ok:true,tenant_id:ctx.tenant_id,businessName,kdsDesign},requestId,ctx);
+  }
+
   if(action==="login"){
     if(!secureSameOrigin(req,ctx))return out(origin,403,{ok:false,error:"csrf_rejected"},requestId,ctx);
     const email=String(body?.email||"").trim().toLowerCase().slice(0,254);
@@ -207,6 +223,26 @@ Deno.serve(async(req:Request)=>{
   if(sess.error||!sess.data?.ok){
     later(integration(sb,ctx,requestId,action||"unknown","rejected",401,started,{origin},null,"invalid_session"));
     return out(origin,401,{ok:false,error:"invalid_session"},requestId,ctx,{"Set-Cookie":clearCookie()});
+  }
+
+  if(action==="realtime"){
+    if(!secureSameOrigin(req,ctx))return out(origin,403,{ok:false,error:"csrf_rejected"},requestId,ctx);
+    const r=await sb.rpc("kds_realtime_ticket_tenant",{p_tenant_id:ctx.tenant_id,p_token:token});
+    if(r.error||!r.data?.ok||!String(r.data?.topic||"").startsWith("kds:")){
+      later(integration(sb,ctx,requestId,"realtime_ticket","failed",503,started,{},null,"realtime_unavailable"));
+      return out(origin,503,{ok:false,error:"realtime_unavailable"},requestId,ctx);
+    }
+    later(integration(sb,ctx,requestId,"realtime_ticket","success",200,started,{}));
+    return out(origin,200,{
+      ok:true,
+      tenant_id:ctx.tenant_id,
+      realtime:{
+        topic:String(r.data.topic),
+        event:String(r.data.event||"kds_change"),
+        safety_poll_seconds:45,
+        stale_after_seconds:75
+      }
+    },requestId,ctx);
   }
 
   if(action==="session"){

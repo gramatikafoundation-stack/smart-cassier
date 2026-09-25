@@ -5,9 +5,10 @@ const DEFAULT_RENDERER = 'https://yybhpmjuywjxqurrrrxl.supabase.co/functions/v1/
 const DEFAULT_BUSINESS_NAME = 'Business'; // compatibility fallback; strict prototype mode requires explicit value
 const RENDERER = process.env.ADMIN_RENDERER_URL || DEFAULT_RENDERER;
 const SUPABASE_ORIGIN = process.env.SUPABASE_ORIGIN || new URL(RENDERER).origin;
-const CASHIER_LOADER_URL = process.env.ADMIN_CASHIER_LOADER_URL || `${SUPABASE_ORIGIN}/functions/v1/rohmat-admin-cashier-loader-v1?v=36`;
 const BUSINESS_NAME = process.env.BUSINESS_NAME || DEFAULT_BUSINESS_NAME;
-const CASHIER_LOADER = `<script id="rohmat-admin-cashier-loader-v30" src="${CASHIER_LOADER_URL}" defer></script><!-- rohmat-admin-smart-cashier-subnav-v30 -->`;
+const CASHIER_LOADER = '<script id="rohmat-admin-cashier-canonical-v60" src="/admin/runtime/cashier.js" defer></script><!-- rohmat-admin-smart-cashier-subnav-v30 -->';
+const CORE_LOADER = '<script id="rohmat-admin-canonical-runtime-v60" src="/admin/runtime/core.js" defer></script>';
+const VISUAL_LOADER = '<script id="rohmat-admin-visual-editor-canonical-v60" src="/admin/runtime/visual-editor.js" defer></script>';
 const NAV_OLD = "admin:['Login','Dashboard','Pesanan','QRIS','Tim Admin','Keamanan']";
 const NAV_NEW = "admin:['Login','Dashboard','Pesanan','Smart Cashier','QRIS','Tim Admin','Keamanan']";
 const MEMORY_TTL_MS = 60_000;
@@ -44,7 +45,7 @@ function contentSecurityPolicy(body) {
   const hashes = inlineScriptHashes(body).join(' ');
   return [
     "default-src 'self'",
-    `script-src 'self' ${SUPABASE_ORIGIN} ${hashes}`,
+    `script-src 'self' ${hashes}`,
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: blob: ${SUPABASE_ORIGIN}`,
     `connect-src 'self' ${SUPABASE_ORIGIN}`,
@@ -59,14 +60,58 @@ function contentSecurityPolicy(body) {
 
 function ensureCashierIntegration(html) {
   let out = html.includes(NAV_NEW) ? html : html.replace(NAV_OLD, NAV_NEW);
-  out = out.replace(/<script id="rohmat-admin-cashier-loader-v\d+"[\s\S]*?<\/script><!-- rohmat-admin-smart-cashier-subnav-v\d+ -->/g, '');
-  if (!out.includes('rohmat-admin-smart-cashier-subnav-v30')) {
-    const at = out.lastIndexOf('</body>');
-    out = at >= 0 ? out.slice(0, at) + CASHIER_LOADER + out.slice(at) : out + CASHIER_LOADER;
+  out = out.replace(/<script\b[^>]*\bid=["']rohmat-admin-cashier-(?:loader|current)-v\d+["'][^>]*>[\s\S]*?<\/script>(?:<!-- rohmat-admin-smart-cashier-subnav-v\d+ -->)?/gi, '');
+  const at = out.lastIndexOf('</body>');
+  return at >= 0 ? out.slice(0, at) + CASHIER_LOADER + out.slice(at) : out + CASHIER_LOADER;
+}
+
+function escRe(value) {
+  return String(value).replace(/[.*+?^$\{\}()|[\]\\]/g, '\\$&');
+}
+function scriptRe(id) {
+  return new RegExp('<script\\b[^>]*\\bid=["\\\']' + escRe(id) + '["\\\'][^>]*>[\\s\\S]*?<\\/script>', 'i');
+}
+function styleRe(id) {
+  return new RegExp('<style\\b[^>]*\\bid=["\\\']' + escRe(id) + '["\\\'][^>]*>([\\s\\S]*?)<\\/style>', 'i');
+}
+function consolidateCss(html) {
+  let out = html;
+  const extras = [];
+  for (const id of ['admin-design-system-v41', 'admin-theme14-v50', 'admin-final-layout-v50']) {
+    out = out.replace(styleRe(id), (_m, css) => {
+      if (String(css || '').trim()) extras.push('/* ' + id + ' consolidated-v60 */\n' + css);
+      return '';
+    });
+  }
+  if (!extras.length) return out;
+  const foundation = /(<style\b[^>]*\bid=["']admin-foundation-css-v1["'][^>]*>)([\s\S]*?)(<\/style>)/i;
+  return out.replace(foundation, (_m, open, css, close) => open + css + '\n' + extras.join('\n') + close);
+}
+
+export function canonicalizeAdminShell(html) {
+  let out = ensureCashierIntegration(String(html || ''));
+  out = out.split('Warung Nasi').join(BUSINESS_NAME);
+  out = consolidateCss(out);
+
+  const v41 = scriptRe('admin-design-system-runtime-v41');
+  if (v41.test(out)) out = out.replace(v41, CORE_LOADER);
+  else if (!out.includes('rohmat-admin-canonical-runtime-v60')) out = out.replace('</head>', CORE_LOADER + '</head>');
+
+  for (const id of [
+    'rohmat-admin-style-runtime-loader-v59',
+    'admin-theme14-runtime-v50',
+    'admin-fast-navigation-v50',
+    'admin-final-links-v50'
+  ]) out = out.replace(scriptRe(id), '');
+
+  const visual = /<script\b[^>]*\bid=["']rohmat-visual-editor-loader-v\d+["'][^>]*>[\s\S]*?<\/script>/i;
+  out = visual.test(out) ? out.replace(visual, VISUAL_LOADER) : out.replace('</head>', VISUAL_LOADER + '</head>');
+
+  if (!/<meta\s+name=["']robots["']/i.test(out)) {
+    out = out.replace(/<head>/i, '<head><meta name="robots" content="noindex,nofollow,noarchive">');
   }
   return out;
 }
-
 function validateRendererPayload(upstreamOk, payload, html) {
   if (!upstreamOk || payload?.ok !== true || typeof html !== 'string') return false;
   if (html.length < 60_000) return false;
@@ -95,7 +140,7 @@ async function refreshShell(renderer) {
     if (!validateRendererPayload(upstream.ok, payload, html)) {
       throw new Error('invalid_admin_renderer_response');
     }
-    const body = ensureCashierIntegration(html);
+    const body = canonicalizeAdminShell(html);
     if (!body.includes(NAV_NEW) || !body.includes('rohmat-admin-smart-cashier-subnav-v30')) {
       throw new Error('cashier_integration_missing');
     }
@@ -133,7 +178,7 @@ async function getShell(renderer) {
 export default async function handler(req, res) {
   const strict = process.env.MASTER_PROTOTYPE_STRICT === '1' || process.env.MASTER_CLONE_STRICT === '1';
   const tenantId = String(process.env.SDB_TENANT_ID || '').trim();
-  if (strict && (!tenantId || !process.env.ADMIN_RENDERER_URL || !process.env.ADMIN_CASHIER_LOADER_URL || !process.env.SUPABASE_ORIGIN || !process.env.BUSINESS_NAME)) {
+  if (strict && (!tenantId || !process.env.ADMIN_RENDERER_URL || !process.env.SUPABASE_ORIGIN || !process.env.BUSINESS_NAME)) {
     res.statusCode = 503;
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Cache-Control', 'no-store');
@@ -161,7 +206,9 @@ export default async function handler(req, res) {
     res.setHeader('X-Rohmat-Admin-Contract', shell.contract);
     res.setHeader('X-Rohmat-Admin-Integrity', shell.rendererIntegrity);
     res.setHeader('X-Rohmat-Admin-Origin-Cache', shell.cacheState);
-    res.setHeader('X-Rohmat-Admin-Cashier', 'canonical-subnav-v30');
+    res.setHeader('X-Rohmat-Admin-Cashier', 'canonical-same-origin-v60');
+    res.setHeader('X-Rohmat-Admin-Runtime', 'canonical-core-v60');
+    res.setHeader('X-Rohmat-Admin-Security', 'secure-api-v5-retained');
     res.setHeader('Content-Security-Policy', contentSecurityPolicy(shell.body));
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
@@ -176,6 +223,6 @@ export default async function handler(req, res) {
     res.setHeader('X-Rohmat-Admin', 'recovery-b2');
     if (req.method === 'HEAD') return res.end();
     const safeName = String(BUSINESS_NAME).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-    return res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Studio Pengelola ${safeName}</title><main style="font:16px system-ui;padding:32px;max-width:680px;margin:auto"><h1>Studio Pengelola ${safeName}</h1><p>Admin sedang memulihkan koneksi. Silakan muat ulang halaman.</p></main>`);
+    return res.end(`<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="viewport" content="width=device-width"><title>Studio Pengelola ${safeName}</title><main style="font:16px system-ui;padding:32px;max-width:680px;margin:auto"><h1>Studio Pengelola ${safeName}</h1><p>Admin sedang memulihkan koneksi. Silakan muat ulang halaman.</p></main>`);
   }
 }

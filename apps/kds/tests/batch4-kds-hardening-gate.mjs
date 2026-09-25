@@ -37,7 +37,8 @@ assert.match(app,/new WebSocket/);
 assert.match(app,/phx_join/);
 assert.match(app,/heartbeat/);
 assert.match(app,/kds_change/);
-assert.match(app,/sync-stale/);
+assert.match(app,/setSyncState\('stale'/);
+assert.match(css,/sync-stale/);
 assert.doesNotMatch(app,/POLL_ACTIVE_MS|POLL_CASHIER_MS|POLL_STOCK_MS/);
 assert.doesNotMatch(app,/onload=\(\)=>print\(\)/);
 

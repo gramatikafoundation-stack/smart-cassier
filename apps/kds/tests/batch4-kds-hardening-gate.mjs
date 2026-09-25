@@ -7,10 +7,13 @@ const login=read('../login.html');
 const app=read('../app.js');
 const tenant=read('../tenant-runtime.js');
 const css=read('../styles.css');
+const design=read('../design-runtime.js');
+const edge=read('../../../supabase/functions/rohmat-kds-api/index.ts');
 const vercel=JSON.parse(read('../../../vercel.json'));
 
 assert.doesNotThrow(()=>new Function(app));
 assert.doesNotThrow(()=>new Function(tenant));
+assert.doesNotThrow(()=>new Function(design));
 assert.match(index,/name="robots" content="noindex,nofollow,noarchive"/);
 assert.match(login,/name="robots" content="noindex,nofollow,noarchive"/);
 assert.match(index,/role="tablist"/);
@@ -27,6 +30,13 @@ for(const asset of ['styles.css','tenant-runtime.js','design-runtime.js','login.
 }
 assert.match(tenant,/fetch\('\/api\/kds\/config'/);
 assert.match(tenant,/action:'brand'/);
+assert.match(tenant,/__SDB_TENANT_CONFIG_REFRESH/);
+assert.match(tenant,/kdsDesign/);
+assert.match(design,/kdsDesign/);
+assert.doesNotMatch(design,/site_settings_kds_design_v1/);
+assert.doesNotMatch(design,/\/rest\/v1\//);
+assert.match(edge,/business_name,updated_at,typography,design_system/);
+assert.match(edge,/kdsDesign/);
 assert.doesNotMatch(tenant,/fetch\('\/api\/config'/);
 
 assert.match(app,/FALLBACK_POLL_MS=8000/);

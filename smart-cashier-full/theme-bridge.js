@@ -36,8 +36,29 @@ function sync(){var h=hs.value,b=bs.value;styleFonts(h,b);if(prev){prev.querySel
 if(!hs.dataset.scBound){hs.addEventListener('change',sync);bs.addEventListener('change',sync);hs.dataset.scBound=bs.dataset.scBound='1';}sync();}
 function enhanceCards(){var grid=document.querySelector('.theme-grid');if(!grid)return;var sec=grid.closest('section.panel');if(sec&&!sec.querySelector('.sc-ts-banner')){var b=document.createElement('div');b.className='sc-ts-banner';b.innerHTML='<span><b>Theme Studio:</b> klik tema untuk Preview → Evaluasi → Terapkan</span><b>20 tema • tidak langsung aktif</b>';grid.before(b);}grid.querySelectorAll('.theme-card').forEach(function(c){if(c.classList.contains('sc-ts-card'))return;c.classList.add('sc-ts-card');var n=cardName(c),d=THEMES[n];if(!d)return;var small=c.querySelector('small');if(small)small.textContent=c.classList.contains('selected')?'Aktif • klik untuk preview':'Preview & evaluasi';var m=document.createElement('div');m.className='sc-ts-meta';m.innerHTML='<span>'+d[0]+'</span><div class="sc-ts-foot"><div class="sc-ts-dots">'+d[1].map(function(x){return '<i style="background:'+x+'"></i>'}).join('')+'</div><b class="sc-ts-ready">'+(c.classList.contains('selected')?'AKTIF':'SIAP')+'</b></div>';c.appendChild(m);});}
 function enhance(){if(location.pathname==='/kasir/general'){enhanceCards();enhanceTypography();}}
+
+/* SC_GLOBAL_CHROME_CLEANUP_V1 */
+function cleanRedundantPageChrome(){
+  if(!location.pathname.startsWith('/kasir/'))return;
+  var topbar=document.querySelector('.topbar');
+  if(topbar){
+    Array.from(topbar.children).forEach(function(el){
+      if(!el.classList.contains('topbar-meta'))el.style.display='none';
+    });
+  }
+  document.querySelectorAll('.content > .stack-xl > .page-actions').forEach(function(row){
+    Array.from(row.children).forEach(function(child){
+      var hasControl=child.matches('button,a,input,select,textarea')||child.querySelector('button,a,input,select,textarea');
+      if(!hasControl)child.style.display='none';
+    });
+  });
+  document.querySelectorAll('.content > .stack-xl > .page-intro,.content > .stack-xl > .page-description,.content > .stack-xl > .page-summary').forEach(function(el){
+    el.style.display='none';
+  });
+}
+
 let __scEnhanceBusy=false;
-function safeEnhance(){if(__scEnhanceBusy)return;__scEnhanceBusy=true;try{enhance()}finally{__scEnhanceBusy=false}}
+function safeEnhance(){if(__scEnhanceBusy)return;__scEnhanceBusy=true;try{cleanRedundantPageChrome();enhance()}finally{__scEnhanceBusy=false}}
 window.addEventListener('popstate',function(){setTimeout(safeEnhance,30)});
 window.addEventListener('hashchange',function(){setTimeout(safeEnhance,30)});
 document.addEventListener('DOMContentLoaded',safeEnhance,{once:true});

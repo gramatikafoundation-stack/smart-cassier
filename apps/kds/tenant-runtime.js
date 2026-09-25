@@ -1,5 +1,5 @@
 (()=>{'use strict';
-const defaults={tenantId:'',businessName:'Business',locale:'id-ID',currency:'IDR',timezone:'Asia/Jakarta',supabaseUrl:'',publishableKey:''};
+const defaults={tenantId:'',businessName:'Business',locale:'id-ID',currency:'IDR',timezone:'Asia/Jakarta',supabaseUrl:'',publishableKey:'',kdsDesign:null};
 const current={...defaults};
 window.__SDB_TENANT_CONFIG=current;
 
@@ -26,13 +26,11 @@ async function readBrand(){
     const n=await r.json();
     const brand=String(n?.businessName||'').trim().slice(0,120);
     if(brand)current.businessName=brand;
+    if(n?.kdsDesign&&typeof n.kdsDesign==='object')current.kdsDesign=n.kdsDesign;
   }catch{}
 }
-window.__SDB_TENANT_CONFIG_READY=(async()=>{
-  await readConfig();
-  await readBrand();
-  apply();
-  return current;
-})();
+async function refreshAll(){await readConfig();await readBrand();apply();return current}
+window.__SDB_TENANT_CONFIG_REFRESH=refreshAll;
+window.__SDB_TENANT_CONFIG_READY=refreshAll();
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
 })();

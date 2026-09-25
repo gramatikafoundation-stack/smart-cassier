@@ -70,6 +70,54 @@
       "destination": "/api/kds-config"
     },
     {
+      "source": "/kds-assets/v4/styles.css",
+      "destination": "/apps/kds/styles.css"
+    },
+    {
+      "source": "/kds-assets/v4/cashier-gate.css",
+      "destination": "/apps/kds/cashier-gate.css"
+    },
+    {
+      "source": "/kds-assets/v4/menu-media.css",
+      "destination": "/apps/kds/menu-media.css"
+    },
+    {
+      "source": "/kds-assets/v4/tenant-runtime.js",
+      "destination": "/apps/kds/tenant-runtime.js"
+    },
+    {
+      "source": "/kds-assets/v4/quantity2.js",
+      "destination": "/apps/kds/quantity2.js"
+    },
+    {
+      "source": "/kds-assets/v4/fast-nav.js",
+      "destination": "/apps/kds/fast-nav.js"
+    },
+    {
+      "source": "/kds-assets/v4/design-runtime.js",
+      "destination": "/apps/kds/design-runtime.js"
+    },
+    {
+      "source": "/kds-assets/v4/app.js",
+      "destination": "/apps/kds/app.js"
+    },
+    {
+      "source": "/kds-assets/v4/menu-media.js",
+      "destination": "/apps/kds/menu-media.js"
+    },
+    {
+      "source": "/kds-assets/v4/cashier-required-receipt.js",
+      "destination": "/apps/kds/cashier-required-receipt.js"
+    },
+    {
+      "source": "/kds-assets/v4/print-hide.js",
+      "destination": "/apps/kds/print-hide.js"
+    },
+    {
+      "source": "/kds-assets/v4/login.js",
+      "destination": "/apps/kds/login.js"
+    },
+    {
       "source": "/styles.css",
       "destination": "/apps/kds/styles.css"
     },
@@ -236,6 +284,18 @@
         {
           "key": "X-Robots-Tag",
           "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; worker-src 'none'; upgrade-insecure-requests"
+        },
+        {
+          "key": "X-Rohmat-KDS-Hardening",
+          "value": "batch4-realtime-v1"
         }
       ]
     },
@@ -245,6 +305,18 @@
         {
           "key": "X-Robots-Tag",
           "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; worker-src 'none'; upgrade-insecure-requests"
+        },
+        {
+          "key": "X-Rohmat-KDS-Hardening",
+          "value": "batch4-realtime-v1"
         }
       ]
     },
@@ -254,6 +326,18 @@
         {
           "key": "X-Robots-Tag",
           "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; worker-src 'none'; upgrade-insecure-requests"
+        },
+        {
+          "key": "X-Rohmat-KDS-Hardening",
+          "value": "batch4-realtime-v1"
         }
       ]
     },
@@ -263,6 +347,52 @@
         {
           "key": "X-Robots-Tag",
           "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; worker-src 'none'; upgrade-insecure-requests"
+        },
+        {
+          "key": "X-Rohmat-KDS-Hardening",
+          "value": "batch4-realtime-v1"
+        }
+      ]
+    },
+    {
+      "source": "/kds-assets/v4/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
+    },
+    {
+      "source": "/api/kds",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0, must-revalidate"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "X-Rohmat-KDS-Region",
+          "value": "sin1"
         }
       ]
     }

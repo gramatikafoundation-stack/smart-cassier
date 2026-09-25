@@ -47,6 +47,7 @@ const fixture=[
 '<script id="admin-final-links-v50">window.__links=1</script>',
 '<script id="rohmat-visual-editor-loader-v50" src="https://example.supabase.co/functions/v1/rohmat-admin-visual-editor-v1"></script>',
 '</head><body><div>Warung Nasi</div>',
+'<script>const MEDIA="https://example.supabase.co/functions/v1/admin-media-upload";</script>',
 '<script id="rohmat-admin-cashier-current-v36" src="https://example.supabase.co/functions/v1/rohmat-admin-cashier-loader-v1"></script><!-- rohmat-admin-smart-cashier-subnav-v30 -->',
 '</body></html>'
 ].join('\n');

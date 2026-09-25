@@ -19,6 +19,15 @@ window.__SDB_TENANT_CONFIG_READY=(async()=>{
       const n=await r.json();
       for(const k of Object.keys(defaults))if(n?.[k]!=null&&String(n[k]).trim())current[k]=n[k];
     }
+    try{
+      const brand=await fetch('/api/kds',{
+        method:'POST',credentials:'same-origin',cache:'no-store',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'brand'})
+      });
+      const data=await brand.json().catch(()=>({}));
+      if(brand.ok&&data?.ok&&String(data.businessName||'').trim())current.businessName=String(data.businessName).trim();
+    }catch{}
   }catch{}
   apply();
   return current;

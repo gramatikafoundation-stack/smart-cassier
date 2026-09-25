@@ -1,0 +1,24 @@
+name: Batch 3 Admin Canonicalization QA
+on:
+  push:
+    branches: [batch3-admin-canonicalization-20260925]
+permissions:
+  contents: read
+jobs:
+  admin-source-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Syntax and canonicalization regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module --check < apps/admin/api/render.js
+          node --input-type=module --check < apps/admin/api/runtime.js
+          node --input-type=module --check < api/admin-runtime.js
+          node apps/admin/tests/admin-canonicalization-gate.mjs
+          echo "BATCH3_ADMIN_SOURCE_PASS=1"

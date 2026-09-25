@@ -1,51 +1,35 @@
-# Production Manifest
+# Production Manifest — Unified SMART CASSIER
 
-## Canonical production projects
+## Current canonical production
 
-| Component | Project / Ref | Production URL / Contract |
-|---|---|---|
-| Public | Vercel `prj_3JC9wVT3viMvinKvdG6hBucDhEGY` | `https://rohmat-pesan-bayar-publik.vercel.app` |
-| Admin | Vercel `prj_CIEgIyyKRSrYahxDLkiK6m78wZ9Y` | `https://studio-pengelola-rohmat.vercel.app` |
-| KDS | Vercel `prj_vv1eioBBQdyto7a0QdRz3v2F3oFW` | `https://rohmat-kds-printer.vercel.app` |
-| Supabase | `yybhpmjuywjxqurrrrxl` | region `ap-southeast-1` |
+| Component | Authority |
+| --- | --- |
+| Git repository | `gramatikafoundation-stack/smart-cassier` |
+| Canonical branch | `main` |
+| Vercel project | `smart-cassier` — `prj_5xph62xWBNqRRR3MZ3bgA0qZU9NK` |
+| Canonical origin | `https://smart-cassier.vercel.app` |
+| Vercel region | `sin1` |
+| Supabase | `smart-cassier-platform` — `xrepmvbccalzhlcznrff` |
+| Supabase region | `ap-southeast-1` |
+| Reference tenant | `warung-nasi` — `d8bb901c-7399-485b-8743-b319fde148ac` |
 
-## Current freeze-preparation baseline
+## Pre-Batch-5 validated baseline
 
-- Git repository: `gramatikafoundation-stack/Rohmat-Master` (Private)
-- Working integration branch: `freeze-prep`
-- Public canonical deployment source: `apps/public/api/render.js` + `apps/public/vercel.json`
-- Admin canonical deployment source: `apps/admin/api/render.js` + `apps/admin/vercel.json`
-- KDS canonical production source: `apps/kds/*` on `freeze-prep`
-- Public renderer production: `rohmat-public-production-v21` v7 (LKG-primary)
-- Public runtime production: `rohmat-public-element-runtime-v64` v18 + Smart OCR v6 in LKG
-- KDS BFF backend production: `rohmat-kds-api` v6, contract `kds-api-v6`, device-bound HttpOnly session design
-- KDS BFF bound-login migration tracked at `supabase/migrations/20260913_kds_bff_bound_login_v1.sql`
-- KDS BFF source tracked at `supabase/functions/rohmat-kds-api/index.ts`
-- Public settings contract: `site_settings_public_v2` cache table with RLS
-- Public point-in-time acceptance: two independent 100-request batches, 200/200 HTTP 200 total, 0 timeout, 0 HTTP 5xx
-- KDS candidate GitHub Actions source/security gate: PASS
-- KDS production security verification refreshed on 2026-09-13 after Git/Vercel cutover.
+- Git SHA: `fd87551ca1142c3cd07db98d52d5647f6b1b5390`
+- Vercel production deployment: `dpl_zRmAC9YFQRdh4xCmq9wS1rcDJiDs`
+- Deployment source ref: `batch4-kds-hardening-realtime-20260925`
+- Batch 4 KDS source gate: PASS
+- `main` and baseline SHA: identical
+- Supabase project state: ACTIVE_HEALTHY
+- KDS API: `rohmat-kds-api` v5, JWT verification enabled
 
-## Original four freeze blockers — current status
+Batch 5 replaces this baseline only after its exact merged `main` SHA is deployed and the canonical production freeze gates pass.
 
-1. **Source/Git consolidation** — KDS CUTOVER PASS; broader Public/Admin reproducibility work remains part of the final freeze program.
-2. **KDS HttpOnly BFF frontend** — **PRODUCTION PASS.** Canonical KDS uses same-origin `/api/kds`; privileged KDS tokens are not stored in browser storage. The backend `rohmat-kds-api` issues device-bound `__Host-rohmat_kds` cookies with `HttpOnly; Secure; SameSite=Strict; Path=/`.
-3. **KDS hardcoded identity** — **PRODUCTION PASS.** Canonical production `/login` has an empty email field and no prefilled operator identity.
-4. **Native Vercel security headers** — **KDS PRODUCTION PASS.** Canonical KDS responses were verified to include CSP with `frame-ancestors 'none'`, HSTS, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, and `Permissions-Policy`. Public/Admin source configuration exists; their broader production native-header cutover remains a separate final-freeze gate.
+## Rollback
 
-## KDS production evidence
+- Immediate predecessor source tested: `a6568a085a0cf157d37b852a763a491b28f1b5ce`.
+- Predecessor Admin/KDS gates and tenant rehearsal were runnable in an isolated detached worktree.
+- Previous Vercel deployments remain retained; production aliases are not changed during drills.
+- Rollback must restore a known-good source/deployment and then re-run cross-surface and data-contract checks.
 
-- Production branch: `freeze-prep`
-- Production project: `prj_vv1eioBBQdyto7a0QdRz3v2F3oFW`
-- Canonical URL: `https://rohmat-kds-printer.vercel.app`
-- Production `/login`: HTTP 200; identity field not prefilled.
-- Production `/api/kds`: same-origin server route present; non-POST request returns HTTP 405 with `Allow: POST`.
-- Browser runtime: `login.js` and `app.js` use `/api/kds` with same-origin credentials and do not expose a privileged KDS session token to JavaScript storage.
-- Native security headers verified on canonical KDS response after production cutover.
-
-## Remaining freeze gates
-
-1. Public/Admin Git-preview and reproducible production-source linkage.
-2. Public/Admin native Vercel security-header cutover and response verification.
-3. Complete Git/CI coverage and canonical source inventory for remaining critical runtime assets.
-4. Public clean certification window, clone rehearsals, DR gate, and final Stage 15 audit must pass before `rohmat-master-clone-v1.0` is tagged.
+Historical manifests referring to split Vercel projects or Supabase `yybhpmjuywjxqurrrrxl` are archival evidence only.

@@ -1,7 +1,7 @@
 // master-prototype-final-preview-marker: 2026-09-20
 // navigation-runtime-coherence-20260918
 import { createHash } from 'node:crypto';
-const DEFAULT_RENDERER = 'https://yybhpmjuywjxqurrrrxl.supabase.co/functions/v1/rohmat-admin-render?mode=optimized'; // compatibility fallback
+const DEFAULT_RENDERER = 'https://xrepmvbccalzhlcznrff.supabase.co/functions/v1/rohmat-admin-render?mode=optimized'; // compatibility fallback
 const DEFAULT_BUSINESS_NAME = 'Business'; // compatibility fallback; strict prototype mode requires explicit value
 const RENDERER = process.env.ADMIN_RENDERER_URL || DEFAULT_RENDERER;
 const SUPABASE_ORIGIN = process.env.SUPABASE_ORIGIN || new URL(RENDERER).origin;
@@ -26,6 +26,29 @@ const REQUIRED_MARKERS = [
 
 let memoryCache = null;
 let inflight = null;
+
+async function resolveCanonicalBusinessName(tenantId, signal) {
+  const fallback = String(BUSINESS_NAME || DEFAULT_BUSINESS_NAME).trim() || DEFAULT_BUSINESS_NAME;
+  const key = String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
+  if (!tenantId || !key) return fallback;
+  try {
+    const url = new URL('/rest/v1/tenant_site_settings_public_v1', SUPABASE_ORIGIN);
+    url.searchParams.set('select', 'business_name');
+    url.searchParams.set('tenant_id', 'eq.' + tenantId);
+    url.searchParams.set('limit', '1');
+    const response = await fetch(url, {
+      method: 'GET',
+      cache: 'no-store',
+      signal,
+      headers: { apikey: key, Authorization: 'Bearer ' + key, Accept: 'application/json' }
+    });
+    if (!response.ok) return fallback;
+    const rows = await response.json();
+    return String(rows?.[0]?.business_name || fallback).trim().slice(0, 120) || fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 function inlineScriptHashes(html) {
   const hashes = [];
@@ -88,9 +111,10 @@ function consolidateCss(html) {
   return out.replace(foundation, (_m, open, css, close) => open + css + '\n' + extras.join('\n') + close);
 }
 
-export function canonicalizeAdminShell(html) {
+export function canonicalizeAdminShell(html, businessName = BUSINESS_NAME) {
   let out = ensureCashierIntegration(String(html || ''));
-  out = out.split('Warung Nasi').join(BUSINESS_NAME);
+  const canonicalBusinessName = String(businessName || BUSINESS_NAME || DEFAULT_BUSINESS_NAME).trim() || DEFAULT_BUSINESS_NAME;
+  out = out.split('Warung Nasi').join(canonicalBusinessName);
   out = out.split(SUPABASE_ORIGIN + '/functions/v1/admin-media-upload').join('/admin/api/media-upload');
   out = out.replace(/MEDIA=U\+'\/functions\/v1\/admin-media-upload'/g, "MEDIA='/admin/api/media-upload'");
   out = out.split('https://smart-cassier.vercel.app/login').join('/kds/login');
@@ -127,23 +151,27 @@ async function refreshShell(renderer) {
   const timer = setTimeout(() => controller.abort(), 8_000);
   try {
     const tenantId = String(process.env.SDB_TENANT_ID || '').trim();
-    const upstream = await fetch(renderer, {
-      method: 'GET',
-      cache: 'no-store',
-      signal: controller.signal,
-      headers: {
-        Accept: 'application/json',
-        'x-sdb-tenant-id': tenantId,
-        apikey: String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || ''),
-        Authorization: 'Bearer ' + String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '')
-      }
-    });
+    const key = String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '');
+    const [upstream, canonicalBusinessName] = await Promise.all([
+      fetch(renderer, {
+        method: 'GET',
+        cache: 'no-store',
+        signal: controller.signal,
+        headers: {
+          Accept: 'application/json',
+          'x-sdb-tenant-id': tenantId,
+          apikey: key,
+          Authorization: 'Bearer ' + key
+        }
+      }),
+      resolveCanonicalBusinessName(tenantId, controller.signal)
+    ]);
     const payload = await upstream.json();
     const html = String(payload?.html || '');
     if (!validateRendererPayload(upstream.ok, payload, html)) {
       throw new Error('invalid_admin_renderer_response');
     }
-    const body = canonicalizeAdminShell(html);
+    const body = canonicalizeAdminShell(html, canonicalBusinessName);
     if (!body.includes(NAV_NEW) || !body.includes('rohmat-admin-smart-cashier-subnav-v30')) {
       throw new Error('cashier_integration_missing');
     }

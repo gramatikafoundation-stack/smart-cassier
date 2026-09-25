@@ -9,7 +9,10 @@
     "dev": "vercel dev",
     "build": "echo 'Unified build complete'",
     "start": "vercel dev",
-    "test": "node prototype/validate-config.mjs"
+    "test": "node prototype/validate-config.mjs && node tests/batch5-source-freeze-gate.mjs",
+    "test:batch5:source": "node tests/batch5-source-freeze-gate.mjs",
+    "test:batch5:http": "node tests/batch5-http-cache-asset-gate.mjs",
+    "test:batch5:browser": "node tests/batch5-cross-surface-browser-gate.mjs"
   },
   "keywords": [
     "rohmat",

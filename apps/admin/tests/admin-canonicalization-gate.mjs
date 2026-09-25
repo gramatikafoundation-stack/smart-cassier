@@ -12,6 +12,9 @@ const runtimeSrc=fs.readFileSync(new URL('../api/runtime.js',import.meta.url),'u
 const edgeSrc=fs.readFileSync(new URL('../api/edge.js',import.meta.url),'utf8');
 const vercel=JSON.parse(fs.readFileSync(new URL('../../../vercel.json',import.meta.url),'utf8'));
 assert.match(renderSrc,/secure-api-v5-retained/);
+assert.match(renderSrc,/resolveCanonicalBusinessName/);
+assert.match(renderSrc,/tenant_site_settings_public_v1/);
+assert.match(renderSrc,/xrepmvbccalzhlcznrff/);
 assert.match(renderSrc,/script-src 'self'/);
 assert.doesNotMatch(renderSrc,/script-src 'self' \$\{SUPABASE_ORIGIN\}/);
 assert.match(runtimeSrc,/canonical runtime v60/);
@@ -53,7 +56,7 @@ const fixture=[
 '</body></html>'
 ].join('\n');
 
-const out=renderMod.canonicalizeAdminShell(fixture);
+const out=renderMod.canonicalizeAdminShell(fixture,'Rohmat Nasi Uduk');
 assert.match(out,/Rohmat Nasi Uduk/);
 assert.doesNotMatch(out,/Warung Nasi/);
 assert.match(out,/name="robots" content="noindex,nofollow,noarchive"/);

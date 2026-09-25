@@ -2,18 +2,18 @@ import http from 'node:http';
 import { chromium } from 'playwright';
 
 process.env.MASTER_PROTOTYPE_STRICT ||= '1';
-process.env.SDB_TENANT_ID ||= 'ad126431-b148-471d-ba62-a7b3a5d0a8c1';
-process.env.SUPABASE_URL ||= 'https://yybhpmjuywjxqurrrrxl.supabase.co';
-process.env.PUBLIC_LKG_PATH ||= '/storage/v1/object/public/rohmat-static/public-lkg-v1.html';
-process.env.BUSINESS_NAME ||= 'Master Prototype Test Merchant';
-process.env.PUBLIC_ORIGIN ||= 'https://master-prototype-test.invalid';
+process.env.SDB_TENANT_ID ||= 'd8bb901c-7399-485b-8743-b319fde148ac';
+process.env.SUPABASE_URL ||= 'https://xrepmvbccalzhlcznrff.supabase.co';
+process.env.PUBLIC_LKG_PATH ||= '/storage/v1/object/public/merchant-static/public-lkg-v1.html';
+process.env.BUSINESS_NAME ||= 'Rohmat Nasi Uduk';
+process.env.PUBLIC_ORIGIN ||= 'https://smart-cassier.vercel.app';
 process.env.TENANT_LOCALE ||= 'id-ID';
 const { default: handler } = await import('../api/render-seo-brand.js');
 const { default: ocrWorkerHandler } = await import('../api/ocr-worker.js');
 const { default: runtimeLifecycleHandler } = await import('../lib/runtime-lifecycle.js');
 
 const PORT=4177,ORIGIN=`http://127.0.0.1:${PORT}`;
-const RUM='https://yybhpmjuywjxqurrrrxl.supabase.co/functions/v1/rohmat-public-element-runtime-v64';
+const RUM='https://xrepmvbccalzhlcznrff.supabase.co/functions/v1/rohmat-public-element-runtime-v64';
 const fail=m=>{throw new Error(m)},sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 function server(){return http.createServer((req,res)=>{const path=(req.url||'').split('?')[0];const fn=path==='/ocr-worker.js'?ocrWorkerHandler:path==='/runtime-lifecycle.js'?runtimeLifecycleHandler:handler;Promise.resolve(fn(req,res)).catch(e=>{console.error('LOCAL_HANDLER_ERROR',e);if(!res.headersSent)res.statusCode=500;if(!res.writableEnded)res.end('handler error')})})}
@@ -49,7 +49,7 @@ async function upload(page,buf,label){
 }
 
 async function main(){
-  const srv=server();await new Promise((ok,no)=>{srv.once('error',no);srv.listen(PORT,'127.0.0.1',ok)});const browser=await chromium.launch({headless:true});
+  const srv=server();await new Promise((ok,no)=>{srv.once('error',no);srv.listen(PORT,'127.0.0.1',ok)});const browser=await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE_PATH?{headless:true,executablePath:process.env.PLAYWRIGHT_EXECUTABLE_PATH}:{headless:true});
   try{const ctx=await browser.newContext({viewport:{width:1280,height:900},locale:'id-ID'}),page=await ctx.newPage(),errors=[],workerResponses=[];
     page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push('console:'+m.text())});
     page.on('response',r=>{if(r.url().includes('/ocr-worker.js'))workerResponses.push({status:r.status(),contentType:r.headers()['content-type'],csp:r.headers()['content-security-policy'],worker:r.headers()['x-rohmat-ocr-worker']})});

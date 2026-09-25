@@ -31,7 +31,7 @@ const OCR_RESET_NEW = "resetOcrWorker();if(timeout){scriptPromise=null;document.
 const OCR_FINALLY_OLD = "finally{clearTimeout(softTimer);clearTimeout(fallbackTimer);busy=false;if(proof){proof.disabled=false;proof.removeAttribute('aria-busy')}}";
 const OCR_FINALLY_NEW = "finally{clearTimeout(softTimer);clearTimeout(fallbackTimer);try{document.dispatchEvent(new CustomEvent('rohmat:ocr-metric',{detail:{duration:Math.max(0,performance.now()-ocrMetricStart),status:ocrMetricStatus}}))}catch{}busy=false;if(proof){proof.disabled=false;proof.removeAttribute('aria-busy')}keepOcrWorkerWarm(90000);const next=ocrQueuedFile;ocrQueuedFile=null;if(next)setTimeout(()=>run(next),0)}";
 const OCR_HOOK_OLD = "document.addEventListener('rohmat:dom-updated',()=>requestAnimationFrame(patch));document.addEventListener('click',e=>{if(e.target.closest('#pay'))setTimeout(patch,0)},{capture:true});patch();";
-const OCR_HOOK_NEW = "document.addEventListener('rohmat:dom-updated',()=>requestAnimationFrame(patch));document.addEventListener('click',e=>{if(e.target.closest('#confirm'))queueOcrWarm(false);if(e.target.closest('#pay')){queueOcrWarm(true);setTimeout(patch,0)}if(e.target.closest('#backm'))keepOcrWorkerWarm(15000)},{capture:true});window.addEventListener('pagehide',()=>{ocrRunSeq++;resetOcrWorker()},{once:true});patch();";
+const OCR_HOOK_NEW = "document.addEventListener('rohmat:dom-updated',()=>requestAnimationFrame(patch));document.addEventListener('click',e=>{if(e.target.closest('#next'))queueOcrWarm(false);if(e.target.closest('#confirm'))queueOcrWarm(true);if(e.target.closest('#pay')){queueOcrWarm(true);setTimeout(patch,0)}if(e.target.closest('#backm'))keepOcrWorkerWarm(15000)},{capture:true});window.addEventListener('pagehide',()=>{ocrRunSeq++;resetOcrWorker()},{once:true});patch();";
 const PAYMENT_TIMERS = "function schedulePayment(){setTimeout(payment,0);setTimeout(payment,120);setTimeout(payment,380);setTimeout(payment,980);setTimeout(payment,1500)}";
 const PAYMENT_RAF = "let paymentQueued=false;function schedulePayment(){if(paymentQueued)return;paymentQueued=true;requestAnimationFrame(()=>{paymentQueued=false;payment()})}";
 const PAYMENT_DOM_TIMER = "document.addEventListener('rohmat:dom-updated',()=>{setTimeout(payment,20);const s=read();";
@@ -45,6 +45,10 @@ const NEXT_ROUTE_OLD = "go('menu')}}function cards(){";
 const NEXT_ROUTE_NEW = "afterInteraction(()=>go('menu'))}}function cards(){";
 const PAY_ROUTE_OLD = "checkoutSnapshot=confirmed.map(i=>Object.assign({},i));save();d.close();go('checkout')};d.classList.add('user-open');";
 const PAY_ROUTE_NEW = "checkoutSnapshot=confirmed.map(i=>Object.assign({},i));save();afterInteraction(()=>{d.close();go('checkout')})};d.classList.add('user-open');";
+const CONFIRM_ROUTE_START_OLD = "if(cf)cf.onclick=()=>{let d=document.getElementById('dlg');";
+const CONFIRM_ROUTE_START_NEW = "if(cf)cf.onclick=()=>afterInteraction(()=>{let d=document.getElementById('dlg');";
+const CONFIRM_ROUTE_END_OLD = "d.classList.add('user-open');d.showModal()}}function checkout(){";
+const CONFIRM_ROUTE_END_NEW = "d.classList.add('user-open');d.showModal()})}function checkout(){";
 const BACK_ROUTE_OLD = "document.getElementById('backm').onclick=()=>{checkoutSnapshot=null;go('menu')};";
 const BACK_ROUTE_NEW = "document.getElementById('backm').onclick=()=>{checkoutSnapshot=null;afterInteraction(()=>go('menu'))};";
 const OCR_PRECONNECT = '<link id="rohmat-ocr-cdn-preconnect-v1" rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link id="rohmat-ocr-lang-preconnect-v1" rel="preconnect" href="https://tessdata.projectnaptha.com" crossorigin>';
@@ -82,6 +86,8 @@ function optimizeInp(html) {
   out = replaceOnce(out, UI_YIELD_HELPER_OLD, UI_YIELD_HELPER_NEW, 'interaction-yield-helper', flags);
   out = replaceOnce(out, NEXT_ROUTE_OLD, NEXT_ROUTE_NEW, 'next-route-after-paint', flags);
   out = replaceOnce(out, PAY_ROUTE_OLD, PAY_ROUTE_NEW, 'pay-route-after-paint', flags);
+  out = replaceOnce(out, CONFIRM_ROUTE_START_OLD, CONFIRM_ROUTE_START_NEW, 'confirm-route-after-paint-start', flags);
+  out = replaceOnce(out, CONFIRM_ROUTE_END_OLD, CONFIRM_ROUTE_END_NEW, 'confirm-route-after-paint-end', flags);
   out = replaceOnce(out, BACK_ROUTE_OLD, BACK_ROUTE_NEW, 'back-route-after-paint', flags);
   if (!out.includes('rohmat-ocr-cdn-preconnect-v1')) {
     out = out.replace('</head>', `${OCR_PRECONNECT}</head>`);

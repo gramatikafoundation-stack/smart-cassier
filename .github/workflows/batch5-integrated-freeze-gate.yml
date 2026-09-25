@@ -1,0 +1,131 @@
+name: Batch 5 Integrated Freeze Gate
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - batch5-integrated-freeze-20260925
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '24'
+  VERCEL_ORG_ID: team_ZpgMfDYGskDACkOuneXhRdPG
+  VERCEL_PROJECT_ID: prj_5xph62xWBNqRRR3MZ3bgA0qZU9NK
+
+jobs:
+  source-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Integrated source and tenant gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm test
+          node prototype/validate-config.mjs prototype/rehearsal-a.json
+          node prototype/validate-config.mjs prototype/rehearsal-b.json
+          node prototype/rehearse.mjs prototype/rehearsal-a.json prototype/rehearsal-b.json
+          node apps/admin/tests/admin-canonicalization-gate.mjs
+          node apps/kds/tests/batch4-kds-hardening-gate.mjs
+          node --input-type=module --check < apps/admin/api/render.js
+          node --input-type=module --check < apps/admin/api/runtime.js
+          node --input-type=module --check < apps/admin/api/edge.js
+          node --input-type=module --check < apps/public/api/render-inp.js
+          echo "BATCH5_SOURCE_CONTRACT_CI_PASS=1"
+
+  browser-stress:
+    needs: source-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install pinned browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock --ignore-scripts playwright@1.63.0
+          npx playwright install --with-deps chromium
+          printf '{"type":"module"}\n' > apps/public/package.json
+      - name: Public runtime, stress, lifecycle, performance, OCR and RUM
+        shell: bash
+        run: |
+          set -euo pipefail
+          node apps/public/tests/runtime-architecture-gate.mjs
+          node apps/public/tests/runtime-memory-stress-gate.mjs
+          node apps/public/tests/lifecycle-browser-gate.mjs
+          node apps/public/tests/lifecycle-checkout-gate.mjs
+          node apps/public/tests/public-media-visual-gate.mjs
+          node apps/public/tests/performance-browser-gate.mjs
+          node apps/public/tests/ocr-runtime-gate.cjs
+          node apps/public/tests/ocr-browser-gate.mjs
+          node apps/public/tests/rum-v3-gate.mjs
+          echo "BATCH5_BROWSER_STRESS_CI_PASS=1"
+
+  production-http-baseline:
+    needs: source-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Current production cache and asset baseline
+        run: node tests/batch5-http-cache-asset-gate.mjs
+
+  deploy-and-freeze-main:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs:
+      - source-contract
+      - browser-stress
+      - production-http-baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Require deployment credential
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${VERCEL_TOKEN:-}" || { echo "VERCEL_TOKEN missing"; exit 1; }
+      - name: Deploy exact main source to production
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .vercel
+          printf '{"orgId":"%s","projectId":"%s"}\n' "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" > .vercel/project.json
+          npx --yes vercel@60.0.0 deploy --prod --yes --token "$VERCEL_TOKEN" --scope gramatikafoundation-3204
+      - name: Install pinned browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock --ignore-scripts playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: Final canonical production freeze validation
+        shell: bash
+        env:
+          BATCH5_BASE_URL: https://smart-cassier.vercel.app
+          BATCH5_BUSINESS_NAME: Rohmat Nasi Uduk
+        run: |
+          set -euo pipefail
+          node tests/batch5-cross-surface-browser-gate.mjs
+          node tests/batch5-http-cache-asset-gate.mjs
+          echo "BATCH5_PRODUCTION_FREEZE_GATE_PASS=1"

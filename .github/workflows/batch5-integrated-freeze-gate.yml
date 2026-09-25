@@ -1,0 +1,44 @@
+name: Batch 5 Integrated Freeze Gate
+
+on:
+  push:
+    branches:
+      - batch5-integrated-qa-freeze-20260925
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: batch5-integrated-freeze-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integrated-freeze-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Source gates
+        run: |
+          node prototype/validate-config.mjs
+          node apps/admin/tests/admin-canonicalization-gate.mjs
+          node apps/kds/tests/batch4-kds-hardening-gate.mjs
+          node apps/public/tests/ocr-runtime-gate.cjs
+
+      - name: Install browser test runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Integrated production gate
+        env:
+          BASE_URL: https://smart-cassier.vercel.app
+        run: node tests/batch5-integrated-production-gate.mjs

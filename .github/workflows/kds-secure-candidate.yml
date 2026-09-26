@@ -20,7 +20,7 @@ jobs:
         run: |
           node --check apps/kds/app.js
           node --check apps/kds/login.js
-          node --check apps/kds/api/kds.js
+          node --input-type=module --check < apps/kds/api/kds.js
       - name: Security source gates
         run: |
           ! grep -R "gramatikafoundation@gmail.com" apps/kds

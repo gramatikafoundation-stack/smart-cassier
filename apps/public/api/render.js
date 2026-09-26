@@ -28,7 +28,7 @@ const MENU_IMG_LAZY = `<img src="'+esc(pic(m))+'" alt="'+esc(m.name)+'" loading=
 const DIALOG_TIMER_OLD = `let intentionalOpen=false;\nfunction hardenMenu(){\n  const dlg=document.getElementById('dlg');\n  if(dlg&&!dlg.classList.contains('user-open')&&dlg.hasAttribute('open')){try{dlg.close()}catch{dlg.removeAttribute('open')}}\n  const confirm=document.getElementById('confirm');\n  if(confirm&&!confirm.dataset.safeBound){confirm.dataset.safeBound='1';confirm.addEventListener('click',()=>{intentionalOpen=true;setTimeout(()=>{intentionalOpen=false},1200)},{capture:true})}\n}`;
 const DIALOG_TIMER_NEW = `function hardenMenu(){\n  const dlg=document.getElementById('dlg');\n  if(dlg&&!dlg.classList.contains('user-open')&&dlg.hasAttribute('open')){try{dlg.close()}catch{dlg.removeAttribute('open')}}\n}`;
 const DEAD_PROOF_GATE = 'let pending=false,criticalBad=false,amountDiff=0;';
-const FUTURE_PUBLIC_UI_PATCH = String.raw`<style id="smart-order-public-foodcode-v1">
+export const FUTURE_PUBLIC_UI_PATCH = String.raw`<style id="smart-order-public-foodcode-v1">
 :root{
  --so-bg:#f5f7f6;--so-surface:#fff;--so-soft:#eef3f1;--so-dark:#091317;--so-dark2:#10201d;
  --so-ink:#14231e;--so-muted:#70807a;--so-line:#dfe7e3;--so-teal:#00bfae;--so-mint:#31d6a6;

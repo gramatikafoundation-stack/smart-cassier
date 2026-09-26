@@ -5,7 +5,7 @@ on:
   push:
     branches: [release/master-clone-v1-freeze-20260919]
   pull_request:
-    branches: [freeze-prep]
+    branches: [main, freeze-prep]
 
 jobs:
   validate:

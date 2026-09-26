@@ -9,7 +9,7 @@ const fail=m=>{throw new Error(m)};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const match=TS.match(/const RUM_V3=String\.raw`([\s\S]*?)`;\r?\n\r?\nfunction stripProof/);
 if(!match)fail('rum_v3_block_missing');
-const rumScript=match[1];
+const rumScript=match[1].replaceAll('__SDB_RUM_ENDPOINT__',ENDPOINT);
 for(const marker of ['rum-v3-20260918-b2','RUNTIME=\'v57\'','LONGTASK','OCRMS','OCRFAIL','performance-observer-v1','ocr-runtime-v1','rowStage','rowViewport','v3-stage-aware'])if(!TS.includes(marker))fail('source_marker_missing:'+marker);
 for(const metric of ['LONGTASK','OCRMS','OCRFAIL'])if(!MIG.includes("'"+metric+"'"))fail('migration_metric_missing:'+metric);
 

@@ -10,6 +10,6 @@ create table if not exists supabase_migrations.schema_migrations (
   statements text[],
   name text,
   created_by text,
-  idempotency_key text,
+  idempotency_key text unique,
   rollback text[]
 );

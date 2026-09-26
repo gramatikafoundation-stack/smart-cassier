@@ -113,6 +113,10 @@ export async function resolvePublicTenantConfig(req, env = process.env) {
     }
     const resolved = await response.json().catch(() => null);
     if (!response.ok || !resolved?.ok || !resolved?.tenant_id || !resolved?.business_name) {
+      const preview = String(env.VERCEL_ENV || '').trim() === 'preview';
+      if (preview && direct.ok && direct.tenantId) {
+        return { ...direct, requestOrigin:requestedOrigin, resolvedBy:'preview-environment-fallback' };
+      }
       return { ...direct, ok:false, missing:['TENANT_ORIGIN_MAPPING'] };
     }
     const canonicalOrigin = origin(resolved.public_origin) || requestedOrigin;

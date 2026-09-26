@@ -39,6 +39,7 @@ jobs:
           node apps/public/tests/ocr-browser-gate.mjs
           node apps/public/tests/ocr-runtime-gate.cjs
           node apps/public/tests/performance-browser-gate.mjs
+          node apps/public/tests/batch5-responsive-browser-gate.mjs
           node apps/public/tests/public-media-visual-gate.mjs
           node apps/public/tests/rum-v3-gate.mjs
           echo "BATCH5_SOURCE_BROWSER_GATES_PASS=1"

@@ -97,7 +97,7 @@ export async function resolvePublicTenantConfig(req, env = process.env) {
     const timer = setTimeout(() => controller.abort(), 1800);
     let response;
     try {
-      response = await fetch(supabaseUrl + '/rest/v1/rpc/master_prototype_resolve_origin', {
+      response = await fetch(supabaseUrl + '/functions/v1/master-prototype-resolve-origin-v1', {
         method:'POST',
         cache:'no-store',
         signal:controller.signal,
@@ -106,7 +106,7 @@ export async function resolvePublicTenantConfig(req, env = process.env) {
           Authorization:'Bearer ' + publishableKey,
           'Content-Type':'application/json'
         },
-        body:JSON.stringify({ p_origin:requestedOrigin, p_app_kind:'public' })
+        body:JSON.stringify({ origin:requestedOrigin, app_kind:'public' })
       });
     } finally {
       clearTimeout(timer);

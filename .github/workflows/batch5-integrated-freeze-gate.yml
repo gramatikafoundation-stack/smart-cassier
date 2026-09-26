@@ -146,5 +146,6 @@ jobs:
           test -f supabase/migrations/20260926082641_batch5_revoke_anon_origin_resolver.sql
           test -f supabase/migrations/20260926083435_batch5_restore_anon_origin_resolver_until_cutover.sql
           test -f supabase/migrations/20260926084339_batch5_sheet_worker_production_routing.sql
+          test -f supabase/migrations/20260926123347_batch5_finalize_origin_resolver_service_only.sql
           test ! -f supabase/migrations/20260926084000_batch5_restore_anon_origin_resolver_until_cutover.sql
           echo "BATCH5_MIGRATION_RECONCILIATION_PASS=1"

@@ -1,0 +1,92 @@
+name: Batch 5 Integrated Freeze Gate
+
+on:
+  push:
+    branches: [batch5-integrated-qa-security-freeze-20260926]
+  workflow_dispatch:
+
+jobs:
+  integrated-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: team_ZpgMfDYGskDACkOuneXhRdPG
+      VERCEL_PROJECT_ID: prj_5xph62xWBNqRRR3MZ3bgA0qZU9NK
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install deterministic browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts playwright@1.63.0
+          npx playwright install --with-deps chromium
+          printf '{"type":"module"}\n' > apps/public/package.json
+      - name: Source and browser gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          node prototype/validate-config.mjs
+          node apps/admin/tests/admin-canonicalization-gate.mjs
+          node apps/kds/tests/batch4-kds-hardening-gate.mjs
+          node apps/public/tests/runtime-architecture-gate.mjs
+          node apps/public/tests/runtime-memory-stress-gate.mjs
+          node apps/public/tests/lifecycle-browser-gate.mjs
+          node apps/public/tests/lifecycle-checkout-gate.mjs
+          node apps/public/tests/ocr-browser-gate.mjs
+          node apps/public/tests/ocr-runtime-gate.cjs
+          node apps/public/tests/performance-browser-gate.mjs
+          node apps/public/tests/public-media-visual-gate.mjs
+          node apps/public/tests/rum-v3-gate.mjs
+          echo "BATCH5_SOURCE_BROWSER_GATES_PASS=1"
+      - name: Security and tenant isolation contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q "master-prototype-resolve-origin-v1" apps/public/lib/tenant-config.js
+          ! grep -q "/rest/v1/rpc/master_prototype_resolve_origin" apps/public/lib/tenant-config.js
+          grep -q "revoke execute on function public.master_prototype_resolve_origin" supabase/migrations/20260926083500_batch5_revoke_anon_origin_resolver.sql
+          ! grep -R "SUPABASE_SERVICE_ROLE_KEY" apps
+          ! grep -R "service_role" apps
+          grep -q "MASTER_PROTOTYPE_STRICT" apps/public/lib/tenant-config.js
+          grep -q "SDB_TENANT_ID" apps/public/lib/tenant-config.js
+          grep -q "SDB_TENANT_ID" apps/admin/api/render.js
+          grep -q "SDB_TENANT_ID" apps/kds/api/kds.js
+          echo "BATCH5_SECURITY_TENANT_CONTRACT_PASS=1"
+      - name: Deploy isolated preview
+        if: env.VERCEL_TOKEN != ''
+        id: deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --global vercel@latest
+          URL="$(vercel deploy --yes --token "$VERCEL_TOKEN" --scope gramatikafoundation-3204)"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "BATCH5_PREVIEW_URL=$URL"
+      - name: Cross-surface preview smoke and cache headers
+        if: steps.deploy.outputs.url != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="${{ steps.deploy.outputs.url }}"
+          for p in / /admin /kds /kds/login /robots.txt /sitemap.xml /manifest.webmanifest /kds-assets/v4/app.js; do
+            out="/tmp/b5-$(echo "$p" | tr '/.' '__').txt"
+            vercel curl "$p" --deployment "$URL" --token "$VERCEL_TOKEN" --scope gramatikafoundation-3204 -- --silent --show-error --fail --location --dump-header "$out.h" --output "$out"
+            test -s "$out"
+          done
+          grep -qi "strict-transport-security" /tmp/b5-_.txt.h
+          grep -qi "x-robots-tag:.*noindex" /tmp/b5-_admin.txt.h
+          grep -qi "x-robots-tag:.*noindex" /tmp/b5-_kds.txt.h
+          grep -qi "cache-control:.*immutable" /tmp/b5-_kds-assets_v4_app_js.txt.h
+          echo "BATCH5_CROSS_SURFACE_PREVIEW_PASS=1"
+      - name: Migration source reconciliation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f supabase/migrations/20260926070025_batch5_explicit_deny_rls_policies.sql
+          test -f supabase/migrations/20260926071510_batch5_add_missing_kds_dismissed_at.sql
+          test -f supabase/migrations/20260926083500_batch5_revoke_anon_origin_resolver.sql
+          echo "BATCH5_MIGRATION_RECONCILIATION_PASS=1"

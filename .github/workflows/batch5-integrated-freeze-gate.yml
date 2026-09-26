@@ -33,6 +33,7 @@ jobs:
           node apps/admin/tests/admin-canonicalization-gate.mjs
           node apps/kds/tests/batch4-kds-hardening-gate.mjs
           node apps/public/tests/runtime-architecture-gate.mjs
+          node apps/public/tests/batch5-preview-tenant-fallback-gate.mjs
           node apps/public/tests/runtime-memory-stress-gate.mjs
           node apps/public/tests/lifecycle-browser-gate.mjs
           node apps/public/tests/lifecycle-checkout-gate.mjs
@@ -57,14 +58,56 @@ jobs:
           grep -q "SDB_TENANT_ID" apps/admin/api/render.js
           grep -q "SDB_TENANT_ID" apps/kds/api/kds.js
           echo "BATCH5_SECURITY_TENANT_CONTRACT_PASS=1"
-      - name: Deploy isolated preview
+      - name: Deploy isolated preview with validated runtime allowlist
         if: env.VERCEL_TOKEN != ''
         id: deploy
         shell: bash
         run: |
           set -euo pipefail
           npm install --global vercel@latest
-          URL="$(vercel deploy --yes --token "$VERCEL_TOKEN" --scope gramatikafoundation-3204)"
+          trap 'rm -f /tmp/b5-prod.env /tmp/b5-env-pull.log' EXIT
+
+          # Pull the known-good production environment only into this ephemeral runner.
+          # Do not print values and do not persist them into repository or preview project settings.
+          vercel env pull /tmp/b5-prod.env             --environment=production             --yes             --token "$VERCEL_TOKEN"             --scope gramatikafoundation-3204             >/tmp/b5-env-pull.log
+          set -a
+          source /tmp/b5-prod.env
+          set +a
+
+          PUBLISHABLE_KEY="${SUPABASE_PUBLISHABLE_KEY:-${SUPABASE_ANON_KEY:-}}"
+          SUPABASE_ORIGIN_VALUE="${SUPABASE_ORIGIN:-${SUPABASE_URL:-}}"
+          ADMIN_RENDERER_VALUE="${ADMIN_RENDERER_URL:-${SUPABASE_URL:-}/functions/v1/rohmat-admin-render}"
+          KDS_BFF_VALUE="${KDS_BFF_URL:-${SUPABASE_URL:-}/functions/v1/rohmat-kds-api}"
+
+          required=(
+            SDB_TENANT_ID PUBLIC_ORIGIN BUSINESS_NAME TENANT_LOCALE
+            TENANT_CURRENCY TENANT_TIMEZONE SUPABASE_URL PUBLIC_LKG_PATH
+          )
+          for key in "${required[@]}"; do
+            test -n "${!key:-}" || { echo "Missing required production runtime key: $key"; exit 1; }
+          done
+          test -n "$PUBLISHABLE_KEY" || { echo "Missing publishable Supabase key"; exit 1; }
+          test -n "$SUPABASE_ORIGIN_VALUE" || { echo "Missing Supabase origin"; exit 1; }
+          test -n "$ADMIN_RENDERER_VALUE" || { echo "Missing Admin renderer URL"; exit 1; }
+          test -n "$KDS_BFF_VALUE" || { echo "Missing KDS BFF URL"; exit 1; }
+
+          runtime_env=(
+            --env "MASTER_PROTOTYPE_STRICT=1"
+            --env "SDB_TENANT_ID=$SDB_TENANT_ID"
+            --env "PUBLIC_ORIGIN=$PUBLIC_ORIGIN"
+            --env "BUSINESS_NAME=$BUSINESS_NAME"
+            --env "TENANT_LOCALE=$TENANT_LOCALE"
+            --env "TENANT_CURRENCY=$TENANT_CURRENCY"
+            --env "TENANT_TIMEZONE=$TENANT_TIMEZONE"
+            --env "SUPABASE_URL=$SUPABASE_URL"
+            --env "SUPABASE_ORIGIN=$SUPABASE_ORIGIN_VALUE"
+            --env "SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
+            --env "PUBLIC_LKG_PATH=$PUBLIC_LKG_PATH"
+            --env "ADMIN_RENDERER_URL=$ADMIN_RENDERER_VALUE"
+            --env "KDS_BFF_URL=$KDS_BFF_VALUE"
+          )
+
+          URL="$(vercel deploy --yes --regions sin1             --token "$VERCEL_TOKEN"             --scope gramatikafoundation-3204             "${runtime_env[@]}")"
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           echo "BATCH5_PREVIEW_URL=$URL"
       - name: Cross-surface preview smoke and cache headers
@@ -82,6 +125,15 @@ jobs:
           grep -qi "x-robots-tag:.*noindex" /tmp/b5-_admin.txt.h
           grep -qi "x-robots-tag:.*noindex" /tmp/b5-_kds.txt.h
           grep -qi "cache-control:.*immutable" /tmp/b5-_kds-assets_v4_app_js.txt.h
+
+          # Verify a true cold->warm CDN transition on a unique preview cache key.
+          CACHE_KEY="batch5-${GITHUB_SHA}"
+          vercel curl "/?qa_cache=$CACHE_KEY" --deployment "$URL" --token "$VERCEL_TOKEN" --scope gramatikafoundation-3204 -- --silent --show-error --fail --dump-header /tmp/b5-cold.h --output /tmp/b5-cold.txt
+          sleep 2
+          vercel curl "/?qa_cache=$CACHE_KEY" --deployment "$URL" --token "$VERCEL_TOKEN" --scope gramatikafoundation-3204 -- --silent --show-error --fail --dump-header /tmp/b5-warm.h --output /tmp/b5-warm.txt
+          grep -qi "x-vercel-cache:.*MISS" /tmp/b5-cold.h
+          grep -qi "x-vercel-cache:.*HIT" /tmp/b5-warm.h
+          echo "BATCH5_COLD_WARM_CACHE_PASS=1"
           echo "BATCH5_CROSS_SURFACE_PREVIEW_PASS=1"
       - name: Migration source reconciliation
         shell: bash

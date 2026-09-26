@@ -1,6 +1,7 @@
 import baseHandler from '../lib/render-lifecycle.js';
 import runtimeHandler from '../lib/runtime-lifecycle.js';
 import { resolvePublicTenantConfig, failTenantConfig, escapeHtml } from '../lib/tenant-config.js';
+import { FUTURE_PUBLIC_UI_PATCH } from './render.js';
 
 const MARKER = 'rohmat-seo-brand-v2';
 
@@ -30,9 +31,13 @@ function normalizeExistingMetadata(html, cfg) {
 
 function injectSeoBrand(input, cfg) {
   let html = normalizeExistingMetadata(input, cfg);
-  if (html.includes(MARKER)) return html;
-
   const nonce = html.match(/<script\s+nonce="([^"]+)"/)?.[1] || html.match(/<style\s+nonce="([^"]+)"/)?.[1] || '';
+  if (!html.includes('smart-order-public-foodcode-v1')) {
+    const uiPatch = FUTURE_PUBLIC_UI_PATCH.replace('<style ', '<style' + (nonce ? ' nonce="' + nonce + '"' : '') + ' ');
+    const headAt = html.lastIndexOf('</head>');
+    html = headAt >= 0 ? html.slice(0, headAt) + uiPatch + html.slice(headAt) : uiPatch + html;
+  }
+  if (html.includes(MARKER)) return html;
   const graph = {
     '@context': 'https://schema.org',
     '@graph': [

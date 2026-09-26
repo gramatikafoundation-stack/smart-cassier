@@ -50,7 +50,7 @@ jobs:
           set -euo pipefail
           grep -q "master-prototype-resolve-origin-v1" apps/public/lib/tenant-config.js
           ! grep -q "/rest/v1/rpc/master_prototype_resolve_origin" apps/public/lib/tenant-config.js
-          grep -q "revoke execute on function public.master_prototype_resolve_origin" supabase/migrations/20260926083500_batch5_revoke_anon_origin_resolver.sql
+          grep -q "revoke execute on function public.master_prototype_resolve_origin" supabase/migrations/20260926082641_batch5_revoke_anon_origin_resolver.sql
           ! grep -R "SUPABASE_SERVICE_ROLE_KEY" apps
           ! grep -R "service_role" apps
           grep -q "MASTER_PROTOTYPE_STRICT" apps/public/lib/tenant-config.js
@@ -141,6 +141,8 @@ jobs:
           set -euo pipefail
           test -f supabase/migrations/20260926070025_batch5_explicit_deny_rls_policies.sql
           test -f supabase/migrations/20260926071510_batch5_add_missing_kds_dismissed_at.sql
-          test -f supabase/migrations/20260926083500_batch5_revoke_anon_origin_resolver.sql
-          test -f supabase/migrations/20260926084000_batch5_restore_anon_origin_resolver_until_cutover.sql
+          test -f supabase/migrations/20260926082641_batch5_revoke_anon_origin_resolver.sql
+          test -f supabase/migrations/20260926083435_batch5_restore_anon_origin_resolver_until_cutover.sql
+          test -f supabase/migrations/20260926084339_batch5_sheet_worker_production_routing.sql
+          test ! -f supabase/migrations/20260926084000_batch5_restore_anon_origin_resolver_until_cutover.sql
           echo "BATCH5_MIGRATION_RECONCILIATION_PASS=1"

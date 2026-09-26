@@ -89,4 +89,5 @@ jobs:
           test -f supabase/migrations/20260926070025_batch5_explicit_deny_rls_policies.sql
           test -f supabase/migrations/20260926071510_batch5_add_missing_kds_dismissed_at.sql
           test -f supabase/migrations/20260926083500_batch5_revoke_anon_origin_resolver.sql
+          test -f supabase/migrations/20260926084000_batch5_restore_anon_origin_resolver_until_cutover.sql
           echo "BATCH5_MIGRATION_RECONCILIATION_PASS=1"

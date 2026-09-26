@@ -87,6 +87,9 @@ export async function resolvePublicTenantConfig(req, env = process.env) {
   const supabaseUrl = origin(env.SUPABASE_URL);
   const publishableKey = clean(env.SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_ANON_KEY, '', 500);
   const requestedOrigin = requestOrigin(req);
+  if (direct.ok && direct.tenantId && direct.origin && direct.origin === requestedOrigin) {
+    return { ...direct, resolvedBy:'environment-canonical' };
+  }
   if (!supabaseUrl || !publishableKey || !requestedOrigin) {
     if (direct.ok && direct.tenantId) return direct;
     return { ...direct, ok:false, missing:[...new Set([...(direct.missing||[]), !publishableKey?'SUPABASE_PUBLISHABLE_KEY':'', !requestedOrigin?'REQUEST_ORIGIN':''].filter(Boolean))] };

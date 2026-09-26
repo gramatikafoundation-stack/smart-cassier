@@ -28,6 +28,102 @@ const MENU_IMG_LAZY = `<img src="'+esc(pic(m))+'" alt="'+esc(m.name)+'" loading=
 const DIALOG_TIMER_OLD = `let intentionalOpen=false;\nfunction hardenMenu(){\n  const dlg=document.getElementById('dlg');\n  if(dlg&&!dlg.classList.contains('user-open')&&dlg.hasAttribute('open')){try{dlg.close()}catch{dlg.removeAttribute('open')}}\n  const confirm=document.getElementById('confirm');\n  if(confirm&&!confirm.dataset.safeBound){confirm.dataset.safeBound='1';confirm.addEventListener('click',()=>{intentionalOpen=true;setTimeout(()=>{intentionalOpen=false},1200)},{capture:true})}\n}`;
 const DIALOG_TIMER_NEW = `function hardenMenu(){\n  const dlg=document.getElementById('dlg');\n  if(dlg&&!dlg.classList.contains('user-open')&&dlg.hasAttribute('open')){try{dlg.close()}catch{dlg.removeAttribute('open')}}\n}`;
 const DEAD_PROOF_GATE = 'let pending=false,criticalBad=false,amountDiff=0;';
+const FUTURE_PUBLIC_UI_PATCH = String.raw`<style id="smart-order-public-foodcode-v1">
+:root{
+ --so-bg:#f5f7f6;--so-surface:#fff;--so-soft:#eef3f1;--so-dark:#091317;--so-dark2:#10201d;
+ --so-ink:#14231e;--so-muted:#70807a;--so-line:#dfe7e3;--so-teal:#00bfae;--so-mint:#31d6a6;
+ --so-warm:#c87942;--so-ok:#23976e;--so-shadow:0 18px 48px rgba(9,19,23,.08);--so-shadow-sm:0 8px 24px rgba(9,19,23,.055)
+}
+html{background:var(--so-bg)!important}
+body{
+ background:radial-gradient(circle at 86% -10%,rgba(0,191,174,.08),transparent 31rem),linear-gradient(180deg,#fafcfb 0%,var(--so-bg) 100%)!important;
+ color:var(--so-ink)!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important;letter-spacing:-.005em
+}
+button,input,select,textarea{font-family:inherit!important}
+button{transition:transform .16s ease,box-shadow .16s ease,background-color .16s ease,border-color .16s ease}
+button:not(:disabled):hover{transform:translateY(-1px)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid rgba(0,191,174,.2)!important;outline-offset:2px!important}
+.w{width:min(1180px,calc(100% - 32px))!important}
+.hero{min-height:100svh!important;padding:28px!important;background:transparent!important}
+.welcome{
+ width:min(1180px,100%)!important;grid-template-columns:minmax(0,1.08fr) minmax(420px,.92fr)!important;
+ border:1px solid rgba(16,32,29,.08)!important;border-radius:30px!important;overflow:hidden!important;background:var(--so-surface)!important;
+ box-shadow:0 32px 80px rgba(9,19,23,.11)!important
+}
+.photo{min-height:600px!important;background:var(--so-dark)!important;position:relative!important;isolation:isolate}
+.photo:after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,transparent 45%,rgba(9,19,23,.2) 100%)}
+.photo img{filter:saturate(.94) contrast(1.02)!important}
+.copy{padding:clamp(34px,5vw,62px)!important;justify-content:center!important;gap:5px!important;background:#fff!important}
+.brand{
+ font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important;color:var(--so-dark)!important;
+ font-size:clamp(42px,5.3vw,68px)!important;line-height:.98!important;letter-spacing:-.055em!important;font-weight:800!important;margin:0 0 16px!important
+}
+.ey{color:var(--so-warm)!important;font-size:.7rem!important;letter-spacing:.18em!important;font-weight:900!important}
+.muted{color:var(--so-muted)!important}
+.opts{gap:10px!important;margin:22px 0 14px!important}
+.opt{border:1px solid var(--so-line)!important;border-radius:15px!important;padding:14px 15px!important;background:#fff!important}
+.opt:hover{border-color:#c8d5cf!important;box-shadow:var(--so-shadow-sm)!important}
+.opt.on{border-color:rgba(0,191,174,.5)!important;background:#effaf7!important;box-shadow:inset 3px 0 var(--so-teal)!important}
+.field{gap:7px!important;margin:13px 0!important}
+.field label{font-size:.82rem!important;color:#40524b!important;font-weight:780!important}
+.field input,.field textarea,.field select{border:1px solid var(--so-line)!important;border-radius:12px!important;background:#fff!important;color:var(--so-ink)!important;min-height:46px!important;padding:11px 13px!important}
+.btn{border-radius:12px!important;min-height:44px!important;padding:11px 15px!important;font-weight:820!important}
+.pri{background:var(--so-dark2)!important;color:#fff!important;box-shadow:0 8px 18px rgba(9,19,23,.14)!important}
+.accent{background:var(--so-teal)!important;color:#052823!important;box-shadow:0 8px 18px rgba(0,191,174,.16)!important}
+.soft{background:#f2f5f3!important;color:var(--so-dark2)!important;border:1px solid var(--so-line)!important}
+.head{background:rgba(255,255,255,.91)!important;backdrop-filter:blur(18px) saturate(150%)!important;border-bottom:1px solid rgba(16,32,29,.08)!important;position:sticky!important;top:0!important;z-index:28!important}
+.headin{min-height:76px!important;gap:14px!important}
+.headin .brand{font-size:clamp(22px,3vw,31px)!important;letter-spacing:-.04em!important;margin:0!important}
+.badge{background:var(--so-dark2)!important;color:#fff!important;border:1px solid var(--so-dark2)!important;padding:8px 12px!important;border-radius:999px!important;font-size:.78rem!important}
+.cats{top:76px!important;background:rgba(245,247,246,.91)!important;backdrop-filter:blur(16px)!important;border-bottom:1px solid rgba(16,32,29,.07)!important}
+.catin{gap:8px!important;padding:11px 0!important}
+.cat{background:rgba(255,255,255,.94)!important;border:1px solid var(--so-line)!important;color:#42534d!important;padding:9px 15px!important;border-radius:999px!important;font-weight:760!important}
+.cat.on{background:var(--so-dark2)!important;border-color:var(--so-dark2)!important;color:#fff!important;box-shadow:0 6px 16px rgba(9,19,23,.10)!important}
+.grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:18px!important;padding:26px 0 130px!important}
+.grid .card{
+ background:var(--so-surface)!important;border:1px solid rgba(16,32,29,.085)!important;border-radius:20px!important;
+ box-shadow:var(--so-shadow-sm)!important;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease!important
+}
+.grid .card:hover{transform:translateY(-3px)!important;box-shadow:var(--so-shadow)!important;border-color:rgba(0,191,174,.22)!important}
+.grid .food,.grid .food img{border-radius:15px!important;background:#e7ece9!important}
+.grid .body{padding:14px 10px 9px!important}
+.grid .body h3{font-size:1.02rem!important;letter-spacing:-.015em!important;color:var(--so-dark)!important}
+.price{color:var(--so-warm)!important;font-weight:900!important}
+.grid .foot{gap:10px!important}
+.grid .foot .btn{min-height:38px!important;border-radius:10px!important}
+.grid .qty{border:1px solid var(--so-line)!important;background:#f6f8f7!important;border-radius:10px!important}
+.grid .qty button{background:#eef4f1!important;color:var(--so-dark2)!important}
+.cart{background:transparent!important;padding:0 14px 14px!important;pointer-events:none!important}
+.cartgo{
+ pointer-events:auto!important;width:min(760px,100%)!important;background:rgba(9,19,23,.97)!important;color:#fff!important;
+ border:1px solid rgba(255,255,255,.10)!important;border-radius:17px!important;padding:14px 18px!important;
+ box-shadow:0 20px 48px rgba(9,19,23,.28)!important;backdrop-filter:blur(18px)!important
+}
+.modal::backdrop{background:rgba(3,10,12,.72)!important;backdrop-filter:blur(7px)!important}
+.box{background:#fff!important;border:1px solid rgba(255,255,255,.2)!important;border-radius:22px!important;padding:22px!important;box-shadow:0 30px 90px rgba(0,0,0,.28)!important}
+.line{border-color:var(--so-line)!important}
+.checkout{padding:28px 0 58px!important}
+.steps{gap:8px!important}.step{background:#e8eeeb!important;color:#77837e!important;border-radius:12px!important}
+.step.on{background:#e6faf4!important;color:#087b6f!important;font-weight:900!important}.step.done{background:var(--so-dark2)!important;color:#fff!important}
+.panel{background:#fff!important;border:1px solid rgba(16,32,29,.08)!important;border-radius:20px!important;padding:22px!important;box-shadow:var(--so-shadow-sm)!important}
+.panel h2{color:var(--so-dark)!important;letter-spacing:-.035em!important}
+.identity{background:#f4f7f5!important;border-color:var(--so-line)!important;border-radius:14px!important}
+.totalbig{border-color:var(--so-line)!important}
+.payroom{background:linear-gradient(145deg,#0a171a 0%,#102c27 100%)!important;color:#fff!important;border-color:#163e36!important;box-shadow:0 24px 56px rgba(9,19,23,.18)!important}
+.qrisbox{border-radius:16px!important;background:#fff!important;color:var(--so-dark)!important}
+.num{background:var(--so-teal)!important;color:#062521!important}
+.confirm,.proof{background:rgba(255,255,255,.075)!important;border:1px solid rgba(255,255,255,.08)!important}
+.status{background:#e9f7f1!important;color:#155a47!important;border:1px solid #cdeade!important}
+.success .code{color:var(--so-dark)!important;letter-spacing:-.04em!important}
+@media(max-width:900px){.welcome{grid-template-columns:1fr!important}.photo{min-height:360px!important}.copy{padding:30px!important}.grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:560px){
+ .hero{padding:12px!important}.welcome{border-radius:22px!important}.photo{min-height:240px!important}.copy{padding:24px 20px 26px!important}
+ .brand{font-size:clamp(36px,12vw,50px)!important}.w{width:min(100% - 20px,1180px)!important}.headin{min-height:68px!important}.cats{top:68px!important}
+ .grid{grid-template-columns:1fr!important;gap:14px!important;padding-top:18px!important}.grid .card{border-radius:17px!important}
+ .grid .food,.grid .food img{border-radius:12px!important}.cart{padding:0 10px 10px!important}.cartgo{border-radius:14px!important}.panel{padding:18px!important;border-radius:18px!important}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style><!-- smart-order-public-foodcode-v1 -->`;
 
 const PUBLIC_UX_PATCH = String.raw`<style id="rohmat-menu-single-media-v6-style">
 .grid{align-items:stretch!important;gap:16px!important}
@@ -69,9 +165,14 @@ function optimizeHtml(html) {
 }
 
 function injectPublicPatch(html) {
-  if (html.includes('rohmat-menu-single-media-v6')) return html;
-  const at = html.lastIndexOf('</body>');
-  return at >= 0 ? html.slice(0, at) + PUBLIC_UX_PATCH + html.slice(at) : html + PUBLIC_UX_PATCH;
+  let out = html;
+  const add = (source, patch) => {
+    const at = source.lastIndexOf('</body>');
+    return at >= 0 ? source.slice(0, at) + patch + source.slice(at) : source + patch;
+  };
+  if (!out.includes('rohmat-menu-single-media-v6')) out = add(out, PUBLIC_UX_PATCH);
+  if (!out.includes('smart-order-public-foodcode-v1')) out = add(out, FUTURE_PUBLIC_UI_PATCH);
+  return out;
 }
 
 function secureHtml(html, nonce) {

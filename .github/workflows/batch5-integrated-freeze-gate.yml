@@ -64,6 +64,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Browser QA creates an untracked ESM marker for tests only. Never ship it.
+          rm -f apps/public/package.json
           npm install --global vercel@latest
           trap 'rm -f /tmp/b5-prod.env /tmp/b5-env-pull.log' EXIT
 

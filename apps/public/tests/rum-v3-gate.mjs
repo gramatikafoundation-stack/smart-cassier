@@ -4,12 +4,12 @@ import { chromium } from 'playwright';
 const ROOT=new URL('../../../',import.meta.url).pathname.replace(/^\/(?:[A-Za-z]:)/,m=>m.slice(1));
 const TS=fs.readFileSync(ROOT+'supabase/functions/rohmat-public-element-runtime-v64/index.ts','utf8');
 const MIG=fs.readFileSync(ROOT+'supabase/migrations/20260917184346_extend_public_rum_performance_metrics_b2.sql','utf8');
-const ENDPOINT='https://yybhpmjuywjxqurrrrxl.supabase.co/functions/v1/rohmat-public-element-runtime-v64';
+const ENDPOINT='https://xrepmvbccalzhlcznrff.supabase.co/functions/v1/rohmat-public-element-runtime-v64?tenant=d8bb901c-7399-485b-8743-b319fde148ac';
 const fail=m=>{throw new Error(m)};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const match=TS.match(/const RUM_V3=String\.raw`([\s\S]*?)`;\r?\n\r?\nfunction stripProof/);
 if(!match)fail('rum_v3_block_missing');
-const rumScript=match[1];
+const rumScript=match[1].replaceAll('__SDB_RUM_ENDPOINT__',ENDPOINT);
 for(const marker of ['rum-v3-20260918-b2','RUNTIME=\'v57\'','LONGTASK','OCRMS','OCRFAIL','performance-observer-v1','ocr-runtime-v1','rowStage','rowViewport','v3-stage-aware'])if(!TS.includes(marker))fail('source_marker_missing:'+marker);
 for(const metric of ['LONGTASK','OCRMS','OCRFAIL'])if(!MIG.includes("'"+metric+"'"))fail('migration_metric_missing:'+metric);
 

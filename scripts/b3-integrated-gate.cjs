@@ -41,7 +41,8 @@ for(const marker of [
   "expected_components=32",
   "expected_version='v6'",
   "rollback_ref='edge-version:v5'",
-  "migration_head='20260927144325'",
+  "20260927144325",
+  "insert into private.release_baseline",
   "'b3_candidate_status','draft'",
   "github_actions_b3_final_gate_pass"
 ]) if(!finalSeal.includes(marker)) fail('final_seal_marker:'+marker);

@@ -347,7 +347,7 @@ function applyReferenceExactStructure(html) {
   let out = String(html || '');
   out = out.replace(
     "let data={settings:{},menu:[],orders:[],team:[],email:'',role:''},main='general',sub='Tema',",
-    "let data={settings:{},menu:[],orders:[],team:[],email:'',role:''},main='admin',sub='Smart Cashier',"
+    "let data={settings:{},menu:[],orders:[],team:[],email:'',role:''},main=(location.pathname==='/database'?'database':'admin'),sub=(location.pathname==='/database'?'Spreadsheet':'Smart Cashier'),"
   );
   out = out.replace(
     "const items=[['general','Dashboard'],['admin','Point of Sale'],['public','Menu Management'],['kds','Kitchen'],['database','Reports']];",

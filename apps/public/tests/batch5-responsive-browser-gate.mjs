@@ -6,7 +6,7 @@ process.env.SDB_TENANT_ID ||= 'd8bb901c-7399-485b-8743-b319fde148ac';
 process.env.SUPABASE_URL ||= 'https://xrepmvbccalzhlcznrff.supabase.co';
 process.env.PUBLIC_LKG_PATH ||= '/storage/v1/object/public/merchant-static/public-lkg-v1.html';
 process.env.BUSINESS_NAME ||= 'Rohmat Nasi Uduk';
-process.env.PUBLIC_ORIGIN ||= 'https://smart-cassier.vercel.app';
+process.env.PUBLIC_ORIGIN ||= 'https://smart-order-sdb.vercel.app';
 process.env.TENANT_LOCALE ||= 'id-ID';
 
 const { default: renderHandler } = await import('../api/render-seo-brand.js');

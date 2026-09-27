@@ -1,0 +1,35 @@
+{
+  "contract": "smart-order-canonical-identity-v1",
+  "status": "candidate",
+  "product": "SMART ORDER",
+  "canonical_origin": "https://smart-order-sdb.vercel.app",
+  "legacy_compatibility_origin": "https://smart-cassier.vercel.app",
+  "deployment_topology": "single_domain_four_surface",
+  "routes": {
+    "public": "/",
+    "admin": "/admin",
+    "kds": "/kds",
+    "database": "/database"
+  },
+  "vercel": {
+    "project_id": "prj_5xph62xWBNqRRR3MZ3bgA0qZU9NK",
+    "project_name": "smart-order-sdb"
+  },
+  "supabase": {
+    "project_ref": "xrepmvbccalzhlcznrff",
+    "tenancy_mode": "shared_database_rls"
+  },
+  "source": {
+    "repository": "gramatikafoundation-stack/smart-cassier",
+    "integration_branch": "batch5-integrated-qa-security-freeze-20260926"
+  },
+  "database_surface": {
+    "provider": "google_drive",
+    "authoritative_app_origin": false,
+    "route": "/database"
+  },
+  "legacy_master": {
+    "prototype_key": "rohmat-master-prototype-v1",
+    "disposition": "retain_read_only_until_final_promotion"
+  }
+}

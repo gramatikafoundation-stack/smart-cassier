@@ -1,0 +1,26 @@
+name: B3 Integrated QA Gate
+
+on:
+  pull_request:
+    paths:
+      - 'apps/**'
+      - 'api/**'
+      - 'supabase/**'
+      - 'scripts/b3-*'
+      - '.github/workflows/b3-integrated-qa-gate.yml'
+  workflow_dispatch:
+
+jobs:
+  source-network-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate B3 source contracts
+        run: node scripts/b3-integrated-gate.cjs
+      - name: Validate production four-surface network budgets
+        shell: bash
+        run: bash scripts/b3-network-gate.sh

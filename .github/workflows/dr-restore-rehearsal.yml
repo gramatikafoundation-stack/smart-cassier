@@ -279,6 +279,11 @@ jobs:
           OUT="$(psql "$DB_URL" -Atc "select private.finalize_master_promotion_v1('$TAG','$SHA')")"
           echo "$OUT"
           echo "$OUT" | grep -q '"ok": true' || echo "$OUT" | grep -q '"ok":true'
+          echo "new_master_status=$(psql "$DB_URL" -Atc "select status from private.platform_prototypes where prototype_key='smart-order-sdb-platform-v1'")"
+          echo "old_master_status=$(psql "$DB_URL" -Atc "select status from private.platform_prototypes where prototype_key='rohmat-master-prototype-v1'")"
+          echo "active_prototypes=$(psql "$DB_URL" -Atc "select count(*) from private.platform_prototypes where status='active'")"
+          echo "active_templates=$(psql "$DB_URL" -Atc "select count(*) from private.platform_clone_templates where status='active' and template_key='smart-order-sdb-master-v1'")"
+          echo "freeze_status=$(psql "$DB_URL" -Atc "select private.master_freeze_status_v1()")"
           test "$(psql "$DB_URL" -Atc "select status from private.platform_prototypes where prototype_key='smart-order-sdb-platform-v1'")" = 'active'
           test "$(psql "$DB_URL" -Atc "select status from private.platform_prototypes where prototype_key='rohmat-master-prototype-v1'")" = 'deprecated'
           test "$(psql "$DB_URL" -Atc "select count(*) from private.platform_prototypes where status='active'")" = '1'

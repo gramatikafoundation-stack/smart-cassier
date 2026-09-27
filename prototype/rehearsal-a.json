@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "tenant_id": "22222222-2222-4222-8222-222222222222",
   "tenant_slug": "tenant-a",
   "business_name": "Tenant A",
@@ -8,9 +8,13 @@
   "locale": "id-ID",
   "currency": "IDR",
   "timezone": "Asia/Jakarta",
-  "public_url": "https://tenant-a-public.example.com",
-  "admin_url": "https://tenant-a-admin.example.com",
-  "kds_url": "https://tenant-a-kds.example.com",
+  "canonical_origin": "https://tenant-a.example.com",
+  "surface_routes": {
+    "public": "/",
+    "admin": "/admin",
+    "kds": "/kds",
+    "database": "/database"
+  },
   "qris_asset": "tenant://tenant-a/qris.png",
   "table_count": 20,
   "require_table_qr_signature": true,
@@ -23,6 +27,7 @@
     "payment_bucket": "payment-proofs"
   },
   "sheets": {
+    "provider": "google_drive",
     "start_year": 2026,
     "years": 5,
     "expected_tabs": [

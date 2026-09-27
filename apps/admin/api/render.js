@@ -350,10 +350,6 @@ function applyReferenceExactStructure(html) {
     "let data={settings:{},menu:[],orders:[],team:[],email:'',role:''},main='admin',sub='Smart Cashier',"
   );
   out = out.replace(
-    "const items=[['general','GENERAL'],['public','SITUS PUBLIK'],['admin','SITUS ADMIN'],['kds','KDS'],['database','DATABASE']];",
-    "const items=[['general','Dashboard'],['admin','Point of Sale'],['public','Menu Management'],['kds','Kitchen'],['database','Reports']];"
-  );
-  out = out.replace(
     '<div class="logo"><div class="logoMark">R</div><div><b>Studio Rohmat</b><small>Design System</small></div></div>',
     '<div class="logo"><div class="logoMark">R</div><div><b>SMART ORDER</b><small>Rohmat Nasi Uduk</small></div></div>'
   );

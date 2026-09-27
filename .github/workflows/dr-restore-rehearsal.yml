@@ -236,7 +236,7 @@ jobs:
           test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and c.relkind='r' and c.relrowsecurity")" = '71'
           test "$(sql "select count(*) from pg_policies where schemaname in ('public','private')")" = '81'
           test "$(sql "select count(*) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and not t.tgisinternal")" = '44'
-          test "$(sql "select count(*) from pg_indexes where schemaname in ('public','private')")" = '158'
+          test "$(sql "select count(*) from pg_indexes where schemaname in ('public','private')")" = '159'
           test "$(sql "select to_regprocedure('public.master_runtime_security_health_v1(uuid)') is not null")" = 't'
           test "$(sql "select to_regprocedure('public.master_prototype_runtime_context(uuid,text,text)') is not null")" = 't'
           test "$(sql "select to_regclass('private.platform_prototypes') is not null")" = 't'

@@ -8,6 +8,11 @@ on:
       - 'supabase/functions/**'
       - '.github/workflows/dr-restore-rehearsal.yml'
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - 'scripts/b3-**'
+      - '.github/workflows/dr-restore-rehearsal.yml'
 
 jobs:
   isolated-restore:
@@ -81,21 +86,138 @@ jobs:
           done < <(find supabase/restore/post-export -maxdepth 1 -type f -name '*.sql' | sort)
           echo "Replayed $APPLIED sanitized production migrations, $INTERSTITIAL explicit untracked prerequisites, plus cleanup."
 
+      - name: Replay canonical post-export source tail
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_URL='postgresql://postgres:postgres@127.0.0.1:54322/postgres'
+          apply_sql(){
+            local f="$1"
+            echo "Applying canonical tail $f"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f" >/tmp/rohmat-dr-tail.log 2>&1 || { cat /tmp/rohmat-dr-tail.log; exit 1; }
+          }
+          ledger(){
+            local version="$1" name="$2"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -c "insert into supabase_migrations.schema_migrations(version,name,statements) values ('$version','$name',array[]::text[]) on conflict(version) do update set name=excluded.name" >/dev/null
+          }
+
+          # These migrations existed in the canonical source/runtime but were not part of
+          # the 2026-09-13 sanitized ledger export. Treat them as explicit interstitial
+          # source tail, preserving the sanitized migration ledger.
+          while IFS= read -r f; do
+            if [ "$(basename "$f")" = "20260918192858_smart_digital_indonesia_platform_foundation_v1.sql" ]; then
+              apply_sql "supabase/restore/tail-bridges/20260918192850_platform_identity_seed_bridge.sql"
+            fi
+            apply_sql "$f"
+          done < <(
+            find /tmp/rohmat-repo-migrations -maxdepth 1 -type f -name '*.sql' -printf '%f\t%p\n' |
+            awk -F '\t' '$1 ~ /^202609(14|15|17|18|19|20)/ {print $0}' |
+            sort -k1,1 | cut -f2-
+          )
+
+          # Batch 5 is tracked in the production ledger.
+          for spec in \
+            "20260926070025 batch5_explicit_deny_rls_policies" \
+            "20260926071510 batch5_add_missing_kds_dismissed_at" \
+            "20260926082641 batch5_revoke_anon_origin_resolver" \
+            "20260926083435 batch5_restore_anon_origin_resolver_until_cutover" \
+            "20260926084339 batch5_sheet_worker_production_routing" \
+            "20260926123347 batch5_finalize_origin_resolver_service_only"
+          do
+            version="${spec%% *}"; name="${spec#* }"
+            f="/tmp/rohmat-repo-migrations/${version}_${name}.sql"
+            test -f "$f"
+            apply_sql "$f"
+            ledger "$version" "$name"
+          done
+
+          # The Sep-18 Admin recovery migration intentionally reintroduced the legacy
+          # URL lock. Production later removed all three per-domain locks before B1.
+          # Reapply the explicit recovery bridge at the chronologically correct point.
+          apply_sql "supabase/restore/interstitial/20260927180000_b1_canonical_url_constraint_bridge.sql"
+
+          # B1 canonical-domain work is intentionally source-tail/interstitial in the
+          # production ledger; it must still be present in a recoverable schema.
+          for f in \
+            /tmp/rohmat-repo-migrations/20260927183000_smart_order_b1_canonical_identity_v1.sql \
+            /tmp/rohmat-repo-migrations/20260927191000_smart_order_b1_release_pin_v1.sql \
+            /tmp/rohmat-repo-migrations/20260927192000_smart_order_b1_final_pin_v1.sql \
+            /tmp/rohmat-repo-migrations/20260927193000_smart_order_b1_unified_origin_resolver_v1.sql
+          do
+            test -f "$f"
+            apply_sql "$f"
+          done
+
+          # Reconstruct the untracked B1 alias cleanup before B2 enforces one canonical alias.
+          apply_sql "supabase/restore/tail-bridges/20260927193500_single_canonical_alias_bridge.sql"
+
+          # Production had a KDS realtime contract before B2, but its creation was
+          # not represented in the canonical migration ledger. Reconstruct it explicitly.
+          apply_sql "supabase/restore/tail-bridges/20260927194000_kds_realtime_contract_bridge.sql"
+
+          # B2 source timestamps differ from their production migration ledger versions
+          # because they were applied through the migration API. Preserve the real ledger.
+          while IFS='|' read -r src version name; do
+            test -n "$src"
+            f="/tmp/rohmat-repo-migrations/$src"
+            test -f "$f"
+            apply_sql "$f"
+            ledger "$version" "$name"
+          done <<'EOF'
+          20260927194500_smart_order_b2_runtime_security_foundation_v1.sql|20260927122856|smart_order_b2_runtime_security_foundation_v1
+          20260927203000_smart_order_b2_final_security_cutover_v1.sql|20260927123415|smart_order_b2_final_security_cutover_v1
+          20260927204500_smart_order_b2_evidence_pin_v1.sql|20260927123915|smart_order_b2_evidence_pin_v1
+          20260927212000_smart_order_b3_integrated_observability_v1.sql|20260927135426|smart_order_b3_integrated_observability_v1
+          EOF
+
+          apply_sql "supabase/restore/tail-bridges/20260927204600_live_identity_reconcile_bridge.sql"
+          apply_sql "supabase/restore/tail-bridges/20260927204700_retired_rdc_recovery_cleanup.sql"
+
+          COUNT="$(node -p "JSON.parse(require('fs').readFileSync('supabase/restore/manifest.json','utf8')).count")"
+          LEDGER_COUNT="$(psql "$DB_URL" -Atc "select count(*) from supabase_migrations.schema_migrations")"
+          ACTUAL_HEAD="$(psql "$DB_URL" -Atc "select max(version) from supabase_migrations.schema_migrations")"
+          test "$LEDGER_COUNT" -eq "$((COUNT+10))"
+          test "$ACTUAL_HEAD" = '20260927135426'
+          echo "B3_DR_CANONICAL_TAIL_PASS=1"
+
       - name: Verify production structural contract
         shell: bash
         run: |
           set -euo pipefail
           DB_URL='postgresql://postgres:postgres@127.0.0.1:54322/postgres'
           sql(){ psql "$DB_URL" -Atc "$1"; }
-          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r'")" = '17'
-          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='private' and c.relkind='r'")" = '32'
+          echo "public_tables=$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r'")"
+          echo "private_tables=$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='private' and c.relkind='r'")"
+          echo "public_views=$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='v'")"
+          echo "public_functions=$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prokind='f' and n.nspname='public'")"
+          echo "private_functions=$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prokind='f' and n.nspname='private'")"
+          echo "rls_tables=$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and c.relkind='r' and c.relrowsecurity")"
+          echo "policies=$(sql "select count(*) from pg_policies where schemaname in ('public','private')")"
+          echo "triggers=$(sql "select count(*) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and not t.tgisinternal")"
+          echo "indexes=$(sql "select count(*) from pg_indexes where schemaname in ('public','private')")"
+          echo "runtime_health_fn=$(sql "select to_regprocedure('public.master_runtime_security_health_v1(uuid)') is not null")"
+          echo "runtime_context_fn=$(sql "select to_regprocedure('public.master_prototype_runtime_context(uuid,text,text)') is not null")"
+          echo "platform_prototypes=$(sql "select to_regclass('private.platform_prototypes') is not null")"
+          echo "tenant_runtime_config=$(sql "select to_regclass('private.tenant_runtime_config') is not null")"
+          echo "kds_realtime_ticket=$(sql "select to_regprocedure('public.kds_realtime_ticket_tenant(uuid,text)') is not null")"
+          echo "kds_realtime_broadcast=$(sql "select to_regprocedure('private.kds_realtime_broadcast()') is not null")"
+          echo "kds_realtime_rls=$(sql "select relrowsecurity from pg_class where oid='private.kds_realtime_channels'::regclass")"
+          echo "anon_internal_rpc_usage=$(sql "select has_schema_privilege('anon','internal_rpc','USAGE')")"
+          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r'")" = '19'
+          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='private' and c.relkind='r'")" = '49'
           test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='v'")" = '2'
-          test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public'")" = '59'
-          test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='private'")" = '60'
-          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and c.relkind='r' and c.relrowsecurity")" = '49'
-          test "$(sql "select count(*) from pg_policies where schemaname in ('public','private')")" = '58'
-          test "$(sql "select count(*) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and not t.tgisinternal")" = '25'
-          test "$(sql "select count(*) from pg_indexes where schemaname in ('public','private')")" = '99'
+          test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prokind='f' and n.nspname='public'")" = '114'
+          test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prokind='f' and n.nspname='private'")" = '89'
+          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and c.relkind='r' and c.relrowsecurity")" = '68'
+          test "$(sql "select count(*) from pg_policies where schemaname in ('public','private')")" = '81'
+          test "$(sql "select count(*) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and not t.tgisinternal")" = '39'
+          test "$(sql "select count(*) from pg_indexes where schemaname in ('public','private')")" = '153'
+          test "$(sql "select to_regprocedure('public.master_runtime_security_health_v1(uuid)') is not null")" = 't'
+          test "$(sql "select to_regprocedure('public.master_prototype_runtime_context(uuid,text,text)') is not null")" = 't'
+          test "$(sql "select to_regclass('private.platform_prototypes') is not null")" = 't'
+          test "$(sql "select to_regclass('private.tenant_runtime_config') is not null")" = 't'
+          test "$(sql "select relrowsecurity from pg_class where oid='private.kds_realtime_channels'::regclass")" = 't'
+          test "$(sql "select has_schema_privilege('anon','internal_rpc','USAGE')")" = 'f'
 
       - name: Verify critical restored relations and RLS
         shell: bash

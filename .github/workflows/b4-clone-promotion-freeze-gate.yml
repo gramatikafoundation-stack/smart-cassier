@@ -12,6 +12,7 @@ on:
   push:
     branches:
       - freeze/b4-clone-master-final-20260927
+      - release/smart-order-master-prototype-v1.0.0
 
 jobs:
   clone-freeze-source:

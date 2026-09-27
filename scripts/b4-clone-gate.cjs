@@ -66,3 +66,37 @@ for(const marker of [
 if(/update\s+private\.platform_prototypes[\s\S]{0,800}?status\s*=\s*'active'/i.test(cert)) fail('b4_2_must_not_promote_candidate');
 if(!cert.includes('delete from private.platform_tenants where id=v_clone_id')) fail('certification_cleanup_missing');
 console.log('B4_CLONE_CERTIFICATION_SOURCE_GATE_PASS=1');
+
+
+const finalFreeze=fs.readFileSync('supabase/migrations/20260927174000_smart_order_b4_final_master_freeze_v1.sql','utf8');
+for(const marker of [
+  'master_freeze_manifests',
+  'master_freeze_manifest_immutable',
+  'platform_prototypes_one_active_per_org_b4',
+  'platform_clone_templates_one_active_per_org_b4',
+  'smart_order_master_prototype_immutable',
+  'smart_order_master_clone_template_immutable',
+  'finalize_master_promotion_v1',
+  'master_freeze_status_v1',
+  'run_release_bound_clone_rehearsal_v1',
+  'smart-order-b4-release-bound-certification-v1',
+  "'git_master_frozen'",
+  "'smart-order-sdb-master-v1'",
+  "'master_frozen'",
+  "'shared_database_rls'",
+  "'single_domain_four_surface_v1'"
+]) if(!finalFreeze.includes(marker)) fail('final_freeze_marker:'+marker);
+
+if(/(?:select|perform)\s+private\.finalize_master_promotion_v1\s*\(/i.test(finalFreeze))
+  fail('final_migration_must_not_self_promote');
+if(!finalFreeze.includes("status='deprecated'")) fail('legacy_master_deprecation_missing');
+if(!finalFreeze.includes("where id=v_proto.id and status='draft'")) fail('draft_to_active_guard_missing');
+
+if(!finalFreeze.includes("v_release_clone:=private.run_release_bound_clone_rehearsal_v1(p_release_tag,p_release_git_sha)"))
+  fail('finalizer_missing_release_bound_clone');
+if(!finalFreeze.includes("clone_contract='smart-order-b4-release-bound-certification-v1'"))
+  fail('freeze_status_missing_release_bound_evidence');
+if(!finalFreeze.includes("source_git_sha=p_release_git_sha"))
+  fail('release_bound_git_sha_not_enforced');
+
+console.log('B4_FINAL_FREEZE_SOURCE_GATE_PASS=1');

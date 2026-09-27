@@ -11,7 +11,7 @@ declare
   a uuid := '22222222-2222-4222-8222-222222222222';
   b uuid := '33333333-3333-4333-8333-333333333333';
   ref uuid := (select reference_tenant_id from private.platform_prototypes where prototype_key='smart-order-sdb-platform-v1');
-  tabs jsonb := '["DASHBOARD","PEMESAN","PESANAN","MENU & STOK","KEUANGAN"]'::jsonb;
+  tabs jsonb := '["Dashboard","Data Pemesan","Data Pesanan Makanan","Data Pesanan Minuman","Riwayat Pembayaran"]'::jsonb;
   routes jsonb := '{"public":"/","admin":"/admin","kds":"/kds","database":"/database"}'::jsonb;
   ra jsonb;
   rb jsonb;

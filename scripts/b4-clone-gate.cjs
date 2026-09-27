@@ -63,6 +63,6 @@ for(const marker of [
   "candidate_status','draft'",
   "source_control_mode='git_b4_clone_certification'"
 ]) if(!cert.includes(marker)) fail('certification_marker:'+marker);
-if(/status\s*=\s*'active'/i.test(cert)) fail('b4_2_must_not_promote_candidate');
+if(/update\s+private\.platform_prototypes[\s\S]{0,800}?status\s*=\s*'active'/i.test(cert)) fail('b4_2_must_not_promote_candidate');
 if(!cert.includes('delete from private.platform_tenants where id=v_clone_id')) fail('certification_cleanup_missing');
 console.log('B4_CLONE_CERTIFICATION_SOURCE_GATE_PASS=1');

@@ -51,3 +51,18 @@ console.log(JSON.stringify({
   disposable_clone_rehearsal:true
 },null,2));
 console.log('B4_CLONE_SOURCE_GATE_PASS=1');
+
+
+const cert=fs.readFileSync('supabase/migrations/20260927172500_smart_order_b4_clone_certification_v1.sql','utf8');
+for(const marker of [
+  'master_clone_rehearsal_evidence',
+  'master_clone_rehearsal_evidence_immutable',
+  'run_master_clone_rehearsal_v1',
+  'smart-order-b4-clone-certification-v1',
+  'cleanup_residue',
+  "candidate_status','draft'",
+  "source_control_mode='git_b4_clone_certification'"
+]) if(!cert.includes(marker)) fail('certification_marker:'+marker);
+if(/update\s+private\.platform_prototypes[\s\S]{0,800}?status\s*=\s*'active'/i.test(cert)) fail('b4_2_must_not_promote_candidate');
+if(!cert.includes('delete from private.platform_tenants where id=v_clone_id')) fail('certification_cleanup_missing');
+console.log('B4_CLONE_CERTIFICATION_SOURCE_GATE_PASS=1');

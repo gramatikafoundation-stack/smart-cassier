@@ -6,20 +6,13 @@ import { fileURLToPath } from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const file=path.resolve(root,process.argv[2]||'prototype/tenant.example.json');
 const c=JSON.parse(fs.readFileSync(file,'utf8'));
+const templates=JSON.parse(fs.readFileSync(path.join(root,'prototype/google-drive-template-set.json'),'utf8'));
 
 const REF=Object.freeze({
   tenant_id:'d8bb901c-7399-485b-8743-b319fde148ac',
   slug:'warung-nasi',
-  canonical_origin:'https://smart-order-sdb.vercel.app',
-  spreadsheet_ids:new Set([
-    '1OnUxxqbwRjjQY18J3A2ypkIlPBKqOMMeB11G_OsHzFM',
-    '1woA7ETIkuATU0J3I_bLAu_L5aD11mf_RNVBeedB8A1E',
-    '1RGH2Oz6cuwK04iNmpaqlWYW2TcnpAgixH9tJiPE2kUY',
-    '1hEd4MzbaICLwSIfRC47Po4IzRZ2YrOarqxXRoXNPBDE',
-    '1Q6LlirORPtNTzPX334xiK9mAsACdpivhRnH7Mheosmo'
-  ])
+  canonical_origin:'https://smart-order-sdb.vercel.app'
 });
-const TABS=['DASHBOARD','PEMESAN','PESANAN','MENU & STOK','KEUANGAN'];
 const ROUTES={public:'/',admin:'/admin',kds:'/kds',database:'/database'};
 const fail=m=>{console.error('TENANT_CONFIG_INVALID: '+m);process.exit(1)};
 const uuid=v=>/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(v||''));
@@ -43,14 +36,20 @@ const menuPath=path.resolve(root,c.menu_seed);
 if(!menuPath.startsWith(path.join(root,'prototype')+path.sep)||!fs.existsSync(menuPath))fail('menu_seed not found');
 const menu=JSON.parse(fs.readFileSync(menuPath,'utf8'));
 if(!Array.isArray(menu)||!menu.length)fail('menu_seed must be non-empty');
+
+if(templates.contract!=='smart-cashier-google-drive-template-set-v1')fail('template manifest contract');
+if(templates.template_set!=='smart-cashier-annual-2026-2030-v1')fail('template manifest id');
+if(templates.writer_version!==5)fail('template manifest writer_version');
 if(c.sheets?.provider!=='google_drive')fail('sheets.provider must be google_drive');
-if(!Array.isArray(c.sheets?.expected_tabs)||JSON.stringify(c.sheets.expected_tabs)!==JSON.stringify(TABS))fail('expected_tabs must exactly match canonical five tabs');
+if(c.sheets?.template_set!==templates.template_set)fail('sheets.template_set');
+if(!Array.isArray(c.sheets?.expected_tabs)||JSON.stringify(c.sheets.expected_tabs)!==JSON.stringify(templates.required_tabs))fail('expected_tabs must match canonical SMART CASHIER archive tabs');
+if(c.sheets.start_year!==2026||c.sheets.years!==5)fail('master v1 uses 2026-2030 yearly templates');
+if(Object.keys(templates.templates||{}).sort().join(',')!=='2026,2027,2028,2029,2030')fail('template years incomplete');
 if(!c.storage?.namespace||c.storage.namespace!==c.tenant_slug)fail('storage.namespace must equal tenant_slug');
 
 if(c.tenant_slug!==REF.slug){
   if(c.tenant_id===REF.tenant_id)fail('new tenant must not reuse reference tenant_id');
   if(canonical===REF.canonical_origin)fail('new tenant must not reuse master canonical origin');
-  if(REF.spreadsheet_ids.has(String(c.spreadsheet_target||'')))fail('new tenant must not reuse master spreadsheet');
 }
 
 console.log(JSON.stringify({
@@ -67,5 +66,9 @@ console.log(JSON.stringify({
   supabase_project_clone_required:false,
   tenancy_mode:'shared_database_rls',
   spreadsheet_provider:'google_drive',
-  spreadsheet_tabs:c.sheets.expected_tabs
+  spreadsheet_template_set:templates.template_set,
+  spreadsheet_template_years:Object.keys(templates.templates).map(Number),
+  spreadsheet_tabs:templates.required_tabs,
+  spreadsheet_copy_policy:templates.clone_policy.mode,
+  writer_version:templates.writer_version
 },null,2));

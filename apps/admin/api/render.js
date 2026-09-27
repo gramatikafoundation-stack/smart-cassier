@@ -68,6 +68,119 @@ button:not(:disabled):hover{transform:translateY(-1px)}
  .topbar{min-height:60px!important;padding:9px 14px!important}.content{padding:16px 12px 24px!important}.grid2,.grid3,.stats{grid-template-columns:1fr!important}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* smart-order-reference-exact-admin-v2 */
+:root{
+  --bg:#f5f5f6!important;--panel:#ffffff!important;--panel2:#f7f7f8!important;
+  --ink:#141414!important;--muted:#767676!important;--primary:#171717!important;
+  --accent:#ff5a24!important;--line:#e6e7e9!important;--radius:9px!important;
+}
+html,body{background:#f5f5f6!important;color:#141414!important;font-size:13px!important}
+body{background:#f5f5f6!important}
+.shell{grid-template-columns:164px minmax(0,1fr)!important;min-height:100vh!important}
+.sidebar{
+  background:#fff!important;color:#1c1c1c!important;padding:10px 8px!important;gap:8px!important;
+  border-right:1px solid #e5e6e8!important;box-shadow:none!important
+}
+.logo{padding:7px 7px 10px!important;gap:8px!important}
+.logoMark{
+  width:28px!important;height:28px!important;border-radius:7px!important;background:#0c9b9d!important;color:#fff!important;
+  box-shadow:none!important;font-size:13px!important
+}
+.logo b{color:#111!important;font-size:12px!important}.logo small,.sidebarFoot small{color:#8a8a8a!important}
+.mainNav{gap:2px!important}.mainNav button{
+  min-height:34px!important;border-radius:6px!important;padding:8px 9px!important;color:#4f4f4f!important;
+  background:transparent!important;font-size:12px!important;box-shadow:none!important
+}
+.mainNav button:hover{background:#f5f5f6!important;color:#111!important}
+.mainNav button.on{
+  background:#eeeeef!important;color:#111!important;box-shadow:none!important;font-weight:750!important
+}
+.sidebarFoot{border-top:1px solid #eeeeef!important;padding-top:8px!important}
+.topbar{
+  min-height:48px!important;background:#fff!important;backdrop-filter:none!important;border-bottom:1px solid #e5e6e8!important;
+  padding:7px 14px!important
+}
+.topbar h2{font-size:14px!important;letter-spacing:0!important;color:#161616!important}
+.content{padding:11px 13px 22px!important;max-width:none!important}
+.subnav{gap:5px!important;padding-bottom:9px!important}.subnav button{
+  min-height:30px!important;border-radius:6px!important;background:#fff!important;border:1px solid #e5e6e8!important;
+  color:#585858!important;padding:6px 10px!important;font-size:11px!important
+}
+.subnav button.on{background:#f0f1f2!important;border-color:#dedfe1!important;color:#111!important;box-shadow:none!important}
+.sectionHead{margin:0 0 10px!important;align-items:center!important}
+.sectionHead h1{font-size:17px!important;letter-spacing:-.01em!important;color:#111!important;margin:0!important}
+.sectionHead p{font-size:11px!important;color:#808080!important}
+.card{
+  background:#fff!important;border:1px solid #e3e4e6!important;border-radius:8px!important;box-shadow:none!important;padding:11px!important
+}
+.grid2{gap:9px!important}.grid3{gap:8px!important}.stats{gap:8px!important}
+.stat{
+  background:#fff!important;border:1px solid #e3e4e6!important;border-radius:7px!important;padding:10px 11px!important;
+  box-shadow:none!important
+}
+.stat:before{display:none!important}.stat b{font-size:18px!important;letter-spacing:0!important;color:#161616!important}
+.stat span{font-size:10px!important;color:#7b7b7b!important}
+.tableWrap{border:1px solid #e3e4e6!important;border-radius:7px!important;box-shadow:none!important;background:#fff!important}
+.table th{background:#f8f8f9!important;color:#565656!important;font-size:10px!important;border-color:#ececef!important;padding:8px!important}
+.table td{border-color:#eeeeef!important;color:#292929!important;font-size:11px!important;padding:8px!important}
+.themeCard{border-color:#e4e5e7!important;border-radius:8px!important;box-shadow:none!important}
+.themeCard.active{border-color:#ff7a50!important;box-shadow:0 0 0 1px #ff7a50!important}
+.activeChip{background:#fff0e9!important;color:#e94d1b!important}
+.pill{background:#f2f3f4!important;color:#555!important}.notice{background:#fff7f2!important;color:#7c3b24!important}
+.modalBack{background:rgba(17,17,17,.35)!important;backdrop-filter:blur(2px)!important}
+.modal{background:#fff!important;border:1px solid #e0e1e3!important;border-radius:10px!important;box-shadow:0 18px 55px rgba(0,0,0,.17)!important}
+.modalTop{background:#fff!important;backdrop-filter:none!important;border-color:#e6e7e9!important}
+.previewStage{background:#f1f1f2!important}.empty{background:#fff!important;border-color:#dfe0e2!important}
+
+/* Smart Cashier / product area: mirror the reference left panel */
+#rohmatCashierSafe .cashierSurface,#cashierRoot.cashierSurface,.cashierSurface{
+  background:#f6f6f7!important;color:#171717!important;border:0!important;border-radius:0!important;
+  padding:0!important;min-height:0!important;box-shadow:none!important
+}
+.cashTop{
+  min-height:44px!important;padding:8px 10px!important;margin:0 0 8px!important;background:#fff!important;
+  border:1px solid #e4e5e7!important;border-radius:8px!important
+}
+.cashTop h2{font-size:14px!important;margin:0!important;color:#111!important;letter-spacing:0!important}
+.cashEy{display:none!important}.cashTop .muted{font-size:10px!important;color:#888!important}
+.cashLayout{grid-template-columns:minmax(0,1fr) 290px!important;gap:8px!important}
+.cashPanel{
+  background:#fff!important;color:#171717!important;border:1px solid #e3e4e6!important;border-radius:8px!important;
+  padding:10px!important;box-shadow:none!important
+}
+.cashCats{gap:4px!important;margin-bottom:8px!important}.cashBtn{
+  min-height:30px!important;padding:6px 9px!important;background:#fff!important;color:#333!important;
+  border:1px solid #e1e2e4!important;border-radius:6px!important;font-size:10px!important;box-shadow:none!important
+}
+.cashBtn.on{background:#f0f1f2!important;border-color:#d7d8da!important;color:#111!important}
+.cashBtn.primary{background:#fff!important;border-color:#d8d9db!important;color:#171717!important}
+.cashBtn.primary:hover{background:#f7f7f8!important}
+.cashMenu{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+.cashItem{
+  background:#fff!important;color:#171717!important;border:1px solid #e2e3e5!important;border-radius:7px!important;
+  padding:6px!important;box-shadow:none!important;display:grid!important;gap:5px!important
+}
+.cashItem img{
+  width:100%!important;aspect-ratio:16/9!important;object-fit:cover!important;border-radius:4px!important;background:#eee!important
+}
+.cashItem>b{font-size:11px!important;line-height:1.25!important;color:#171717!important}
+.cashItem>strong{font-size:10px!important;color:#585858!important;font-weight:700!important}
+.cashLine{border-color:#eeeeef!important;padding:6px 0!important}.cashLine .muted{color:#888!important;font-size:10px!important}
+.cashField{gap:4px!important}.cashField label{font-size:10px!important;color:#666!important}
+.cashField input,.cashField select,.cashField textarea{
+  min-height:32px!important;padding:6px 8px!important;background:#fff!important;color:#171717!important;
+  border:1px solid #dedfe1!important;border-radius:6px!important;font-size:11px!important
+}
+.cashTotal{border-color:#e5e6e8!important;color:#111!important;padding-top:8px!important;margin-top:8px!important}
+.cashQris img{max-width:150px!important}
+@media(max-width:1050px){.shell{grid-template-columns:150px minmax(0,1fr)!important}.cashLayout{grid-template-columns:1fr 260px!important}}
+@media(max-width:760px){
+  .shell{grid-template-columns:1fr!important}.sidebar{position:static!important;padding:6px!important}
+  .mainNav{display:flex!important;overflow:auto!important}.mainNav button{min-width:max-content!important}
+  .content{padding:9px!important}.cashLayout{grid-template-columns:1fr!important}.cashMenu{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+
 </style><!-- smart-order-admin-foodcode-v1 -->`;
 const REQUIRED_MARKERS = [
   'Studio Pengelola',

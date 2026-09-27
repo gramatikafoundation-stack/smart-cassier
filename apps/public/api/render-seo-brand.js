@@ -34,8 +34,8 @@ function injectSeoBrand(input, cfg) {
   const nonce = html.match(/<script\s+nonce="([^"]+)"/)?.[1] || html.match(/<style\s+nonce="([^"]+)"/)?.[1] || '';
   if (!html.includes('smart-order-public-foodcode-v1')) {
     const uiPatch = FUTURE_PUBLIC_UI_PATCH.replace('<style ', '<style' + (nonce ? ' nonce="' + nonce + '"' : '') + ' ');
-    const headAt = html.lastIndexOf('</head>');
-    html = headAt >= 0 ? html.slice(0, headAt) + uiPatch + html.slice(headAt) : uiPatch + html;
+    const bodyAt = html.lastIndexOf('</body>');
+    html = bodyAt >= 0 ? html.slice(0, bodyAt) + uiPatch + html.slice(bodyAt) : html + uiPatch;
   }
   if (html.includes(MARKER)) return html;
   const graph = {

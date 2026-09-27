@@ -128,6 +128,11 @@ jobs:
             ledger "$version" "$name"
           done
 
+          # The Sep-18 Admin recovery migration intentionally reintroduced the legacy
+          # URL lock. Production later removed all three per-domain locks before B1.
+          # Reapply the explicit recovery bridge at the chronologically correct point.
+          apply_sql "supabase/restore/interstitial/20260927180000_b1_canonical_url_constraint_bridge.sql"
+
           # B1 canonical-domain work is intentionally source-tail/interstitial in the
           # production ledger; it must still be present in a recoverable schema.
           for f in \

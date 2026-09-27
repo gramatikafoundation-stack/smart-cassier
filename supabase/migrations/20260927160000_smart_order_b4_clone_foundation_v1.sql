@@ -49,8 +49,8 @@ begin
   limit 1;
   if v_tenant is null then raise exception 'b4_candidate_b3_missing'; end if;
 
-  if not coalesce((private.release_preflight_status()->>'ok')::boolean,false) then
-    raise exception 'b4_release_preflight_not_ready';
+  if not coalesce((private.release_engineering_status()->>'ok')::boolean,false) then
+    raise exception 'b4_release_engineering_not_ready';
   end if;
 
   select jsonb_build_object(

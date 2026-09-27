@@ -419,6 +419,17 @@
   ],
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "smart-cassier.vercel.app"
+        }
+      ],
+      "destination": "https://smart-order-sdb.vercel.app/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

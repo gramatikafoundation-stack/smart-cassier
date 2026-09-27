@@ -25,7 +25,7 @@ function normalizeExistingMetadata(html, cfg) {
   html = replaceMeta(html, 'property="og:title"', cfg.title);
   html = replaceMeta(html, 'property="og:description"', cfg.description);
   html = replaceMeta(html, 'property="og:type"', 'website');
-  html = replaceMeta(html, 'name="theme-color"', '#315343');
+  html = replaceMeta(html, 'name="theme-color"', '#ff5a24');
   return html;
 }
 

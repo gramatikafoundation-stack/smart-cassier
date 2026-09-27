@@ -6,10 +6,19 @@ import { fileURLToPath } from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const file=path.resolve(root,process.argv[2]||'prototype/tenant.example.json');
 const c=JSON.parse(fs.readFileSync(file,'utf8'));
+const templates=JSON.parse(fs.readFileSync(path.join(root,'prototype/google-drive-template-set.json'),'utf8'));
 const sharedRef='xrepmvbccalzhlcznrff';
 const supabaseUrl='https://'+sharedRef+'.supabase.co';
 const canonical=new URL(c.canonical_origin).origin;
 const routes={public:'/',admin:'/admin',kds:'/kds',database:'/database'};
+const copies=Object.fromEntries(Object.entries(templates.templates).map(([year,t])=>[
+  year,{
+    source_template_id:t.spreadsheet_id,
+    source_title:t.title,
+    destination_title:c.business_name+' — SMART CASHIER DATABASE '+year,
+    bind_after_copy:'private.tenant_sheet_targets('+year+')'
+  }
+]));
 
 const plan={
   contract:'smart-order-master-tenant-provision-plan-v2',
@@ -36,8 +45,9 @@ const plan={
       'insert private.tenant_runtime_config row with one canonical origin',
       'insert one canonical private.tenant_origin_aliases row with four unified routes',
       'insert private.tenant_memberships owner row',
+      'copy five canonical Google Drive yearly workbooks and bind generated IDs',
       'insert five private.tenant_sheet_targets rows',
-      'insert private.tenant_writer_config row in disabled-until-provisioned mode',
+      'insert private.tenant_writer_config row disabled until writer URL+secret exist',
       'insert private.tenant_table_qr_signatures rows',
       'seed tenant-scoped menu/config using tenant_id'
     ],
@@ -70,15 +80,18 @@ const plan={
   },
   sheets:{
     provider:'google_drive',
-    target:c.spreadsheet_target,
-    expected_tabs:c.sheets.expected_tabs,
+    template_set:templates.template_set,
+    copy_policy:templates.clone_policy.mode,
+    required_tabs:templates.required_tabs,
+    templates:copies,
     writer_source:'integrations/google-sheets/master-writer-v1/Code.gs',
-    writer_version:4,
+    writer_version:templates.writer_version,
     deployment_mode:'one-webapp-per-tenant-same-canonical-source',
+    activation_mode:'disabled_until_tenant_url_secret_and_5of5_reconciliation',
     script_properties:{
       SDB_TENANT_ID:c.tenant_id,
       SDB_DATA_ENDPOINT:supabaseUrl+'/functions/v1/rohmat-sheet-writer-data-v1',
-      SDB_TARGETS_JSON:'generated from private.tenant_sheet_targets after workbook provisioning',
+      SDB_TARGETS_JSON:'generated from copied workbook IDs after Google Drive provisioning',
       SDB_TZ:c.timezone,
       SDB_BUSINESS_NAME:c.business_name,
       SDB_PII_RETENTION_DAYS:'365'
@@ -94,8 +107,9 @@ const plan={
     'explicit fail-closed tenant resolution',
     'cross-tenant read/write negative test PASS',
     'signed table QR PASS',
-    'five yearly Google Drive targets provisionable',
-    'Writer v4 tenant sync can be enabled only after secret/url provisioning'
+    'five Google Drive annual workbooks copied from immutable template set',
+    'copied workbook IDs differ from master template IDs',
+    'Writer v5 remains disabled until URL+secret provisioning and 5/5 reconciliation'
   ]
 };
 console.log(JSON.stringify(plan,null,2));

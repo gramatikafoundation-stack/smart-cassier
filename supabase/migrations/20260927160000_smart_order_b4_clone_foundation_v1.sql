@@ -4,7 +4,7 @@
 begin;
 
 -- Deterministic precondition must run before any B4 DDL changes the schema fingerprint.
-do $
+do $$
 declare
   v_status text;
 begin
@@ -17,7 +17,7 @@ begin
   if not coalesce((private.release_engineering_status()->>'ok')::boolean,false) then
     raise exception 'b4_release_engineering_not_ready';
   end if;
-end $;
+end $$;
 
 create table if not exists private.master_template_snapshots (
   prototype_key text primary key,

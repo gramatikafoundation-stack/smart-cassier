@@ -3,6 +3,22 @@
 
 begin;
 
+-- Deterministic precondition must run before any B4 DDL changes the schema fingerprint.
+do $
+declare
+  v_status text;
+begin
+  select status into v_status
+  from private.platform_prototypes
+  where prototype_key='smart-order-sdb-platform-v1'
+    and metadata->>'b3_gate'='passed'
+  limit 1;
+  if v_status is distinct from 'draft' then raise exception 'b4_candidate_b3_missing'; end if;
+  if not coalesce((private.release_engineering_status()->>'ok')::boolean,false) then
+    raise exception 'b4_release_engineering_not_ready';
+  end if;
+end $;
+
 create table if not exists private.master_template_snapshots (
   prototype_key text primary key,
   snapshot_version text not null,
@@ -48,10 +64,6 @@ begin
     and metadata->>'b3_gate'='passed'
   limit 1;
   if v_tenant is null then raise exception 'b4_candidate_b3_missing'; end if;
-
-  if not coalesce((private.release_engineering_status()->>'ok')::boolean,false) then
-    raise exception 'b4_release_engineering_not_ready';
-  end if;
 
   select jsonb_build_object(
     'contract','smart-order-master-template-v1',

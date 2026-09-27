@@ -9,8 +9,9 @@ if(!(v.rewrites||[]).some(x=>x.source==='/'&&x.destination==='/api/public-render
 if(!(v.rewrites||[]).some(x=>x.source==='/admin'&&x.destination==='/api/admin-render')) fail('admin_rewrite');
 if(!(v.rewrites||[]).some(x=>x.source==='/kds'&&x.destination==='/apps/kds/index.html')) fail('kds_rewrite');
 if(!(v.rewrites||[]).some(x=>x.source==='/database'&&x.destination==='/api/admin-render')) fail('database_rewrite');
-if(!(v.redirects||[]).some(x=>x.source==='/:path*'&&x.destination==='https://smart-order-sdb.vercel.app/:path*'&&(x.has||[]).some(h=>h.type==='host'&&h.value==='smart-cassier.vercel.app'))) fail('legacy_redirect');
+if(!(v.redirects||[]).some(x=>x.source==='/'&&x.destination==='https://smart-order-sdb.vercel.app/'&&(x.has||[]).some(h=>h.type==='host'&&h.value==='smart-cassier.vercel.app'))) fail('legacy_root_redirect');
+if(!(v.redirects||[]).some(x=>x.source==='/:path*'&&x.destination==='https://smart-order-sdb.vercel.app/:path*'&&(x.has||[]).some(h=>h.type==='host'&&h.value==='smart-cassier.vercel.app'))) fail('legacy_path_redirect');
 const admin=fs.readFileSync('apps/admin/api/render.js','utf8');
 if(!admin.includes("location.pathname==='/database'?'database':'admin'")) fail('database_surface_bootstrap');
-console.log(JSON.stringify({ok:true,contract:m.contract,canonical:m.canonical_origin,routes:m.routes,legacy_redirect:true},null,2));
+console.log(JSON.stringify({ok:true,contract:m.contract,canonical:m.canonical_origin,routes:m.routes,legacy_root_redirect:true,legacy_path_redirect:true},null,2));
 console.log('B1_CANONICAL_IDENTITY_PASS=1');

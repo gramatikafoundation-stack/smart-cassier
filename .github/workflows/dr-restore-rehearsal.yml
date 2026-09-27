@@ -232,7 +232,7 @@ jobs:
           test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='private' and c.relkind='r'")" = '52'
           test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='v'")" = '2'
           test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prokind='f' and n.nspname='public'")" = '114'
-          test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prokind='f' and n.nspname='private'")" = '98'
+          test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prokind='f' and n.nspname='private'")" = '99'
           test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and c.relkind='r' and c.relrowsecurity")" = '71'
           test "$(sql "select count(*) from pg_policies where schemaname in ('public','private')")" = '81'
           test "$(sql "select count(*) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and not t.tgisinternal")" = '44'

@@ -1,0 +1,40 @@
+name: B4 Clone Promotion Freeze Gate
+
+on:
+  pull_request:
+    paths:
+      - 'prototype/**'
+      - 'scripts/b4-**'
+      - 'supabase/migrations/**'
+      - '.github/workflows/b4-clone-promotion-freeze-gate.yml'
+      - '.github/workflows/clone-rehearsal.yml'
+      - '.github/workflows/dr-restore-rehearsal.yml'
+  push:
+    branches:
+      - freeze/b4-clone-master-final-20260927
+
+jobs:
+  clone-freeze-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate tenant A v2
+        run: node prototype/validate-config.mjs prototype/rehearsal-a.json
+      - name: Validate tenant B v2
+        run: node prototype/validate-config.mjs prototype/rehearsal-b.json
+      - name: Generate v2 provision plans
+        run: |
+          node prototype/provision-plan.mjs prototype/rehearsal-a.json > /tmp/a.json
+          node prototype/provision-plan.mjs prototype/rehearsal-b.json > /tmp/b.json
+          grep -q '"topology": "single_domain_four_surface"' /tmp/a.json
+          grep -q '"source_edits_required": false' /tmp/a.json
+          grep -q '"source_clone_required": false' /tmp/a.json
+          grep -q '"database_project_clone_required": false' /tmp/a.json
+          grep -q '"shared_project_ref": "xrepmvbccalzhlcznrff"' /tmp/a.json
+      - name: Two-tenant static clone rehearsal v2
+        run: node prototype/rehearse.mjs prototype/rehearsal-a.json prototype/rehearsal-b.json
+      - name: B4 immutable freeze source contract
+        run: node scripts/b4-clone-freeze-gate.cjs

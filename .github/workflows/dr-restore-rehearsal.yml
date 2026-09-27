@@ -179,12 +179,18 @@ jobs:
           apply_sql "$FINAL_SEAL"
           ledger "20260927144325" "smart_order_b3_final_evidence_seal_v1"
 
+          # B4 clone foundation must itself be recoverable before promotion is allowed.
+          B4_CLONE="/tmp/rohmat-repo-migrations/20260927160000_smart_order_b4_clone_foundation_v1.sql"
+          test -f "$B4_CLONE"
+          apply_sql "$B4_CLONE"
+          ledger "20260927160000" "smart_order_b4_clone_foundation_v1"
+
           COUNT="$(node -p "JSON.parse(require('fs').readFileSync('supabase/restore/manifest.json','utf8')).count")"
           LEDGER_COUNT="$(psql "$DB_URL" -Atc "select count(*) from supabase_migrations.schema_migrations")"
           ACTUAL_HEAD="$(psql "$DB_URL" -Atc "select max(version) from supabase_migrations.schema_migrations")"
-          test "$LEDGER_COUNT" -eq "$((COUNT+11))"
-          test "$ACTUAL_HEAD" = '20260927144325'
-          echo "B3_DR_CANONICAL_TAIL_PASS=1"
+          test "$LEDGER_COUNT" -eq "$((COUNT+12))"
+          test "$ACTUAL_HEAD" = '20260927160000'
+          echo "B4_DR_CLONE_FOUNDATION_PASS=1"
 
       - name: Verify production structural contract
         shell: bash
@@ -211,14 +217,14 @@ jobs:
           echo "anon_internal_rpc_usage=$(sql "select has_schema_privilege('anon','internal_rpc','USAGE')")"
           echo "release_engineering_status=$(sql "select private.release_engineering_status()")"
           test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r'")" = '19'
-          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='private' and c.relkind='r'")" = '49'
+          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='private' and c.relkind='r'")" = '50'
           test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='v'")" = '2'
           test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prokind='f' and n.nspname='public'")" = '114'
-          test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prokind='f' and n.nspname='private'")" = '89'
-          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and c.relkind='r' and c.relrowsecurity")" = '68'
+          test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prokind='f' and n.nspname='private'")" = '91'
+          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and c.relkind='r' and c.relrowsecurity")" = '69'
           test "$(sql "select count(*) from pg_policies where schemaname in ('public','private')")" = '81'
-          test "$(sql "select count(*) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and not t.tgisinternal")" = '39'
-          test "$(sql "select count(*) from pg_indexes where schemaname in ('public','private')")" = '153'
+          test "$(sql "select count(*) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and not t.tgisinternal")" = '40'
+          test "$(sql "select count(*) from pg_indexes where schemaname in ('public','private')")" = '154'
           test "$(sql "select to_regprocedure('public.master_runtime_security_health_v1(uuid)') is not null")" = 't'
           test "$(sql "select to_regprocedure('public.master_prototype_runtime_context(uuid,text,text)') is not null")" = 't'
           test "$(sql "select to_regclass('private.platform_prototypes') is not null")" = 't'
@@ -226,6 +232,17 @@ jobs:
           test "$(sql "select relrowsecurity from pg_class where oid='private.kds_realtime_channels'::regclass")" = 't'
           test "$(sql "select has_schema_privilege('anon','internal_rpc','USAGE')")" = 'f'
           test "$(sql "select (private.release_engineering_status()->>'ok')::boolean")" = 't'
+
+      - name: Run disposable B4 tenant clone rehearsal
+        shell: bash
+        run: |
+          set -euo pipefail
+          DB_URL='postgresql://postgres:postgres@127.0.0.1:54322/postgres'
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f scripts/b4-clone-rehearsal.sql | tee /tmp/b4-clone-rehearsal.log
+          grep -q '"ok": true' /tmp/b4-clone-rehearsal.log || grep -q '"ok" : true' /tmp/b4-clone-rehearsal.log || grep -q '"ok":true' /tmp/b4-clone-rehearsal.log
+          grep -q '"tenant_residue" : 0' /tmp/b4-clone-rehearsal.log || grep -q '"tenant_residue": 0' /tmp/b4-clone-rehearsal.log || grep -q '"tenant_residue":0' /tmp/b4-clone-rehearsal.log
+          grep -q '"origin_residue" : 0' /tmp/b4-clone-rehearsal.log || grep -q '"origin_residue": 0' /tmp/b4-clone-rehearsal.log || grep -q '"origin_residue":0' /tmp/b4-clone-rehearsal.log
+          echo "B4_DISPOSABLE_CLONE_REHEARSAL_PASS=1"
 
       - name: Verify critical restored relations and RLS
         shell: bash

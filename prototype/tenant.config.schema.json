@@ -21,25 +21,50 @@
     "require_table_qr_signature",
     "menu_seed",
     "admin_owner_email",
-    "spreadsheet_target",
     "storage",
     "sheets"
   ],
   "properties": {
-    "schema_version": { "const": 2 },
-    "tenant_id": { "type": "string", "format": "uuid" },
+    "schema_version": {
+      "const": 2
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
     "tenant_slug": {
       "type": "string",
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
       "minLength": 3,
       "maxLength": 48
     },
-    "business_name": { "type": "string", "minLength": 2, "maxLength": 100 },
-    "merchant_name": { "type": "string", "minLength": 2, "maxLength": 100 },
-    "merchant_name_acknowledged": { "type": "boolean" },
-    "locale": { "type": "string", "minLength": 2, "maxLength": 32 },
-    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
-    "timezone": { "type": "string", "minLength": 3, "maxLength": 64 },
+    "business_name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 100
+    },
+    "merchant_name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 100
+    },
+    "merchant_name_acknowledged": {
+      "type": "boolean"
+    },
+    "locale": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 32
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "timezone": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64
+    },
     "canonical_origin": {
       "type": "string",
       "pattern": "^https://[^/]+/?$"
@@ -47,27 +72,55 @@
     "surface_routes": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["public", "admin", "kds", "database"],
+      "required": [
+        "public",
+        "admin",
+        "kds",
+        "database"
+      ],
       "properties": {
-        "public": { "const": "/" },
-        "admin": { "const": "/admin" },
-        "kds": { "const": "/kds" },
-        "database": { "const": "/database" }
+        "public": {
+          "const": "/"
+        },
+        "admin": {
+          "const": "/admin"
+        },
+        "kds": {
+          "const": "/kds"
+        },
+        "database": {
+          "const": "/database"
+        }
       }
     },
-    "qris_asset": { "type": "string", "minLength": 1 },
-    "table_count": { "type": "integer", "minimum": 1, "maximum": 200 },
-    "require_table_qr_signature": { "const": true },
-    "menu_seed": { "type": "string", "pattern": "^prototype/.+\\.json$" },
+    "qris_asset": {
+      "type": "string",
+      "minLength": 1
+    },
+    "table_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200
+    },
+    "require_table_qr_signature": {
+      "const": true
+    },
+    "menu_seed": {
+      "type": "string",
+      "pattern": "^prototype/.+\\.json$"
+    },
     "admin_owner_email": {
       "type": "string",
       "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
     },
-    "spreadsheet_target": { "type": "string", "minLength": 3, "maxLength": 160 },
     "storage": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["namespace", "static_bucket", "payment_bucket"],
+      "required": [
+        "namespace",
+        "static_bucket",
+        "payment_bucket"
+      ],
       "properties": {
         "namespace": {
           "type": "string",
@@ -86,19 +139,44 @@
     "sheets": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["provider", "start_year", "years", "expected_tabs"],
+      "required": [
+        "provider",
+        "template_set",
+        "start_year",
+        "years",
+        "expected_tabs"
+      ],
       "properties": {
-        "provider": { "const": "google_drive" },
-        "start_year": { "type": "integer", "minimum": 2026, "maximum": 2100 },
-        "years": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "provider": {
+          "const": "google_drive"
+        },
+        "start_year": {
+          "type": "integer",
+          "minimum": 2026,
+          "maximum": 2100
+        },
+        "years": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
         "expected_tabs": {
           "type": "array",
           "minItems": 5,
           "maxItems": 5,
           "uniqueItems": true,
           "items": {
-            "enum": ["DASHBOARD", "PEMESAN", "PESANAN", "MENU & STOK", "KEUANGAN"]
+            "enum": [
+              "Dashboard",
+              "Data Pemesan",
+              "Data Pesanan Makanan",
+              "Data Pesanan Minuman",
+              "Riwayat Pembayaran"
+            ]
           }
+        },
+        "template_set": {
+          "const": "smart-cashier-annual-2026-2030-v1"
         }
       }
     }

@@ -209,6 +209,7 @@ jobs:
           echo "kds_realtime_broadcast=$(sql "select to_regprocedure('private.kds_realtime_broadcast()') is not null")"
           echo "kds_realtime_rls=$(sql "select relrowsecurity from pg_class where oid='private.kds_realtime_channels'::regclass")"
           echo "anon_internal_rpc_usage=$(sql "select has_schema_privilege('anon','internal_rpc','USAGE')")"
+          echo "release_engineering_status=$(sql "select private.release_engineering_status()")"
           test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r'")" = '19'
           test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='private' and c.relkind='r'")" = '49'
           test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='v'")" = '2'

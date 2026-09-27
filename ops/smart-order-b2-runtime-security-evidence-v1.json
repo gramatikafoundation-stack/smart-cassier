@@ -1,0 +1,45 @@
+{
+  "contract": "smart-order-b2-runtime-security-evidence-v1",
+  "status": "candidate_pass",
+  "canonical_origin": "https://smart-order-sdb.vercel.app",
+  "candidate_prototype_key": "smart-order-sdb-platform-v1",
+  "candidate_status": "draft",
+  "runtime_source_sha": "abc56e5fa3db530ae55feb84fd3cac6f9e41c9de",
+  "vercel_deployment": "dpl_5YZjx6BkNkanxaf1djcACaXQiTm1",
+  "database_contract": "smart-order-master-runtime-security-v2",
+  "checks": {
+    "rls_off_tables": 0,
+    "client_rls_enforced": true,
+    "four_surface_routes": true,
+    "canonical_aliases": 1,
+    "enabled_preview_aliases": 0,
+    "signed_table_qr_required": true,
+    "active_valid_table_signatures": "20/20",
+    "direct_anon_internal_rpc_execute": 0,
+    "active_kds_without_fingerprint": 0,
+    "post_cutover_admin_without_fingerprint": 0,
+    "post_cutover_sessions_over_6h": 0
+  },
+  "edge": {
+    "rohmat-secure-api-v1": {
+      "version": 6,
+      "sha256": "8ac9fb58b974bebb1ddeb9fd7ee4f4a12c85ed1eeb5c4f052b75880cefa9983c",
+      "rollback": 5
+    },
+    "admin-media-upload": {
+      "version": 3,
+      "sha256": "537c05722bda48791e4a39aabd34a92df2692ef93207b8372f2dc80986b5183f",
+      "rollback": 2
+    },
+    "rohmat-admin-order-history-v1": {
+      "version": 3,
+      "sha256": "e06762359fb344751915575afc3c71b3381c82f66366de147ec7cb60d0f7043a",
+      "rollback": 2
+    }
+  },
+  "residual": {
+    "supabase_auth_leaked_password_protection": "disabled_external_platform_setting",
+    "impact": "Supabase-native password hygiene advisory; SMART ORDER Admin uses separate tenant-bound custom bcrypt session gateway.",
+    "candidate_blocking": false
+  }
+}

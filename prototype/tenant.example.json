@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "tenant_id": "11111111-1111-4111-8111-111111111111",
   "tenant_slug": "example-merchant",
   "business_name": "Example Merchant",
@@ -8,21 +8,26 @@
   "locale": "id-ID",
   "currency": "IDR",
   "timezone": "Asia/Jakarta",
-  "public_url": "https://example-public.vercel.app",
-  "admin_url": "https://example-admin.vercel.app",
-  "kds_url": "https://example-kds.vercel.app",
+  "canonical_origin": "https://example-merchant.example.com",
+  "surface_routes": {
+    "public": "/",
+    "admin": "/admin",
+    "kds": "/kds",
+    "database": "/database"
+  },
   "qris_asset": "tenant://example-merchant/qris.png",
   "table_count": 20,
   "require_table_qr_signature": true,
   "menu_seed": "prototype/menu.example.json",
   "admin_owner_email": "owner@example.com",
-  "spreadsheet_target": "replace-at-provisioning",
+  "spreadsheet_target": "sheet-example-merchant",
   "storage": {
     "namespace": "example-merchant",
     "static_bucket": "merchant-static",
     "payment_bucket": "payment-proofs"
   },
   "sheets": {
+    "provider": "google_drive",
     "start_year": 2026,
     "years": 5,
     "expected_tabs": [

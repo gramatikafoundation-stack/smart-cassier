@@ -19,6 +19,23 @@ function replaceMeta(html, selector, value) {
   });
 }
 
+function rewriteCanonicalOrigin(html, cfg) {
+  const canonicalMatch = html.match(/<link\s+[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["'][^>]*>/i)
+    || html.match(/<link\s+[^>]*href=["']([^"']+)["'][^>]*rel=["']canonical["'][^>]*>/i);
+  let oldOrigin = '';
+  if (canonicalMatch?.[1]) {
+    try { oldOrigin = new URL(canonicalMatch[1]).origin; } catch {}
+  }
+  if (oldOrigin && oldOrigin !== cfg.origin) html = html.split(oldOrigin).join(cfg.origin);
+  html = html.replace(
+    /<link\s+([^>]*rel=["']canonical["'][^>]*)>/i,
+    (tag) => /href=["'][^"']*["']/i.test(tag)
+      ? tag.replace(/href=["'][^"']*["']/i, `href="${cfg.canonical}"`)
+      : tag.replace(/>$/, ` href="${cfg.canonical}">`)
+  );
+  return html;
+}
+
 function normalizeExistingMetadata(html, cfg) {
   html = replaceMeta(html, 'name="description"', cfg.description);
   html = replaceMeta(html, 'name="robots"', 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1');
@@ -30,7 +47,7 @@ function normalizeExistingMetadata(html, cfg) {
 }
 
 function injectSeoBrand(input, cfg) {
-  let html = normalizeExistingMetadata(input, cfg);
+  let html = rewriteCanonicalOrigin(normalizeExistingMetadata(input, cfg), cfg);
   const nonce = html.match(/<script\s+nonce="([^"]+)"/)?.[1] || html.match(/<style\s+nonce="([^"]+)"/)?.[1] || '';
   if (!html.includes('smart-order-public-foodcode-v1')) {
     const uiPatch = FUTURE_PUBLIC_UI_PATCH.replace('<style ', '<style' + (nonce ? ' nonce="' + nonce + '"' : '') + ' ');
@@ -147,7 +164,7 @@ export default async function handler(req, res) {
 
   const end = res.end.bind(res);
   res.end = (body, ...args) => {
-    if (res.statusCode === 200 && typeof body === 'string' && body.includes('rohmat-public-a11y-v3')) {
+    if (res.statusCode === 200 && typeof body === 'string' && body.includes('</head>') && body.includes('</body>')) {
       body = injectSeoBrand(body, cfg);
       res.setHeader('X-Rohmat-SEO-Brand', 'metadata-v2');
       res.setHeader('X-Rohmat-SEO-Brand-Scope', 'og-twitter-hreflang-jsonld-restaurant-icons-manifest');

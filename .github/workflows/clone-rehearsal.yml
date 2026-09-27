@@ -30,6 +30,8 @@ jobs:
           node-version: '24'
       - name: Validate B2 runtime/security contract
         run: node scripts/b2-runtime-security-gate.cjs
+      - name: Validate B4 clone safety contract
+        run: node scripts/b4-clone-gate.cjs
       - name: Validate tenant A
         run: node prototype/validate-config.mjs prototype/rehearsal-a.json | tee /tmp/tenant-a-validation.json
       - name: Validate tenant B

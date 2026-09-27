@@ -71,14 +71,29 @@ where prototype_key='smart-order-sdb-platform-v1'
   and status='draft';
 
 -- Fingerprints are captured after all manifest-bearing rows above are reconciled.
-update private.release_baseline
-set release_label='b3-integrated-qa-freeze-prep-20260927',
-    migration_head='20260927144325',
-    schema_fingerprint=private.release_schema_fingerprint(),
-    cron_fingerprint=private.release_cron_fingerprint(),
-    manifest_fingerprint=private.release_manifest_fingerprint(),
-    captured_at=now(),
-    notes='B3 freeze-preparation evidence seal. Candidate remains draft; final master promotion is a separate gate.'
-where id=1;
+-- Upsert is required because sanitized/fresh DR environments intentionally may not
+-- contain a historical release_baseline row, while production already does.
+insert into private.release_baseline(
+  id,release_label,migration_head,schema_fingerprint,cron_fingerprint,
+  manifest_fingerprint,captured_at,notes
+)
+values(
+  1,
+  'b3-integrated-qa-freeze-prep-20260927',
+  '20260927144325',
+  private.release_schema_fingerprint(),
+  private.release_cron_fingerprint(),
+  private.release_manifest_fingerprint(),
+  now(),
+  'B3 freeze-preparation evidence seal. Candidate remains draft; final master promotion is a separate gate.'
+)
+on conflict(id) do update
+set release_label=excluded.release_label,
+    migration_head=excluded.migration_head,
+    schema_fingerprint=excluded.schema_fingerprint,
+    cron_fingerprint=excluded.cron_fingerprint,
+    manifest_fingerprint=excluded.manifest_fingerprint,
+    captured_at=excluded.captured_at,
+    notes=excluded.notes;
 
 commit;

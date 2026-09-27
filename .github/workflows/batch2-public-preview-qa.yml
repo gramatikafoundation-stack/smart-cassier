@@ -70,10 +70,10 @@ jobs:
           if(badStatus!==503) throw new Error('runtime_origin_binding_gate_failed');
           console.log('BATCH2_RUNTIME_ORIGIN_BINDING_PASS=1');
           NODE
-          MASTER_PROTOTYPE_STRICT=1 SDB_TENANT_ID='d8bb901c-7399-485b-8743-b319fde148ac' SUPABASE_URL='https://xrepmvbccalzhlcznrff.supabase.co' PUBLIC_ORIGIN='https://smart-cassier.vercel.app' BUSINESS_NAME='Rohmat Nasi Uduk' node --input-type=module <<'NODE'
+          MASTER_PROTOTYPE_STRICT=1 SDB_TENANT_ID='d8bb901c-7399-485b-8743-b319fde148ac' SUPABASE_URL='https://xrepmvbccalzhlcznrff.supabase.co' PUBLIC_ORIGIN='https://smart-order-sdb.vercel.app' BUSINESS_NAME='Rohmat Nasi Uduk' node --input-type=module <<'NODE'
           import handler from './apps/public/api/manifest.js';
           const headers={};let status=0,body='';
-          const req={method:'GET',headers:{host:'smart-cassier.vercel.app'}};
+          const req={method:'GET',headers:{host:'smart-order-sdb.vercel.app'}};
           const res={set statusCode(v){status=v},get statusCode(){return status},setHeader(k,v){headers[k.toLowerCase()]=v},end(v=''){body=String(v);return v}};
           await handler(req,res);
           const m=JSON.parse(body);

@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+const fail=m=>{console.error('B1_CANONICAL_IDENTITY_FAIL:'+m);process.exit(1)};
+const v=JSON.parse(fs.readFileSync('vercel.json','utf8'));
+const m=JSON.parse(fs.readFileSync('ops/smart-order-canonical-identity-v1.json','utf8'));
+if(m.canonical_origin!=='https://smart-order-sdb.vercel.app') fail('canonical_origin');
+if(m.deployment_topology!=='single_domain_four_surface') fail('topology');
+for(const [k,r] of Object.entries({public:'/',admin:'/admin',kds:'/kds',database:'/database'})) if(m.routes[k]!==r) fail('route_'+k);
+if(!(v.rewrites||[]).some(x=>x.source==='/'&&x.destination==='/api/public-render-seo-brand')) fail('public_rewrite');
+if(!(v.rewrites||[]).some(x=>x.source==='/admin'&&x.destination==='/api/admin-render')) fail('admin_rewrite');
+if(!(v.rewrites||[]).some(x=>x.source==='/kds'&&x.destination==='/apps/kds/index.html')) fail('kds_rewrite');
+if(!(v.rewrites||[]).some(x=>x.source==='/database'&&x.destination==='/api/admin-render')) fail('database_rewrite');
+if(!(v.redirects||[]).some(x=>x.source==='/:path*'&&x.destination==='https://smart-order-sdb.vercel.app/:path*'&&(x.has||[]).some(h=>h.type==='host'&&h.value==='smart-cassier.vercel.app'))) fail('legacy_redirect');
+const admin=fs.readFileSync('apps/admin/api/render.js','utf8');
+if(!admin.includes("location.pathname==='/database'?'database':'admin'")) fail('database_surface_bootstrap');
+console.log(JSON.stringify({ok:true,contract:m.contract,canonical:m.canonical_origin,routes:m.routes,legacy_redirect:true},null,2));
+console.log('B1_CANONICAL_IDENTITY_PASS=1');

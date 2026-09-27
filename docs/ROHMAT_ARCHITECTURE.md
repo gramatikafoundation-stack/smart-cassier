@@ -1,4 +1,6 @@
-# Rohmat Architecture Contract
+# Rohmat Architecture Contract (Legacy)
+
+> DEPRECATED FOR NEW TENANTS. This document records the historical multi-domain Rohmat topology for rollback/audit only. The active SMART ORDER candidate architecture is defined in SMART_ORDER_ARCHITECTURE.md.
 
 ## Canonical roles
 

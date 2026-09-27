@@ -4,7 +4,7 @@ import { resolvePublicTenantConfig } from '../lib/tenant-config.js';
 const base={
   MASTER_PROTOTYPE_STRICT:'1',
   SDB_TENANT_ID:'d8bb901c-7399-485b-8743-b319fde148ac',
-  PUBLIC_ORIGIN:'https://smart-cassier.vercel.app',
+  PUBLIC_ORIGIN:'https://smart-order-sdb.vercel.app',
   BUSINESS_NAME:'Rohmat Nasi Uduk',
   TENANT_LOCALE:'id-ID',
   SUPABASE_URL:'https://xrepmvbccalzhlcznrff.supabase.co',

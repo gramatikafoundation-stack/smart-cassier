@@ -226,6 +226,10 @@
       "destination": "/api/admin-render"
     },
     {
+      "source": "/database",
+      "destination": "/api/admin-render"
+    },
+    {
       "source": "/api/admin/render",
       "destination": "/api/admin-render"
     },
@@ -266,6 +270,19 @@
         {
           "key": "X-Robots-Tag",
           "value": "noindex, nofollow, noarchive"
+        }
+      ]
+    },
+    {
+      "source": "/database",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0, must-revalidate"
         }
       ]
     },
@@ -399,5 +416,18 @@
   ],
   "regions": [
     "sin1"
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "smart-cassier.vercel.app"
+        }
+      ],
+      "destination": "https://smart-order-sdb.vercel.app/:path*",
+      "permanent": true
+    }
   ]
 }

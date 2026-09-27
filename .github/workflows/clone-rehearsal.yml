@@ -10,6 +10,7 @@ on:
       - 'supabase/**'
       - 'integrations/google-sheets/**'
       - '.github/workflows/clone-rehearsal.yml'
+      - 'scripts/b2-runtime-security-gate.cjs'
   pull_request:
     paths:
       - 'prototype/**'
@@ -17,6 +18,7 @@ on:
       - 'supabase/**'
       - 'integrations/google-sheets/**'
       - '.github/workflows/clone-rehearsal.yml'
+      - 'scripts/b2-runtime-security-gate.cjs'
 
 jobs:
   zero-source-edit-rehearsal:
@@ -26,6 +28,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Validate B2 runtime/security contract
+        run: node scripts/b2-runtime-security-gate.cjs
       - name: Validate tenant A
         run: node prototype/validate-config.mjs prototype/rehearsal-a.json | tee /tmp/tenant-a-validation.json
       - name: Validate tenant B

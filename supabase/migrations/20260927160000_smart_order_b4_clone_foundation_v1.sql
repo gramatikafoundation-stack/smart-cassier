@@ -66,6 +66,12 @@ begin
       'require_table_qr_signature',c.require_table_qr_signature,
       'settings',coalesce(c.settings,'{}'::jsonb)
         - 'canonical_origin' - 'database_url'
+        - 'public_url' - 'admin_url' - 'kds_url'
+        - 'google_sheet_url'
+        - 'qris_image_url' - 'qris_enabled' - 'payment_instructions'
+        - 'business_name' - 'merchant_name'
+        - 'updated_at' - 'updated_by'
+        - 'security_contract'
     ),
     'menu',coalesce((
       select jsonb_agg(jsonb_build_object(
@@ -101,7 +107,8 @@ begin
     'clone_exclusions',jsonb_build_array(
       'orders','order_events','order_history_archive','admin_sessions',
       'payment_proofs','sheet_sync_outbox','reliability_history',
-      'spreadsheet_ids','writer_url','writer_secret','qris_asset','table_qr_signature_hashes'
+      'spreadsheet_ids','writer_url','writer_secret','admin_passwords',
+      'qris_asset','qris_image_url','payment_instructions','table_qr_signature_hashes'
     )
   )
   into v_snapshot
@@ -128,6 +135,7 @@ begin
       and frozen and source_tenant_id=v_tenant
       and source_git_sha='91ccddb8f90d1aa56dbd7335c2952bd0af98d36c'
       and source_migration_head='20260927144325'
+      and snapshot_sha256=v_sha
   ) then raise exception 'b4_snapshot_conflict'; end if;
 end $$;
 
@@ -220,7 +228,27 @@ begin
         'surface_routes',v_snap.snapshot->'surface_routes',
         'cloned_from_prototype',p_prototype_key,
         'master_snapshot_sha256',v_snap.snapshot_sha256,
-        'require_table_qr_signature',true
+        'require_table_qr_signature',true,
+        'business_name',trim(p_business_name),
+        'merchant_name',trim(p_business_name),
+        'public_url',v_origin,
+        'admin_url',v_origin,
+        'kds_url',v_origin,
+        'google_sheet_url',null,
+        'qris_image_url',null,
+        'qris_enabled',false,
+        'payment_instructions','',
+        'security_contract',jsonb_build_object(
+          'version','smart-order-master-runtime-security-v2',
+          'hardened_at',now(),
+          'client_rls','required',
+          'admin_session_ttl_hours',6,
+          'kds_session_ttl_hours',4,
+          'admin_gateway_fingerprint_binding',true,
+          'kds_fingerprint_binding',true,
+          'signed_table_qr',true,
+          'legacy_internal_rpc_direct_access',false
+        )
       ),
     true,v_table_count,true
   );
@@ -318,5 +346,32 @@ revoke all on function private.provision_tenant_from_master_v1(text,text,text,te
 from public,anon,authenticated;
 grant execute on function private.provision_tenant_from_master_v1(text,text,text,text,text,jsonb,text)
 to service_role;
+
+-- Keep release engineering exact while this is still a draft B4 foundation.
+update private.release_policy
+set source_control_mode='git_b4_clone_foundation',
+    ci_status='github_actions_b4_clone_foundation_candidate',
+    notes=coalesce(notes,'') || E'\n2026-09-27 B4.1: immutable template snapshot + safe clone provisioning contract. Candidate remains draft; promotion forbidden until disposable clone rehearsal passes.',
+    updated_at=now()
+where id=1;
+
+insert into private.release_baseline(
+  id,release_label,migration_head,schema_fingerprint,cron_fingerprint,
+  manifest_fingerprint,captured_at,notes
+)
+values(
+  1,'b4-clone-foundation-20260927','20260927160000',
+  private.release_schema_fingerprint(),private.release_cron_fingerprint(),
+  private.release_manifest_fingerprint(),now(),
+  'B4.1 clone foundation baseline. Candidate remains draft; no master promotion.'
+)
+on conflict(id) do update
+set release_label=excluded.release_label,
+    migration_head=excluded.migration_head,
+    schema_fingerprint=excluded.schema_fingerprint,
+    cron_fingerprint=excluded.cron_fingerprint,
+    manifest_fingerprint=excluded.manifest_fingerprint,
+    captured_at=excluded.captured_at,
+    notes=excluded.notes;
 
 commit;

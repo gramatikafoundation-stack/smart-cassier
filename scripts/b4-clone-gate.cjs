@@ -20,6 +20,9 @@ for(const marker of [
   "database_project_clone_required',false"
 ]) if(!m.includes(marker)) fail('foundation_marker:'+marker);
 
+if(!m.includes("delete from public.sheet_sync_outbox\n  where tenant_id=v_tenant;")) fail('bootstrap_outbox_cleanup_must_be_tenant_scoped');
+if((m.match(/delete from public\.sheet_sync_outbox/gi)||[]).length!==1) fail('unexpected_sheet_outbox_delete_scope');
+
 for(const forbidden of [
   'insert into public.orders',
   'insert into public.order_events',

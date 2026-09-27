@@ -78,9 +78,8 @@ for(const marker of [
   'smart_order_master_clone_template_immutable',
   'finalize_master_promotion_v1',
   'master_freeze_status_v1',
-  'run_postfreeze_clone_rehearsal_v1',
-  'smart-order-b4-postfreeze-certification-v1',
-  "'postfreeze_clone_ok'",
+  'run_release_bound_clone_rehearsal_v1',
+  'smart-order-b4-release-bound-certification-v1',
   "'git_master_frozen'",
   "'smart-order-sdb-master-v1'",
   "'master_frozen'",
@@ -92,4 +91,12 @@ if(/(?:select|perform)\s+private\.finalize_master_promotion_v1\s*\(/i.test(final
   fail('final_migration_must_not_self_promote');
 if(!finalFreeze.includes("status='deprecated'")) fail('legacy_master_deprecation_missing');
 if(!finalFreeze.includes("where id=v_proto.id and status='draft'")) fail('draft_to_active_guard_missing');
+
+if(!finalFreeze.includes("v_release_clone:=private.run_release_bound_clone_rehearsal_v1(p_release_tag,p_release_git_sha)"))
+  fail('finalizer_missing_release_bound_clone');
+if(!finalFreeze.includes("clone_contract='smart-order-b4-release-bound-certification-v1'"))
+  fail('freeze_status_missing_release_bound_evidence');
+if(!finalFreeze.includes("source_git_sha=p_release_git_sha"))
+  fail('release_bound_git_sha_not_enforced');
+
 console.log('B4_FINAL_FREEZE_SOURCE_GATE_PASS=1');

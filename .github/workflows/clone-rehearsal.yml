@@ -43,7 +43,7 @@ jobs:
           grep -q '"database_project_clone_required": false' /tmp/tenant-a-plan.json
           grep -q '"shared_project_ref": "xrepmvbccalzhlcznrff"' /tmp/tenant-a-plan.json
           grep -q '"ok": true' /tmp/prototype-rehearsal.json
-          grep -q '"single_domain_four_surface": true' /tmp/prototype-rehearsal.json
+          grep -q '"one_domain_four_surface": true' /tmp/prototype-rehearsal.json
           grep -q '"google_drive_database": true' /tmp/prototype-rehearsal.json
           node scripts/b4-clone-freeze-gate.cjs
           git diff --exit-code -- apps supabase integrations prototype scripts

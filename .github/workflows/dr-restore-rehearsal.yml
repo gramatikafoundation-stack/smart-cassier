@@ -179,12 +179,19 @@ jobs:
           apply_sql "$FINAL_SEAL"
           ledger "20260927144325" "smart_order_b3_final_evidence_seal_v1"
 
+          # B4 installs clone/freeze infrastructure but intentionally does not promote
+          # the prototype. Promotion requires an exact-head live clone attestation.
+          B4_INFRA="/tmp/rohmat-repo-migrations/20260927152500_smart_order_b4_master_freeze_infrastructure_v1.sql"
+          test -f "$B4_INFRA"
+          apply_sql "$B4_INFRA"
+          ledger "20260927152500" "smart_order_b4_master_freeze_infrastructure_v1"
+
           COUNT="$(node -p "JSON.parse(require('fs').readFileSync('supabase/restore/manifest.json','utf8')).count")"
           LEDGER_COUNT="$(psql "$DB_URL" -Atc "select count(*) from supabase_migrations.schema_migrations")"
           ACTUAL_HEAD="$(psql "$DB_URL" -Atc "select max(version) from supabase_migrations.schema_migrations")"
-          test "$LEDGER_COUNT" -eq "$((COUNT+11))"
-          test "$ACTUAL_HEAD" = '20260927144325'
-          echo "B3_DR_CANONICAL_TAIL_PASS=1"
+          test "$LEDGER_COUNT" -eq "$((COUNT+12))"
+          test "$ACTUAL_HEAD" = '20260927152500'
+          echo "B4_DR_FREEZE_INFRA_PASS=1"
 
       - name: Verify production structural contract
         shell: bash
@@ -211,18 +218,24 @@ jobs:
           echo "anon_internal_rpc_usage=$(sql "select has_schema_privilege('anon','internal_rpc','USAGE')")"
           echo "release_engineering_status=$(sql "select private.release_engineering_status()")"
           test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r'")" = '19'
-          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='private' and c.relkind='r'")" = '49'
+          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='private' and c.relkind='r'")" = '51'
           test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='v'")" = '2'
-          test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prokind='f' and n.nspname='public'")" = '114'
-          test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prokind='f' and n.nspname='private'")" = '89'
-          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and c.relkind='r' and c.relrowsecurity")" = '68'
+          test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prokind='f' and n.nspname='public'")" = '115'
+          test "$(sql "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prokind='f' and n.nspname='private'")" = '92'
+          test "$(sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and c.relkind='r' and c.relrowsecurity")" = '70'
           test "$(sql "select count(*) from pg_policies where schemaname in ('public','private')")" = '81'
-          test "$(sql "select count(*) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and not t.tgisinternal")" = '39'
-          test "$(sql "select count(*) from pg_indexes where schemaname in ('public','private')")" = '153'
+          test "$(sql "select count(*) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and not t.tgisinternal")" = '42'
+          test "$(sql "select count(*) from pg_indexes where schemaname in ('public','private')")" = '157'
           test "$(sql "select to_regprocedure('public.master_runtime_security_health_v1(uuid)') is not null")" = 't'
           test "$(sql "select to_regprocedure('public.master_prototype_runtime_context(uuid,text,text)') is not null")" = 't'
           test "$(sql "select to_regclass('private.platform_prototypes') is not null")" = 't'
           test "$(sql "select to_regclass('private.tenant_runtime_config') is not null")" = 't'
+          test "$(sql "select to_regclass('private.master_clone_rehearsal_attestations') is not null")" = 't'
+          test "$(sql "select to_regclass('private.master_freeze_manifests') is not null")" = 't'
+          test "$(sql "select to_regprocedure('private.promote_smart_order_master_v1(text,text,text,text,text)') is not null")" = 't'
+          test "$(sql "select to_regprocedure('public.master_frozen_runtime_security_health_v1(uuid)') is not null")" = 't'
+          test "$(sql "select relrowsecurity from pg_class where oid='private.master_clone_rehearsal_attestations'::regclass")" = 't'
+          test "$(sql "select relrowsecurity from pg_class where oid='private.master_freeze_manifests'::regclass")" = 't'
           test "$(sql "select relrowsecurity from pg_class where oid='private.kds_realtime_channels'::regclass")" = 't'
           test "$(sql "select has_schema_privilege('anon','internal_rpc','USAGE')")" = 'f'
           test "$(sql "select (private.release_engineering_status()->>'ok')::boolean")" = 't'

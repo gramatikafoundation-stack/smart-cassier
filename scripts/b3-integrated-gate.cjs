@@ -31,3 +31,26 @@ console.log(JSON.stringify({
   outbox_audit_rows_preserved:true
 },null,2));
 console.log('B3_INTEGRATED_SOURCE_GATE_PASS=1');
+
+
+const finalSeal=fs.readFileSync('supabase/migrations/20260927144325_smart_order_b3_final_evidence_seal_v1.sql','utf8');
+const rollbackE2E=fs.readFileSync('scripts/b3-rollback-e2e.sql','utf8');
+const livePreflight=fs.readFileSync('scripts/b3-live-preflight.sql','utf8');
+
+for(const marker of [
+  "expected_components=32",
+  "expected_version='v6'",
+  "rollback_ref='edge-version:v5'",
+  "20260927144325",
+  "insert into private.release_baseline",
+  "'b3_candidate_status','draft'",
+  "github_actions_b3_final_gate_pass"
+]) if(!finalSeal.includes(marker)) fail('final_seal_marker:'+marker);
+
+if(/status\s*=\s*'active'/i.test(finalSeal)) fail('final_seal_must_not_promote_candidate');
+if(!rollbackE2E.includes('rollback;')) fail('rollback_e2e_must_rollback');
+if(!rollbackE2E.includes('cross_tenant_read_rejected')) fail('rollback_e2e_missing_tenant_read_assertion');
+if(!rollbackE2E.includes('cross_tenant_write_rejected')) fail('rollback_e2e_missing_tenant_write_assertion');
+if(!livePreflight.includes('smart-order-b3-live-preflight-v1')) fail('live_preflight_contract_missing');
+
+console.log('B3_FINAL_EVIDENCE_SOURCE_GATE_PASS=1');

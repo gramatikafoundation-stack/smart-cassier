@@ -121,8 +121,8 @@ begin
     id,name,category,price,description,image_url,is_favorite,is_visible,
     display_order,is_available,availability_note,tenant_id
   ) values
-    ('b4-tenant-a-menu-001','Contoh Menu A','Makanan',10000,'B4 clone seed','',false,true,1,true,'',a),
-    ('b4-tenant-b-menu-001','Example Menu B','Food',12000,'B4 clone seed','',false,true,1,true,'',b);
+    ('b4-tenant-a-menu-001','Contoh Menu A','Nasi',10000,'B4 clone seed','',false,true,1,true,'',a),
+    ('b4-tenant-b-menu-001','Example Menu B','Minuman',12000,'B4 clone seed','',false,true,1,true,'',b);
 
   foreach ak in array array['public','admin','kds','database'] loop
     ra:=public.master_prototype_resolve_origin('https://tenant-a.example.com',ak);

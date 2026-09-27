@@ -201,13 +201,70 @@ Deno.serve(async(req:Request)=>{
       menu_rows:menu.length
     };
 
+    // SMART CASHIER annual archive v2. Keep the legacy tabs above unchanged for
+    // Writer v4 rollback compatibility; Writer v5 consumes archive_tabs only.
+    const menuMeta=new Map<string,any>();
+    for(const x of mr.data||[]){
+      if(x.id)menuMeta.set(String(x.id),x);
+      if(x.name)menuMeta.set(String(x.name),x);
+    }
+    const archivePemesan:any[][]=[];
+    const archiveMakanan:any[][]=[];
+    const archiveMinuman:any[][]=[];
+    const archivePembayaran:any[][]=[];
+    let archiveUnclassifiedItems=0;
+
+    for(const o of paidOrders){
+      const p=parts(o.created_at,tz);
+      const keepCustomerPii=withinDays(o.created_at,piiDays);
+      const mode=service(o.service_mode);
+      const serviceTable=o.table_number?mode+" / Meja "+String(o.table_number):mode;
+      archivePemesan.push([
+        p.d,p.t,keepCustomerPii?(o.customer_name||""):"",serviceTable
+      ]);
+      archivePembayaran.push([p.d,Number(o.total_amount||0)]);
+
+      for(const i of (Array.isArray(o.items)?o.items:[])){
+        const q=Math.max(0,Math.floor(Number(i.quantity??i.qty??1)||0));
+        const name=String(i.name??i.menu_name??"Menu");
+        const key=String(i.menuId??i.menu_id??i.id??"");
+        const meta=(key&&menuMeta.get(key))||menuMeta.get(name)||null;
+        const category=String(i.category??i.menu_category??meta?.category??"");
+        const price=Math.max(0,Number(i.price??i.unit_price??meta?.price??0)||0);
+        const target=["Minuman","Jus Buah"].includes(category)
+          ?archiveMinuman
+          :["Nasi","Lauk"].includes(category)
+            ?archiveMakanan
+            :null;
+        if(!target){ archiveUnclassifiedItems+=q; continue; }
+        for(let unit=0;unit<q;unit++)target.push([p.d,name,price]);
+      }
+    }
+
     return json({
-      ok:true,version:3,writer_version_expected:Number(cfg.data.expected_writer_version||4),
+      ok:true,version:3,archive_version:2,
+      writer_version_expected:Number(cfg.data.expected_writer_version||4),
       tenant_id:tenantId,tenant_slug:cfg.data.tenant_slug,
       business_name:cfg.data.business_name,timezone:tz,year,
       spreadsheetId:target.spreadsheet_id,label:target.label,
       retention:{customer_pii_days:piiDays,payment_proof_reference_days:PAYMENT_PROOF_REFERENCE_DAYS},
       tabs:{PEMESAN:pemesan,PESANAN:pesanan,"MENU & STOK":menu,KEUANGAN:keuangan},
+      archive_tabs:{
+        "Data Pemesan":archivePemesan,
+        "Data Pesanan Makanan":archiveMakanan,
+        "Data Pesanan Minuman":archiveMinuman,
+        "Riwayat Pembayaran":archivePembayaran
+      },
+      archive_quality:{
+        unclassified_items:archiveUnclassifiedItems,
+        complete:archiveUnclassifiedItems===0
+      },
+      archive_metrics:{
+        transactions:archivePemesan.length,
+        food_units:archiveMakanan.length,
+        drink_units:archiveMinuman.length,
+        total_paid:archivePembayaran.reduce((sum,row)=>sum+Number(row[1]||0),0)
+      },
       metrics
     },200,tenantId);
   }catch(e){

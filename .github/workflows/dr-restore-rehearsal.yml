@@ -171,6 +171,7 @@ jobs:
           EOF
 
           apply_sql "supabase/restore/tail-bridges/20260927204600_live_identity_reconcile_bridge.sql"
+          apply_sql "supabase/restore/tail-bridges/20260927204700_retired_rdc_recovery_cleanup.sql"
 
           COUNT="$(node -p "JSON.parse(require('fs').readFileSync('supabase/restore/manifest.json','utf8')).count")"
           LEDGER_COUNT="$(psql "$DB_URL" -Atc "select count(*) from supabase_migrations.schema_migrations")"

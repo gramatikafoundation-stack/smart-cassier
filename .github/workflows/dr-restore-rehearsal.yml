@@ -280,23 +280,18 @@ jobs:
           echo "$OUT"
           echo "$OUT" | grep -q '"ok": true' || echo "$OUT" | grep -q '"ok":true'
 
-          POST="$(psql "$DB_URL" -Atc "select private.run_postfreeze_clone_rehearsal_v1()")"
-          echo "$POST"
-          echo "$POST" | grep -q '"ok": true' || echo "$POST" | grep -q '"ok":true'
-          echo "$POST" | grep -q '"cleanup_residue": 0' || echo "$POST" | grep -q '"cleanup_residue":0'
-
           echo "new_master_status=$(psql "$DB_URL" -Atc "select status from private.platform_prototypes where prototype_key='smart-order-sdb-platform-v1'")"
           echo "old_master_status=$(psql "$DB_URL" -Atc "select status from private.platform_prototypes where prototype_key='rohmat-master-prototype-v1'")"
           echo "active_prototypes=$(psql "$DB_URL" -Atc "select count(*) from private.platform_prototypes where status='active'")"
           echo "active_templates=$(psql "$DB_URL" -Atc "select count(*) from private.platform_clone_templates where status='active' and template_key='smart-order-sdb-master-v1'")"
-          echo "postfreeze_evidence=$(psql "$DB_URL" -Atc "select count(*) from private.master_clone_rehearsal_evidence where clone_contract='smart-order-b4-postfreeze-certification-v1' and passed and residue_zero")"
+          echo "release_bound_evidence=$(psql "$DB_URL" -Atc "select count(*) from private.master_clone_rehearsal_evidence where clone_contract='smart-order-b4-release-bound-certification-v1' and source_git_sha='$SHA' and source_migration_head='20260927174000' and passed and residue_zero")"
           echo "freeze_status=$(psql "$DB_URL" -Atc "select private.master_freeze_status_v1()")"
           test "$(psql "$DB_URL" -Atc "select status from private.platform_prototypes where prototype_key='smart-order-sdb-platform-v1'")" = 'active'
           test "$(psql "$DB_URL" -Atc "select status from private.platform_prototypes where prototype_key='rohmat-master-prototype-v1'")" = 'deprecated'
           test "$(psql "$DB_URL" -Atc "select count(*) from private.platform_prototypes where status='active'")" = '1'
           test "$(psql "$DB_URL" -Atc "select count(*) from private.platform_clone_templates where status='active' and template_key='smart-order-sdb-master-v1'")" = '1'
-          test "$(psql "$DB_URL" -Atc "select count(*) from private.master_clone_rehearsal_evidence where clone_contract='smart-order-b4-postfreeze-certification-v1' and passed and residue_zero")" -ge '1'
-          test "$(psql "$DB_URL" -Atc "select (private.master_freeze_status_v1()->>'postfreeze_clone_ok')::boolean")" = 't'
+          test "$(psql "$DB_URL" -Atc "select count(*) from private.master_clone_rehearsal_evidence where clone_contract='smart-order-b4-release-bound-certification-v1' and source_git_sha='$SHA' and source_migration_head='20260927174000' and passed and residue_zero")" -ge '1'
+          test "$(psql "$DB_URL" -Atc "select (private.master_freeze_status_v1()->>'clone_evidence_ok')::boolean")" = 't'
           test "$(psql "$DB_URL" -Atc "select (private.master_freeze_status_v1()->>'ok')::boolean")" = 't'
           test "$(psql "$DB_URL" -Atc "select count(*) from private.platform_tenants where slug like 'b4-cert-%'")" = '0'
           echo "B4_ISOLATED_MASTER_PROMOTION_PASS=1"

@@ -357,9 +357,11 @@ function applyReferenceExactStructure(html) {
     '<div class="logo"><div class="logoMark">R</div><div><b>Studio Rohmat</b><small>Design System</small></div></div>',
     '<div class="logo"><div class="logoMark">R</div><div><b>SMART ORDER</b><small>Rohmat Nasi Uduk</small></div></div>'
   );
-  const cashierOld = "if(sub==='Smart Cashier'){v.innerHTML='<section id=\"rohmatCashierSafe\"><div class=\"empty\">Memuat menu Smart Cashier…</div></section>';";
   const cashierNew = "if(sub==='Smart Cashier'){const q=data.orders.slice(0,3);v.innerHTML='<section class=\"refOrderQueue\"><div class=\"refQueueHead\"><h2>Order queue</h2><div class=\"refQueueActions\"><button type=\"button\" aria-label=\"Filter\">⌁</button><button type=\"button\" aria-label=\"Menu\">•••</button></div></div><div class=\"refQueueGrid\">'+q.map((o,i)=>{const raw=String(o.order_status||o.status||o.payment_status||'Pending'),lc=raw.toLowerCase(),cls=(lc.includes('prepar')||lc.includes('confirm')||lc.includes('ready'))?'preparing':(lc.includes('cook')||lc.includes('process'))?'cooking':'pending',label=cls==='preparing'?'Preparing':cls==='cooking'?'Cooking':'Pending',place=o.table_number?'Table '+o.table_number+' · Dine In':(String(o.service_mode||'').toLowerCase().includes('take')?'Takeaway · Pick Up':'Online Order'),mins=Math.max(1,Math.round((Date.now()-new Date(o.created_at||Date.now()).getTime())/60000)),cnt=Array.isArray(o.items)?o.items.reduce((a,x)=>a+Number(x.quantity||1),0):1;return '<article class=\"refQueueCard '+cls+'\"><div class=\"refQueueTop\"><span class=\"refQueueCode\">#'+esc(o.order_code||o.public_order_code||o.id||('ORD-'+String(i+1).padStart(3,'0')))+'</span><span class=\"refQueueStatus\">'+label+'</span></div><div class=\"refQueuePlace\">'+esc(place)+'</div><div class=\"refQueueMeta\"><span>'+cnt+' items · '+mins+' min</span><span>'+esc(o.payment_method||o.service_mode||'Order')+'</span></div></article>'}).join('')+'</div></section><div class=\"refProductHead\"><h2>Product List</h2><span class=\"muted\">Menu aktif · cari dan tambahkan ke pesanan</span></div><section id=\"rohmatCashierSafe\"><div class=\"empty\">Memuat menu Smart Cashier…</div></section>';";
-  if (out.includes(cashierOld)) out = out.replace(cashierOld, cashierNew);
+  out = out.replace(
+    /if\(sub==='Smart Cashier'\)\{v\.innerHTML='<section id="rohmatCashierSafe"><div class="empty">Memuat menu Smart Cashier…<\/div><\/section>';/,
+    cashierNew
+  );
   return out;
 }
 

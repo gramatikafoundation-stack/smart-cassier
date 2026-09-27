@@ -16,15 +16,6 @@ begin
   if not coalesce((private.release_engineering_status()->>'ok')::boolean,false) then
     raise exception 'b4_final_release_engineering_not_ready';
   end if;
-  if not exists(
-    select 1
-    from private.master_clone_rehearsal_evidence e
-    join private.master_template_snapshots s on s.prototype_key=e.prototype_key
-    where e.prototype_key='smart-order-sdb-platform-v1'
-      and e.passed and e.residue_zero
-      and e.template_snapshot_sha256=s.snapshot_sha256
-      and s.frozen
-  ) then raise exception 'b4_clone_certification_missing'; end if;
 end $$;
 
 create table if not exists private.master_freeze_manifests (

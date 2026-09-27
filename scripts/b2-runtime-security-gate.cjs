@@ -13,6 +13,18 @@ for(const marker of [
   'tenant_table_qr_hash_b2'
 ]) if(!foundation.includes(marker)) fail('foundation_marker:'+marker);
 
+const cutover=read('supabase/migrations/20260927203000_smart_order_b2_final_security_cutover_v1.sql');
+for(const marker of [
+  "require_table_qr_signature=true",
+  "active_contract='smart-order-master-runtime-security-v2'",
+  "revoke usage on schema internal_rpc from public, anon, authenticated",
+  "master_runtime_security_health_v1",
+  "b2_cutover_state','pending_final_validation'",
+  "secure_api','v6'",
+  "admin_media_upload','v3'",
+  "admin_order_history','v3'"
+]) if(!cutover.includes(marker)) fail('cutover_marker:'+marker);
+
 const secure=read('supabase/functions/rohmat-secure-api-v1/index.ts');
 for(const marker of [
   'admin_password_login_bound_tenant',
@@ -38,6 +50,9 @@ console.log(JSON.stringify({
   admin_scope_isolation:true,
   admin_fingerprint_binding:true,
   admin_session_ttl_hours:6,
-  qr_constraints:true
+  qr_constraints:true,
+  signed_qr_cutover:true,
+  legacy_internal_rpc_closed:true,
+  health_contract:true
 },null,2));
 console.log('B2_RUNTIME_SECURITY_GATE_PASS=1');

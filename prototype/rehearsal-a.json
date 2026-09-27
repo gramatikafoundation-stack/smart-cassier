@@ -20,7 +20,6 @@
   "require_table_qr_signature": true,
   "menu_seed": "prototype/menu.example.json",
   "admin_owner_email": "owner-a@example.com",
-  "spreadsheet_target": "sheet-tenant-a",
   "storage": {
     "namespace": "tenant-a",
     "static_bucket": "merchant-static",
@@ -31,11 +30,12 @@
     "start_year": 2026,
     "years": 5,
     "expected_tabs": [
-      "DASHBOARD",
-      "PEMESAN",
-      "PESANAN",
-      "MENU & STOK",
-      "KEUANGAN"
-    ]
+      "Dashboard",
+      "Data Pemesan",
+      "Data Pesanan Makanan",
+      "Data Pesanan Minuman",
+      "Riwayat Pembayaran"
+    ],
+    "template_set": "smart-cashier-annual-2026-2030-v1"
   }
 }

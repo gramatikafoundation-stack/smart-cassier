@@ -181,6 +181,91 @@ body{background:#f5f5f6!important}
   .content{padding:9px!important}.cashLayout{grid-template-columns:1fr!important}.cashMenu{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
 
+
+/* smart-order-reference-structural-admin-v3 */
+body #rohmatCashierSafe{
+  --c-bg:#f6f6f7!important;--c-panel:#fff!important;--c-ink:#171717!important;--c-muted:#7a7f84!important;
+  --c-primary:#f4f5f6!important;--c-accent:#111!important;--c-line:#e2e4e7!important;
+  background:transparent!important;color:#171717!important;border:0!important;border-radius:0!important;
+  padding:0!important;margin:0!important;min-height:0!important
+}
+.refOrderQueue{background:#fff;border:1px solid #e2e4e7;border-radius:8px;padding:10px;margin-bottom:8px}
+.refQueueHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.refQueueHead h2,.refProductHead h2{margin:0;color:#111;font-size:14px;letter-spacing:0}
+.refQueueActions{display:flex;gap:5px}.refQueueActions button{width:28px;height:28px;border:1px solid #e0e2e4;background:#fff;border-radius:6px;color:#5a6065}
+.refQueueGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.refQueueCard{background:#fff;border:1px solid #e3e5e7;border-radius:7px;padding:8px;display:grid;gap:6px;min-width:0}
+.refQueueTop{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.refQueueCode{font-weight:800;font-size:10px;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.refQueueStatus{font-size:8px;font-weight:800;padding:3px 6px;border-radius:5px;white-space:nowrap}
+.refQueueCard.preparing .refQueueStatus{background:#dff5e6;color:#287d43}
+.refQueueCard.cooking .refQueueStatus{background:#fff0d9;color:#b36a12}
+.refQueueCard.pending .refQueueStatus{background:#ffe0df;color:#c74a46}
+.refQueuePlace{font-size:11px;font-weight:750;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.refQueueMeta{font-size:9px;color:#81868a;display:flex;justify-content:space-between;gap:5px}
+.refProductHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 2px 7px}
+.refProductHead .muted{font-size:9px}
+body #rohmatCashierSafe .rc6Top{display:none!important}
+body #rohmatCashierSafe .rc6Layout{display:grid!important;grid-template-columns:minmax(0,1fr) 286px!important;gap:8px!important}
+body #rohmatCashierSafe .rc6Panel{
+  padding:8px!important;background:#fff!important;border:1px solid #e2e4e7!important;border-radius:8px!important
+}
+body #rohmatCashierSafe .rc6Cats{gap:4px!important;margin-bottom:8px!important;overflow:auto!important}
+body #rohmatCashierSafe .rc6Btn{
+  min-height:29px!important;padding:5px 8px!important;border:1px solid #e0e2e4!important;background:#fff!important;
+  color:#3f4549!important;border-radius:6px!important;font-size:9px!important;font-weight:700!important;box-shadow:none!important
+}
+body #rohmatCashierSafe .rc6Btn.on{background:#f0f1f2!important;border-color:#d9dcdf!important;color:#111!important}
+body #rohmatCashierSafe .rc6Btn.primary{background:#eef6f1!important;border-color:#d8e7dd!important;color:#30493b!important}
+body #rohmatCashierSafe .rc6Menu{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+body #rohmatCashierSafe .rc6Item{
+  background:#fff!important;border:1px solid #e1e3e5!important;border-radius:7px!important;padding:0!important;overflow:hidden!important;
+  display:grid!important;grid-template-rows:auto auto auto 1fr!important;gap:0!important;box-shadow:none!important
+}
+body #rohmatCashierSafe .rc6Item .rc6MediaSolo,
+body #rohmatCashierSafe .rc6Item>img{
+  width:100%!important;height:auto!important;aspect-ratio:16/9!important;object-fit:cover!important;object-position:center!important;
+  border-radius:0!important;background:#eee!important;margin:0!important
+}
+body #rohmatCashierSafe .rc6Item h4{margin:7px 8px 0!important;font-size:11px!important;line-height:1.25!important;color:#161616!important}
+body #rohmatCashierSafe .rc6Price{margin:5px 8px 5px!important;color:#222!important;font-size:10px!important;font-weight:800!important}
+body #rohmatCashierSafe .rc6Item>.rc6Btn.primary{margin:0 8px 8px!important;justify-self:end!important;min-height:28px!important}
+body #rohmatCashierSafe .rc6Item>.rc6Qty{margin:0 8px 8px!important;gap:4px!important}
+body #rohmatCashierSafe .rc6Item>.rc6Qty .rc6Btn{width:29px!important;height:29px!important;min-height:29px!important}
+body #rohmatCashierSafe .rc6Item>.rc6Qty>b{
+  width:30px!important;height:29px!important;min-height:29px!important;border:1px solid #e1e3e5!important;border-radius:5px!important;
+  background:#fff!important;color:#222!important;font-size:10px!important
+}
+body #rohmatCashierSafe .rc6Line{padding:6px 0!important;border-color:#eceeef!important;font-size:10px!important}
+body #rohmatCashierSafe .rc6Qty .rc6Btn{width:28px!important;height:28px!important;min-height:28px!important}
+body #rohmatCashierSafe .rc6Field{gap:3px!important;margin-top:6px!important}
+body #rohmatCashierSafe .rc6Field label{font-size:9px!important;color:#686e72!important}
+body #rohmatCashierSafe .rc6Field input,
+body #rohmatCashierSafe .rc6Field select,
+body #rohmatCashierSafe .rc6Field textarea{
+  min-height:31px!important;padding:6px 7px!important;border:1px solid #dfe2e4!important;border-radius:6px!important;
+  background:#fff!important;color:#222!important;font-size:10px!important
+}
+body #rohmatCashierSafe .rc6Two{gap:5px!important;margin-top:6px!important}
+body #rohmatCashierSafe .rc6Total{font-size:14px!important;padding:8px 0!important;border-top:1px solid #e7e9eb!important;margin-top:6px!important}
+body #rohmatCashierSafe .rc6Empty{border:1px dashed #dfe2e4!important;color:#8a9094!important;padding:10px!important;border-radius:6px!important;font-size:9px!important}
+body #rohmatCashierSafe .rc6GateReason{font-size:8px!important;color:#8a9094!important}
+body #rohmatCashierSafe .rc6Qris img{max-width:150px!important;max-height:170px!important}
+body #rohmatCashierSafe .rc6Layout:has(aside .rc6Empty)>aside{display:none!important}
+body #rohmatCashierSafe .rc6Layout:has(aside .rc6Empty){grid-template-columns:1fr!important}
+body .topbar .ey{display:none!important}
+body .topbar{min-height:44px!important}
+body .topbar h2{font-size:13px!important}
+@media(max-width:1050px){
+  .refQueueGrid{grid-template-columns:repeat(3,minmax(160px,1fr))}
+  body #rohmatCashierSafe .rc6Layout{grid-template-columns:minmax(0,1fr) 250px!important}
+}
+@media(max-width:760px){
+  .refQueueGrid{grid-template-columns:1fr;overflow:auto}
+  body #rohmatCashierSafe .rc6Layout{grid-template-columns:1fr!important}
+  body #rohmatCashierSafe .rc6Menu{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+
 </style><!-- smart-order-admin-foodcode-v1 -->`;
 const REQUIRED_MARKERS = [
   'Studio Pengelola',
@@ -257,6 +342,27 @@ function consolidateCss(html) {
   return out.replace(foundation, (_m, open, css, close) => open + css + '\n' + extras.join('\n') + close);
 }
 
+
+function applyReferenceExactStructure(html) {
+  let out = String(html || '');
+  out = out.replace(
+    "let data={settings:{},menu:[],orders:[],team:[],email:'',role:''},main='general',sub='Tema',",
+    "let data={settings:{},menu:[],orders:[],team:[],email:'',role:''},main='admin',sub='Smart Cashier',"
+  );
+  out = out.replace(
+    "const items=[['general','GENERAL'],['public','SITUS PUBLIK'],['admin','SITUS ADMIN'],['kds','KDS'],['database','DATABASE']];",
+    "const items=[['general','Dashboard'],['admin','Point of Sale'],['public','Menu Management'],['kds','Kitchen'],['database','Reports']];"
+  );
+  out = out.replace(
+    '<div class="logo"><div class="logoMark">R</div><div><b>Studio Rohmat</b><small>Design System</small></div></div>',
+    '<div class="logo"><div class="logoMark">R</div><div><b>SMART ORDER</b><small>Rohmat Nasi Uduk</small></div></div>'
+  );
+  const cashierOld = "if(sub==='Smart Cashier'){v.innerHTML='<section id=\"rohmatCashierSafe\"><div class=\"empty\">Memuat menu Smart Cashier…</div></section>';";
+  const cashierNew = "if(sub==='Smart Cashier'){const q=data.orders.slice(0,3);v.innerHTML='<section class=\"refOrderQueue\"><div class=\"refQueueHead\"><h2>Order queue</h2><div class=\"refQueueActions\"><button type=\"button\" aria-label=\"Filter\">⌁</button><button type=\"button\" aria-label=\"Menu\">•••</button></div></div><div class=\"refQueueGrid\">'+q.map((o,i)=>{const raw=String(o.order_status||o.status||o.payment_status||'Pending'),lc=raw.toLowerCase(),cls=(lc.includes('prepar')||lc.includes('confirm')||lc.includes('ready'))?'preparing':(lc.includes('cook')||lc.includes('process'))?'cooking':'pending',label=cls==='preparing'?'Preparing':cls==='cooking'?'Cooking':'Pending',place=o.table_number?'Table '+o.table_number+' · Dine In':(String(o.service_mode||'').toLowerCase().includes('take')?'Takeaway · Pick Up':'Online Order'),mins=Math.max(1,Math.round((Date.now()-new Date(o.created_at||Date.now()).getTime())/60000)),cnt=Array.isArray(o.items)?o.items.reduce((a,x)=>a+Number(x.quantity||1),0):1;return '<article class=\"refQueueCard '+cls+'\"><div class=\"refQueueTop\"><span class=\"refQueueCode\">#'+esc(o.order_code||o.public_order_code||o.id||('ORD-'+String(i+1).padStart(3,'0')))+'</span><span class=\"refQueueStatus\">'+label+'</span></div><div class=\"refQueuePlace\">'+esc(place)+'</div><div class=\"refQueueMeta\"><span>'+cnt+' items · '+mins+' min</span><span>'+esc(o.payment_method||o.service_mode||'Order')+'</span></div></article>'}).join('')+'</div></section><div class=\"refProductHead\"><h2>Product List</h2><span class=\"muted\">Menu aktif · cari dan tambahkan ke pesanan</span></div><section id=\"rohmatCashierSafe\"><div class=\"empty\">Memuat menu Smart Cashier…</div></section>';";
+  if (out.includes(cashierOld)) out = out.replace(cashierOld, cashierNew);
+  return out;
+}
+
 export function canonicalizeAdminShell(html) {
   let out = ensureCashierIntegration(String(html || ''));
   out = out.split('Warung Nasi').join(BUSINESS_NAME);
@@ -264,6 +370,7 @@ export function canonicalizeAdminShell(html) {
   out = out.replace(/MEDIA=U\+'\/functions\/v1\/admin-media-upload'/g, "MEDIA='/admin/api/media-upload'");
   out = out.split('https://smart-cassier.vercel.app/login').join('/kds/login');
   out = consolidateCss(out);
+  out = applyReferenceExactStructure(out);
 
   const v41 = scriptRe('admin-design-system-runtime-v41');
   if (v41.test(out)) out = out.replace(v41, CORE_LOADER);

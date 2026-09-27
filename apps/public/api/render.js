@@ -123,6 +123,94 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
  .grid .food,.grid .food img{border-radius:12px!important}.cart{padding:0 10px 10px!important}.cartgo{border-radius:14px!important}.panel{padding:18px!important;border-radius:18px!important}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* smart-order-reference-exact-public-v2 */
+:root{
+ --so-bg:#f3e6de!important;--so-surface:#fffaf7!important;--so-soft:#f8efe9!important;
+ --so-dark:#1c1714!important;--so-dark2:#211b18!important;--so-ink:#2d2521!important;
+ --so-muted:#8b7d76!important;--so-line:#eadbd2!important;--so-teal:#ff5a24!important;
+ --so-mint:#ff7b45!important;--so-warm:#ff4f1f!important;--so-ok:#52a55a!important;
+}
+html{background:#f3e6de!important}
+body{
+  background:
+    radial-gradient(circle at 50% -10%,rgba(255,255,255,.82),transparent 24rem),
+    linear-gradient(180deg,#f6ece6 0%,#f1dfd5 100%)!important;
+  color:#2d2521!important
+}
+.w{width:min(1040px,calc(100% - 24px))!important}
+.hero{padding:18px!important;background:transparent!important}
+.welcome{
+  width:min(980px,100%)!important;grid-template-columns:minmax(0,.9fr) minmax(360px,1.1fr)!important;
+  border:1px solid rgba(115,76,58,.10)!important;border-radius:22px!important;background:#fffaf7!important;
+  box-shadow:0 24px 60px rgba(105,67,49,.15)!important
+}
+.photo{min-height:500px!important;background:#eadbd1!important}
+.photo:after{background:linear-gradient(180deg,transparent 58%,rgba(86,48,32,.10) 100%)!important}
+.copy{padding:38px!important;background:#fffaf7!important}
+.brand{
+  color:#271f1b!important;font-size:clamp(38px,5vw,58px)!important;letter-spacing:-.05em!important;line-height:.98!important
+}
+.ey{color:#ff5a24!important}.muted{color:#8c7f78!important}
+.opt{border-color:#eadfd8!important;border-radius:12px!important;background:#fff!important}
+.opt.on{border-color:#ff8b63!important;background:#fff4ee!important;box-shadow:inset 3px 0 #ff5a24!important}
+.field input,.field textarea,.field select{border-color:#eadfd8!important;border-radius:10px!important;background:#fff!important;color:#2d2521!important}
+.btn{border-radius:10px!important}
+.pri,.accent{background:#ff5a24!important;color:#fff!important;box-shadow:none!important}
+.soft{background:#fff!important;color:#4e4039!important;border-color:#eadfd8!important}
+.head{background:rgba(255,250,247,.95)!important;border-color:#eadfd8!important;backdrop-filter:blur(12px)!important}
+.headin{min-height:66px!important}.headin .brand{font-size:24px!important;color:#251e1a!important}
+.badge{background:#fff0e8!important;color:#d84b1d!important;border-color:#ffd6c6!important}
+.cats{top:66px!important;background:rgba(246,236,230,.96)!important;border-color:#eadfd8!important}
+.catin{padding:8px 0!important;gap:6px!important}
+.cat{padding:7px 11px!important;border-radius:8px!important;background:#fff!important;border-color:#eadfd8!important;color:#6a5b53!important;font-size:12px!important}
+.cat.on{background:#ff5a24!important;border-color:#ff5a24!important;color:#fff!important;box-shadow:none!important}
+.grid{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;padding:15px 0 100px!important
+}
+.grid .card{
+  background:#fffaf7!important;border:1px solid #eadfd8!important;border-radius:14px!important;
+  box-shadow:0 7px 18px rgba(97,61,45,.06)!important;padding:9px!important
+}
+.grid .card:hover{transform:translateY(-2px)!important;border-color:#f1c7b7!important;box-shadow:0 10px 22px rgba(97,61,45,.09)!important}
+.grid .food{
+  width:min(100%,116px)!important;aspect-ratio:1!important;margin:3px auto 7px!important;border-radius:999px!important;
+  background:#f2e7e0!important;overflow:hidden!important
+}
+.grid .food img{
+  width:100%!important;height:100%!important;aspect-ratio:1!important;border-radius:999px!important;
+  object-fit:cover!important
+}
+.grid .body{padding:3px 3px 1px!important;text-align:left!important}
+.grid .body h3{font-size:12px!important;line-height:1.25!important;color:#2a221e!important;margin:0 0 3px!important}
+.grid .body p{font-size:10px!important;color:#8e817a!important;line-height:1.35!important}
+.price{color:#ff5a24!important;font-size:11px!important}
+.grid .foot{gap:5px!important;margin-top:6px!important}.grid .foot .btn{min-height:30px!important;padding:5px 7px!important;font-size:10px!important}
+.grid .qty{border-color:#eadfd8!important;background:#fff!important;border-radius:7px!important}
+.grid .qty button{background:#fff3ed!important;color:#d84b1d!important}
+.cart{padding:7px 10px 10px!important;background:transparent!important}
+.cartgo{
+  width:min(540px,100%)!important;background:#ff5a24!important;color:#fff!important;border:0!important;border-radius:10px!important;
+  padding:11px 14px!important;box-shadow:0 12px 28px rgba(214,70,20,.24)!important
+}
+.box,.panel{background:#fffaf7!important;border-color:#eadfd8!important;border-radius:16px!important;box-shadow:0 16px 36px rgba(97,61,45,.10)!important}
+.step{background:#f2e8e2!important;color:#91817a!important;border-radius:9px!important}.step.on{background:#fff0e8!important;color:#d84b1d!important}.step.done{background:#ffe1d4!important;color:#b53b15!important}
+.identity{background:#f8efe9!important;border-color:#eadfd8!important;border-radius:10px!important}
+.payroom{
+  background:#fffaf7!important;color:#2d2521!important;border-color:#eadfd8!important;box-shadow:0 16px 36px rgba(97,61,45,.10)!important
+}
+.payroom h2,.payroom h3{color:#2d2521!important}.payroom p{color:#8a7c74!important}
+.qrisbox{background:#fff!important;color:#2d2521!important;border:1px solid #eadfd8!important;border-radius:12px!important}
+.num{background:#ff5a24!important;color:#fff!important}.confirm,.proof{background:#fff4ee!important;border-color:#ffd8c8!important}
+.status{background:#eff8ef!important;color:#3f7c45!important;border-color:#cfe8d1!important}
+@media(max-width:900px){.welcome{grid-template-columns:1fr!important}.photo{min-height:320px!important}.grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:560px){
+ .hero{padding:10px!important}.welcome{border-radius:18px!important}.photo{min-height:220px!important}.copy{padding:22px 18px!important}
+ .headin{min-height:60px!important}.cats{top:60px!important}.grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding-top:12px!important}
+ .grid .card{padding:7px!important;border-radius:12px!important}.grid .food{width:min(100%,104px)!important}
+ .grid .body h3{font-size:11px!important}.grid .body p{font-size:9px!important}.cartgo{border-radius:9px!important}
+}
+
 </style><!-- smart-order-public-foodcode-v1 -->`;
 
 const PUBLIC_UX_PATCH = String.raw`<style id="rohmat-menu-single-media-v6-style">

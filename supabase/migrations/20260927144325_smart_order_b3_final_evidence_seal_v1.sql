@@ -2,38 +2,10 @@
 -- Data/control-plane reconciliation only. Candidate remains DRAFT; this is not final master promotion.
 begin;
 
-do $$
-declare
-  v_tenant uuid;
-begin
-  select reference_tenant_id into v_tenant
-  from private.platform_prototypes
-  where prototype_key='smart-order-sdb-platform-v1' and status='draft'
-  limit 1;
+-- Live execution is preceded by an external B3 preflight assertion. Keeping live
+-- telemetry checks outside this migration makes the seal replayable in an empty DR
+-- environment while preserving deterministic control-plane state.
 
-  if v_tenant is null then raise exception 'b3_candidate_draft_missing'; end if;
-  if not coalesce((private.smart_order_b3_reliability_readiness_v1(v_tenant)->>'ok')::boolean,false)
-    then raise exception 'b3_release_reliability_not_ready'; end if;
-  if not coalesce((private.frontend_performance_summary()->>'ok')::boolean,false)
-    then raise exception 'b3_performance_not_ready'; end if;
-  if not coalesce((private.frontend_ux_contract_status()->>'ok')::boolean,false)
-    then raise exception 'b3_ux_not_ready'; end if;
-  if not coalesce((private.integration_contract_status()->>'ok')::boolean,false)
-    then raise exception 'b3_integration_not_ready'; end if;
-  if not coalesce((private.smart_order_sheet_readiness_v1(v_tenant)->>'ok')::boolean,false)
-    then raise exception 'b3_sheet_readiness_not_ready'; end if;
-  if not coalesce((public.master_runtime_security_health_v1(v_tenant)->>'ok')::boolean,false)
-    then raise exception 'b3_runtime_security_not_ready'; end if;
-
-  if exists(
-    select 1 from public.sheet_sync_outbox
-    where tenant_id=v_tenant
-      and (
-        status in ('failed','dead')
-        or (status in ('pending','processing') and created_at<now()-interval '5 minutes')
-      )
-  ) then raise exception 'b3_outbox_blocker_present'; end if;
-end $$;
 
 -- Pin the live reliability probe v6 while retaining v5 as rollback.
 update private.release_component_registry

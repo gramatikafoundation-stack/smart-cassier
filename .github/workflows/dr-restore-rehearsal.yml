@@ -24,7 +24,7 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.118.0
 
       - name: Start isolated local Supabase foundation without app migrations
         shell: bash

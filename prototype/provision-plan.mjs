@@ -6,19 +6,22 @@ import { fileURLToPath } from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const file=path.resolve(root,process.argv[2]||'prototype/tenant.example.json');
 const c=JSON.parse(fs.readFileSync(file,'utf8'));
-const sharedRef='yybhpmjuywjxqurrrrxl';
+const sharedRef='xrepmvbccalzhlcznrff';
 const supabaseUrl='https://'+sharedRef+'.supabase.co';
+const canonical=new URL(c.canonical_origin).origin;
+const routes={public:'/',admin:'/admin',kds:'/kds',database:'/database'};
 
 const plan={
-  contract:'master-prototype-tenant-provision-plan-v1',
-  platform:'SMART DIGITAL FOR BUSINESS',
+  contract:'smart-order-master-tenant-provision-plan-v2',
+  platform:'SMART ORDER — SMART DIGITAL FOR BUSINESS',
+  topology:'single_domain_four_surface',
   source_edits_required:false,
   source_clone_required:false,
   database_project_clone_required:false,
   source:{
-    repository:'gramatikafoundation-stack/Rohmat-Master',
-    candidate_branch:'release/master-clone-v1-freeze-20260919',
-    final_release_tag:'rohmat-master-prototype-v1.0.0'
+    repository:'gramatikafoundation-stack/smart-cassier',
+    candidate_branch:'batch5-integrated-qa-security-freeze-20260926',
+    final_release_tag:'smart-order-master-prototype-v1.0.0'
   },
   tenant:{
     id:c.tenant_id,slug:c.tenant_slug,business_name:c.business_name,
@@ -30,29 +33,43 @@ const plan={
     tenancy_mode:'shared_database_rls',
     operations:[
       'insert private.platform_tenants row',
-      'insert private.tenant_runtime_config row',
+      'insert private.tenant_runtime_config row with one canonical origin',
+      'insert one canonical private.tenant_origin_aliases row with four unified routes',
       'insert private.tenant_memberships owner row',
-      'insert private.tenant_sheet_targets rows',
+      'insert five private.tenant_sheet_targets rows',
+      'insert private.tenant_writer_config row in disabled-until-provisioned mode',
       'insert private.tenant_table_qr_signatures rows',
       'seed tenant-scoped menu/config using tenant_id'
     ],
     edge_functions:'deploy-once-platform-wide',
-    tenant_resolution:'explicit tenant id/slug/origin; fail closed when unresolved'
+    tenant_resolution:'explicit tenant id or registered canonical origin; fail closed when unresolved'
   },
   runtime:{
     required_env:{
       SDB_TENANT_ID:c.tenant_id,
       SDB_TENANT_SLUG:c.tenant_slug,
-      SUPABASE_URL:supabaseUrl,
+      PUBLIC_ORIGIN:canonical,
       BUSINESS_NAME:c.business_name,
       TENANT_LOCALE:c.locale,
       TENANT_CURRENCY:c.currency,
-      TENANT_TIMEZONE:c.timezone
+      TENANT_TIMEZONE:c.timezone,
+      SUPABASE_URL:supabaseUrl
     },
-    public_origin:c.public_url,admin_origin:c.admin_url,kds_origin:c.kds_url
+    canonical_origin:canonical,
+    surface_routes:routes,
+    public_url:canonical,
+    admin_url:canonical+routes.admin,
+    kds_url:canonical+routes.kds,
+    database_url:canonical+routes.database
   },
-  storage:{namespace:c.storage.namespace,static_bucket:c.storage.static_bucket,payment_bucket:c.storage.payment_bucket,qris_asset:c.qris_asset},
+  storage:{
+    namespace:c.storage.namespace,
+    static_bucket:c.storage.static_bucket,
+    payment_bucket:c.storage.payment_bucket,
+    qris_asset:c.qris_asset
+  },
   sheets:{
+    provider:'google_drive',
     target:c.spreadsheet_target,
     expected_tabs:c.sheets.expected_tabs,
     writer_source:'integrations/google-sheets/master-writer-v1/Code.gs',
@@ -73,12 +90,12 @@ const plan={
   acceptance:[
     'zero source edits per tenant',
     'same canonical Supabase project',
-    'explicit tenant resolution',
+    'one domain with /, /admin, /kds, /database',
+    'explicit fail-closed tenant resolution',
     'cross-tenant read/write negative test PASS',
-    'Public/Admin/KDS smoke PASS',
     'signed table QR PASS',
-    '5-sheet consistency PASS',
-    'Writer v4 tenant sync PASS'
+    'five yearly Google Drive targets provisionable',
+    'Writer v4 tenant sync can be enabled only after secret/url provisioning'
   ]
 };
 console.log(JSON.stringify(plan,null,2));

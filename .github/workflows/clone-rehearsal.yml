@@ -1,24 +1,16 @@
 name: Master Prototype Rehearsal
 
 on:
-  push:
-    branches:
-      - release/master-clone-v1-freeze-20260919
-    paths:
-      - 'prototype/**'
-      - 'apps/**'
-      - 'supabase/**'
-      - 'integrations/google-sheets/**'
-      - '.github/workflows/clone-rehearsal.yml'
-      - 'scripts/b2-runtime-security-gate.cjs'
   pull_request:
     paths:
       - 'prototype/**'
-      - 'apps/**'
+      - 'scripts/b4-**'
       - 'supabase/**'
       - 'integrations/google-sheets/**'
       - '.github/workflows/clone-rehearsal.yml'
-      - 'scripts/b2-runtime-security-gate.cjs'
+  push:
+    branches:
+      - release/smart-order-master-prototype-v1.0.0
 
 jobs:
   zero-source-edit-rehearsal:
@@ -30,25 +22,28 @@ jobs:
           node-version: '24'
       - name: Validate B2 runtime/security contract
         run: node scripts/b2-runtime-security-gate.cjs
-      - name: Validate tenant A
+      - name: Validate tenant A v2
         run: node prototype/validate-config.mjs prototype/rehearsal-a.json | tee /tmp/tenant-a-validation.json
-      - name: Validate tenant B
+      - name: Validate tenant B v2
         run: node prototype/validate-config.mjs prototype/rehearsal-b.json | tee /tmp/tenant-b-validation.json
-      - name: Generate tenant provision plans
+      - name: Generate tenant provision plans v2
         run: |
           node prototype/provision-plan.mjs prototype/rehearsal-a.json > /tmp/tenant-a-plan.json
           node prototype/provision-plan.mjs prototype/rehearsal-b.json > /tmp/tenant-b-plan.json
-      - name: Run two-tenant static rehearsal
+      - name: Run two-tenant static rehearsal v2
         run: node prototype/rehearse.mjs prototype/rehearsal-a.json prototype/rehearsal-b.json | tee /tmp/prototype-rehearsal.json
-      - name: Assert master-prototype contract
+      - name: Assert SMART ORDER master tenant contract
         run: |
           grep -q '"ok": true' /tmp/tenant-a-validation.json
           grep -q '"ok": true' /tmp/tenant-b-validation.json
+          grep -q '"contract": "smart-order-master-tenant-provision-plan-v2"' /tmp/tenant-a-plan.json
+          grep -q '"topology": "single_domain_four_surface"' /tmp/tenant-a-plan.json
           grep -q '"source_edits_required": false' /tmp/tenant-a-plan.json
           grep -q '"source_clone_required": false' /tmp/tenant-a-plan.json
           grep -q '"database_project_clone_required": false' /tmp/tenant-a-plan.json
-          grep -q '"tenancy_mode": "shared_database_rls"' /tmp/tenant-a-plan.json
+          grep -q '"shared_project_ref": "xrepmvbccalzhlcznrff"' /tmp/tenant-a-plan.json
           grep -q '"ok": true' /tmp/prototype-rehearsal.json
-          grep -q '"shared_supabase_project": true' /tmp/prototype-rehearsal.json
-          grep -q '"source_edits_required": false' /tmp/prototype-rehearsal.json
-          git diff --exit-code -- apps supabase integrations prototype
+          grep -q '"single_domain_four_surface": true' /tmp/prototype-rehearsal.json
+          grep -q '"google_drive_database": true' /tmp/prototype-rehearsal.json
+          node scripts/b4-clone-freeze-gate.cjs
+          git diff --exit-code -- apps supabase integrations prototype scripts

@@ -173,11 +173,17 @@ jobs:
           apply_sql "supabase/restore/tail-bridges/20260927204600_live_identity_reconcile_bridge.sql"
           apply_sql "supabase/restore/tail-bridges/20260927204700_retired_rdc_recovery_cleanup.sql"
 
+          # B3 final evidence seal is data/control-plane only and intentionally replayable.
+          FINAL_SEAL="/tmp/rohmat-repo-migrations/20260927144325_smart_order_b3_final_evidence_seal_v1.sql"
+          test -f "$FINAL_SEAL"
+          apply_sql "$FINAL_SEAL"
+          ledger "20260927144325" "smart_order_b3_final_evidence_seal_v1"
+
           COUNT="$(node -p "JSON.parse(require('fs').readFileSync('supabase/restore/manifest.json','utf8')).count")"
           LEDGER_COUNT="$(psql "$DB_URL" -Atc "select count(*) from supabase_migrations.schema_migrations")"
           ACTUAL_HEAD="$(psql "$DB_URL" -Atc "select max(version) from supabase_migrations.schema_migrations")"
-          test "$LEDGER_COUNT" -eq "$((COUNT+10))"
-          test "$ACTUAL_HEAD" = '20260927135426'
+          test "$LEDGER_COUNT" -eq "$((COUNT+11))"
+          test "$ACTUAL_HEAD" = '20260927144325'
           echo "B3_DR_CANONICAL_TAIL_PASS=1"
 
       - name: Verify production structural contract
@@ -218,6 +224,7 @@ jobs:
           test "$(sql "select to_regclass('private.tenant_runtime_config') is not null")" = 't'
           test "$(sql "select relrowsecurity from pg_class where oid='private.kds_realtime_channels'::regclass")" = 't'
           test "$(sql "select has_schema_privilege('anon','internal_rpc','USAGE')")" = 'f'
+          test "$(sql "select (private.release_engineering_status()->>'ok')::boolean")" = 't'
 
       - name: Verify critical restored relations and RLS
         shell: bash

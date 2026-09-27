@@ -105,6 +105,9 @@ jobs:
           # the 2026-09-13 sanitized ledger export. Treat them as explicit interstitial
           # source tail, preserving the sanitized migration ledger.
           while IFS= read -r f; do
+            if [ "$(basename "$f")" = "20260918192858_smart_digital_indonesia_platform_foundation_v1.sql" ]; then
+              apply_sql "supabase/restore/tail-bridges/20260918192850_platform_identity_seed_bridge.sql"
+            fi
             apply_sql "$f"
           done < <(
             find /tmp/rohmat-repo-migrations -maxdepth 1 -type f -name '*.sql' -printf '%f\t%p\n' |
@@ -158,6 +161,8 @@ jobs:
           20260927203000_smart_order_b2_final_security_cutover_v1.sql|20260927123415|smart_order_b2_final_security_cutover_v1
           20260927204500_smart_order_b2_evidence_pin_v1.sql|20260927123915|smart_order_b2_evidence_pin_v1
           EOF
+
+          apply_sql "supabase/restore/tail-bridges/20260927204600_live_identity_reconcile_bridge.sql"
 
           COUNT="$(node -p "JSON.parse(require('fs').readFileSync('supabase/restore/manifest.json','utf8')).count")"
           LEDGER_COUNT="$(psql "$DB_URL" -Atc "select count(*) from supabase_migrations.schema_migrations")"

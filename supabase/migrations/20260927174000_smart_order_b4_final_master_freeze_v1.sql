@@ -289,7 +289,9 @@ declare
   v_proto private.platform_prototypes%rowtype;
   v_old private.platform_prototypes%rowtype;
   v_snap private.master_template_snapshots%rowtype;
+  v_pre_ev private.master_clone_rehearsal_evidence%rowtype;
   v_ev private.master_clone_rehearsal_evidence%rowtype;
+  v_release_clone jsonb;
   v_manifest_id uuid:=extensions.gen_random_uuid();
   v_schema text;
   v_cron text;
@@ -323,20 +325,45 @@ begin
   limit 1;
   if v_snap.prototype_key is null then raise exception 'master_snapshot_unavailable'; end if;
 
+  select e.* into v_pre_ev
+  from private.master_clone_rehearsal_evidence e
+  where e.prototype_id=v_proto.id
+    and e.prototype_key=v_proto.prototype_key
+    and e.template_snapshot_sha256=v_snap.snapshot_sha256
+    and e.clone_contract='smart-order-b4-clone-certification-v1'
+    and e.passed and e.residue_zero
+    and e.checked_at>=now()-interval '24 hours'
+  order by e.checked_at desc
+  limit 1;
+  if v_pre_ev.id is null then raise exception 'fresh_clone_certification_missing'; end if;
+
+  if exists(select 1 from private.platform_tenants where slug like 'b4-cert-%')
+     or exists(select 1 from private.tenant_origin_aliases where origin like 'https://b4-cert-%.invalid')
+  then raise exception 'clone_rehearsal_residue_present'; end if;
+
+  -- Final exact-release clone proof happens BEFORE immutable activation. Any failure
+  -- aborts this transaction, leaving the legacy master active and the candidate draft.
+  v_release_clone:=private.run_release_bound_clone_rehearsal_v1(p_release_tag,p_release_git_sha);
+  if not coalesce((v_release_clone->>'ok')::boolean,false)
+  then raise exception 'release_bound_clone_certification_failed'; end if;
+
   select e.* into v_ev
   from private.master_clone_rehearsal_evidence e
   where e.prototype_id=v_proto.id
     and e.prototype_key=v_proto.prototype_key
     and e.template_snapshot_sha256=v_snap.snapshot_sha256
+    and e.clone_contract='smart-order-b4-release-bound-certification-v1'
+    and e.source_git_sha=p_release_git_sha
+    and e.source_migration_head='20260927174000'
     and e.passed and e.residue_zero
-    and e.checked_at>=now()-interval '24 hours'
+    and e.checked_at>=now()-interval '15 minutes'
   order by e.checked_at desc
   limit 1;
-  if v_ev.id is null then raise exception 'fresh_clone_certification_missing'; end if;
+  if v_ev.id is null then raise exception 'release_bound_clone_evidence_missing'; end if;
 
-  if exists(select 1 from private.platform_tenants where slug like 'b4-cert-%')
-     or exists(select 1 from private.tenant_origin_aliases where origin like 'https://b4-cert-%.invalid')
-  then raise exception 'clone_rehearsal_residue_present'; end if;
+  if exists(select 1 from private.platform_tenants where slug like 'b4-release-%')
+     or exists(select 1 from private.tenant_origin_aliases where origin like 'https://b4-release-%.invalid')
+  then raise exception 'release_bound_clone_residue_present'; end if;
 
   select * into v_old
   from private.platform_prototypes
@@ -353,7 +380,7 @@ begin
         'integrated_e2e','data_consistency','release_reliability','performance',
         'four_surface_network','ux','dr_restore_rehearsal','production_health',
         'clone_certification','single_active_master','immutable_master_manifest',
-        'source_release_tag','postfreeze_clone_rehearsal'
+        'source_release_tag','release_bound_clone_rehearsal'
       ),
       notes=coalesce(notes,'') || E'\n2026-09-27 B4 FINAL: SMART ORDER SDB promoted from certified cloneable candidate to immutable master v1.0.0.',
       updated_at=now()
@@ -511,15 +538,17 @@ revoke all on function private.finalize_master_promotion_v1(text,text)
 from public,anon,authenticated;
 grant execute on function private.finalize_master_promotion_v1(text,text) to service_role;
 
-create or replace function private.run_postfreeze_clone_rehearsal_v1()
+create or replace function private.run_release_bound_clone_rehearsal_v1(
+  p_release_tag text,
+  p_release_git_sha text
+)
 returns jsonb
 language plpgsql
 security definer
 set search_path=''
-as $
+as $$
 declare
   v_proto private.platform_prototypes%rowtype;
-  v_manifest private.master_freeze_manifests%rowtype;
   v_snap private.master_template_snapshots%rowtype;
   v_clone jsonb;
   v_clone_id uuid;
@@ -537,128 +566,106 @@ declare
   v_evidence_sha text;
   v_evidence_id uuid:=extensions.gen_random_uuid();
 begin
+  if coalesce(p_release_tag,'') !~ '^smart-order-sdb-master-v[0-9]+\.[0-9]+\.[0-9]+$'
+  then raise exception 'invalid_release_bound_tag'; end if;
+  if coalesce(p_release_git_sha,'') !~ '^[0-9a-f]{40}$'
+  then raise exception 'invalid_release_bound_git_sha'; end if;
+
   select * into v_proto
   from private.platform_prototypes
   where prototype_key='smart-order-sdb-platform-v1'
-    and status='active'
-    and release_tag is not null
-    and metadata->>'freeze_state'='master_frozen'
-    and coalesce((metadata->>'immutable')::boolean,false)
+    and status='draft'
+    and metadata->>'b3_gate'='passed'
   limit 1;
-  if v_proto.id is null then raise exception 'frozen_master_not_active'; end if;
-
-  select * into v_manifest
-  from private.master_freeze_manifests
-  where prototype_id=v_proto.id
-    and prototype_key=v_proto.prototype_key
-    and release_tag=v_proto.release_tag
-  order by promoted_at desc
-  limit 1;
-  if v_manifest.id is null then raise exception 'freeze_manifest_unavailable'; end if;
-
-  if v_manifest.release_git_sha is distinct from v_proto.metadata->>'release_git_sha'
-  then raise exception 'freeze_manifest_git_sha_mismatch'; end if;
+  if v_proto.id is null then raise exception 'release_bound_candidate_not_draft'; end if;
 
   select * into v_snap
   from private.master_template_snapshots
-  where prototype_key=v_proto.prototype_key
-    and frozen
-    and snapshot_sha256=v_manifest.template_snapshot_sha256
+  where prototype_key=v_proto.prototype_key and frozen
   limit 1;
-  if v_snap.prototype_key is null then raise exception 'frozen_master_snapshot_unavailable'; end if;
+  if v_snap.prototype_key is null then raise exception 'release_bound_snapshot_unavailable'; end if;
 
   v_ref:=v_proto.reference_tenant_id;
-  v_slug:='b4-postfreeze-'||v_nonce;
+  v_slug:='b4-release-'||v_nonce;
   v_origin:='https://'||v_slug||'.invalid';
 
   v_clone:=private.provision_tenant_from_master_v1(
     v_proto.prototype_key,
     v_slug,
-    'B4 Post-Freeze Clone '||v_nonce,
+    'B4 Release-Bound Clone '||v_nonce,
     v_origin,
-    'b4.postfreeze.'||v_nonce||'@example.invalid',
+    'b4.release.'||v_nonce||'@example.invalid',
     jsonb_build_object(
-      '2026','b4-postfreeze-'||v_nonce||'-2026',
-      '2027','b4-postfreeze-'||v_nonce||'-2027',
-      '2028','b4-postfreeze-'||v_nonce||'-2028',
-      '2029','b4-postfreeze-'||v_nonce||'-2029',
-      '2030','b4-postfreeze-'||v_nonce||'-2030'
+      '2026','b4-release-'||v_nonce||'-2026',
+      '2027','b4-release-'||v_nonce||'-2027',
+      '2028','b4-release-'||v_nonce||'-2028',
+      '2029','b4-release-'||v_nonce||'-2029',
+      '2030','b4-release-'||v_nonce||'-2030'
     ),
     null
   );
 
-  if not coalesce((v_clone->>'ok')::boolean,false) then
-    raise exception 'postfreeze_clone_provision_failed';
-  end if;
+  if not coalesce((v_clone->>'ok')::boolean,false)
+  then raise exception 'release_bound_clone_provision_failed'; end if;
   v_clone_id:=(v_clone->>'tenant_id')::uuid;
 
-  if v_clone_id=v_ref then raise exception 'postfreeze_clone_identity_collision'; end if;
+  if v_clone_id=v_ref then raise exception 'release_bound_clone_identity_collision'; end if;
 
   if not exists(
     select 1 from private.platform_tenants
-    where id=v_clone_id
-      and status='active'
+    where id=v_clone_id and status='active'
       and isolation_mode='shared_database_rls'
       and source_prototype_key=v_proto.prototype_key
-  ) then raise exception 'postfreeze_clone_tenant_contract_failed'; end if;
+  ) then raise exception 'release_bound_clone_tenant_contract_failed'; end if;
 
   if not exists(
     select 1 from private.tenant_runtime_config c
-    where c.tenant_id=v_clone_id
-      and c.enabled
-      and c.public_origin=v_origin
-      and c.admin_origin=v_origin
-      and c.kds_origin=v_origin
+    where c.tenant_id=v_clone_id and c.enabled
+      and c.public_origin=v_origin and c.admin_origin=v_origin and c.kds_origin=v_origin
       and c.settings->>'canonical_origin'=v_origin
       and c.settings->>'database_url'=v_origin||'/database'
       and c.settings->'surface_routes'->>'public'='/'
       and c.settings->'surface_routes'->>'admin'='/admin'
       and c.settings->'surface_routes'->>'kds'='/kds'
       and c.settings->'surface_routes'->>'database'='/database'
-  ) then raise exception 'postfreeze_clone_runtime_contract_failed'; end if;
+  ) then raise exception 'release_bound_clone_runtime_contract_failed'; end if;
 
   if (select count(*) from public.menu_items where tenant_id=v_clone_id) <>
      (select count(*) from public.menu_items where tenant_id=v_ref)
-  then raise exception 'postfreeze_clone_menu_count_mismatch'; end if;
+  then raise exception 'release_bound_clone_menu_count_mismatch'; end if;
 
   select md5(string_agg(name||'|'||category||'|'||price||'|'||display_order,';' order by display_order,name))
-    into v_ref_menu_sig
-  from public.menu_items where tenant_id=v_ref;
-
+    into v_ref_menu_sig from public.menu_items where tenant_id=v_ref;
   select md5(string_agg(name||'|'||category||'|'||price||'|'||display_order,';' order by display_order,name))
-    into v_clone_menu_sig
-  from public.menu_items where tenant_id=v_clone_id;
-
+    into v_clone_menu_sig from public.menu_items where tenant_id=v_clone_id;
   if v_ref_menu_sig is distinct from v_clone_menu_sig
-  then raise exception 'postfreeze_clone_menu_semantics_mismatch'; end if;
+  then raise exception 'release_bound_clone_menu_semantics_mismatch'; end if;
 
   if exists(
     select 1 from public.menu_items c
     join public.menu_items m on m.id=c.id
     where c.tenant_id=v_clone_id and m.tenant_id=v_ref
-  ) then raise exception 'postfreeze_clone_menu_id_collision'; end if;
+  ) then raise exception 'release_bound_clone_menu_id_collision'; end if;
 
   if (select count(*) from private.tenant_sheet_targets where tenant_id=v_clone_id and enabled)<>5
-  then raise exception 'postfreeze_clone_sheet_target_count_mismatch'; end if;
+  then raise exception 'release_bound_clone_sheet_target_count_mismatch'; end if;
 
   select count(*) into v_sheet_reuse
   from private.tenant_sheet_targets c
   join private.tenant_sheet_targets m
     on m.tenant_id=v_ref and m.spreadsheet_id=c.spreadsheet_id
   where c.tenant_id=v_clone_id;
-  if v_sheet_reuse<>0 then raise exception 'postfreeze_master_sheet_id_leaked'; end if;
+  if v_sheet_reuse<>0 then raise exception 'release_bound_master_sheet_id_leaked'; end if;
 
   if not exists(
     select 1 from private.tenant_writer_config
-    where tenant_id=v_clone_id
-      and not enabled
-      and writer_url is null
-      and writer_secret_id is null
-  ) then raise exception 'postfreeze_writer_secret_or_url_cloned'; end if;
+    where tenant_id=v_clone_id and not enabled
+      and writer_url is null and writer_secret_id is null
+  ) then raise exception 'release_bound_writer_secret_or_url_cloned'; end if;
 
   if (select count(*) from private.tenant_table_qr_signatures where tenant_id=v_clone_id and is_active) <>
      (select table_count from private.tenant_runtime_config where tenant_id=v_clone_id)
-  then raise exception 'postfreeze_clone_qr_count_mismatch'; end if;
+  then raise exception 'release_bound_clone_qr_count_mismatch'; end if;
 
   select count(*) into v_qr_reuse
   from private.tenant_table_qr_signatures c
@@ -667,7 +674,7 @@ begin
    and m.table_number=c.table_number
    and m.signature_hash=c.signature_hash
   where c.tenant_id=v_clone_id;
-  if v_qr_reuse<>0 then raise exception 'postfreeze_master_qr_signature_leaked'; end if;
+  if v_qr_reuse<>0 then raise exception 'release_bound_master_qr_signature_leaked'; end if;
 
   select
     (select count(*) from public.orders where tenant_id=v_clone_id)
@@ -676,22 +683,22 @@ begin
     +(select count(*) from public.sheet_sync_outbox where tenant_id=v_clone_id)
     +(select count(*) from private.admin_sessions where tenant_id=v_clone_id)
   into v_history_rows;
-  if v_history_rows<>0 then raise exception 'postfreeze_operational_history_cloned'; end if;
+  if v_history_rows<>0 then raise exception 'release_bound_operational_history_cloned'; end if;
 
   if (select qris_asset from private.tenant_runtime_config where tenant_id=v_clone_id) is not null
-  then raise exception 'postfreeze_qris_asset_cloned'; end if;
+  then raise exception 'release_bound_qris_asset_cloned'; end if;
 
   if not coalesce((public.master_prototype_runtime_context(null,v_origin,'public')->>'ok')::boolean,false)
      or (public.master_prototype_runtime_context(null,v_origin,'public')->>'tenant_id')::uuid<>v_clone_id
-  then raise exception 'postfreeze_clone_origin_resolution_failed'; end if;
+  then raise exception 'release_bound_clone_origin_resolution_failed'; end if;
 
   v_evidence:=jsonb_build_object(
     'ok',true,
-    'contract','smart-order-b4-postfreeze-certification-v1',
+    'contract','smart-order-b4-release-bound-certification-v1',
     'prototype_key',v_proto.prototype_key,
-    'release_tag',v_manifest.release_tag,
-    'release_git_sha',v_manifest.release_git_sha,
-    'migration_head',v_manifest.migration_head,
+    'release_tag',p_release_tag,
+    'release_git_sha',p_release_git_sha,
+    'migration_head','20260927174000',
     'template_snapshot_sha256',v_snap.snapshot_sha256,
     'clone_tenant_id',v_clone_id,
     'clone_origin',v_origin,
@@ -735,7 +742,7 @@ begin
     +(select count(*) from public.menu_items where tenant_id=v_clone_id)
     +(select count(*) from public.sheet_sync_outbox where tenant_id=v_clone_id)
   into v_residue;
-  if v_residue<>0 then raise exception 'postfreeze_clone_cleanup_residue'; end if;
+  if v_residue<>0 then raise exception 'release_bound_clone_cleanup_residue'; end if;
 
   insert into private.master_clone_rehearsal_evidence(
     id,prototype_id,prototype_key,template_snapshot_sha256,
@@ -744,8 +751,8 @@ begin
     evidence,evidence_sha256,checked_at
   ) values(
     v_evidence_id,v_proto.id,v_proto.prototype_key,v_snap.snapshot_sha256,
-    v_manifest.release_git_sha,v_manifest.migration_head,
-    'smart-order-b4-postfreeze-certification-v1',
+    p_release_git_sha,'20260927174000',
+    'smart-order-b4-release-bound-certification-v1',
     v_clone_id,v_origin,true,true,
     v_evidence||jsonb_build_object('cleanup_residue',0),
     v_evidence_sha,now()
@@ -753,22 +760,22 @@ begin
 
   return jsonb_build_object(
     'ok',true,
-    'contract','smart-order-b4-postfreeze-certification-v1',
-    'release_tag',v_manifest.release_tag,
-    'release_git_sha',v_manifest.release_git_sha,
-    'migration_head',v_manifest.migration_head,
+    'contract','smart-order-b4-release-bound-certification-v1',
+    'release_tag',p_release_tag,
+    'release_git_sha',p_release_git_sha,
+    'migration_head','20260927174000',
     'evidence_id',v_evidence_id,
     'evidence_sha256',v_evidence_sha,
     'clone_tenant_id',v_clone_id,
     'clone_origin',v_origin,
     'cleanup_residue',0,
-    'master_status','active'
+    'candidate_status','draft'
   );
 end
-$;
-revoke all on function private.run_postfreeze_clone_rehearsal_v1()
+$$;
+revoke all on function private.run_release_bound_clone_rehearsal_v1(text,text)
 from public,anon,authenticated;
-grant execute on function private.run_postfreeze_clone_rehearsal_v1()
+grant execute on function private.run_release_bound_clone_rehearsal_v1(text,text)
 to service_role;
 
 create or replace function private.master_freeze_status_v1()
@@ -785,7 +792,6 @@ declare
   v_old_deprecated boolean;
   v_snapshot_frozen boolean;
   v_evidence_ok boolean;
-  v_postfreeze_clone_ok boolean;
   v_guards integer;
   v_engineering jsonb;
   v_preflight jsonb;
@@ -820,23 +826,14 @@ begin
 
   select exists(
     select 1 from private.master_clone_rehearsal_evidence e
-    where e.id=m.clone_evidence_id and e.passed and e.residue_zero
+    where e.id=m.clone_evidence_id
+      and e.passed and e.residue_zero
       and e.evidence_sha256=m.clone_evidence_sha256
-  ) into v_evidence_ok;
-
-  select exists(
-    select 1
-    from private.master_clone_rehearsal_evidence e
-    where e.prototype_id=p.id
-      and e.prototype_key=p.prototype_key
-      and e.template_snapshot_sha256=m.template_snapshot_sha256
-      and e.clone_contract='smart-order-b4-postfreeze-certification-v1'
+      and e.clone_contract='smart-order-b4-release-bound-certification-v1'
       and e.source_git_sha=m.release_git_sha
       and e.source_migration_head=m.migration_head
-      and e.passed
-      and e.residue_zero
-      and e.checked_at>=m.promoted_at
-  ) into v_postfreeze_clone_ok;
+      and e.template_snapshot_sha256=m.template_snapshot_sha256
+  ) into v_evidence_ok;
 
   select count(*) into v_guards
   from pg_trigger t
@@ -870,7 +867,6 @@ begin
     and v_old_deprecated
     and v_snapshot_frozen
     and v_evidence_ok
-    and v_postfreeze_clone_ok
     and v_guards=5
     and coalesce((v_engineering->>'ok')::boolean,false)
     and coalesce((v_runtime->>'ok')::boolean,false);
@@ -889,7 +885,6 @@ begin
     'old_master_deprecated',v_old_deprecated,
     'snapshot_frozen',v_snapshot_frozen,
     'clone_evidence_ok',v_evidence_ok,
-    'postfreeze_clone_ok',v_postfreeze_clone_ok,
     'immutable_guards',v_guards,
     'release_engineering',v_engineering,
     'runtime_security',v_runtime,

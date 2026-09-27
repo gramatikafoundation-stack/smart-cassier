@@ -23,6 +23,12 @@ function ip(req:Request){
   return(req.headers.get("cf-connecting-ip")||req.headers.get("x-real-ip")||req.headers.get("x-forwarded-for")||"unknown")
     .split(",")[0].trim().slice(0,80);
 }
+function ua(req:Request){return(req.headers.get("user-agent")||"unknown").slice(0,240)}
+async function fingerprint(req:Request){
+  const lang=(req.headers.get("accept-language")||"unknown").slice(0,120);
+  const platform=(req.headers.get("sec-ch-ua-platform")||"unknown").slice(0,80);
+  return sha256(ua(req)+"|"+lang+"|"+platform);
+}
 function headers(origin:string|null,ctx?:TenantContext){
   const h=new Headers({
     "Content-Type":"application/json; charset=utf-8",
@@ -34,7 +40,7 @@ function headers(origin:string|null,ctx?:TenantContext){
     "Referrer-Policy":"no-referrer",
     "Permissions-Policy":"camera=(), microphone=(), geolocation=()",
     "Cross-Origin-Resource-Policy":"cross-origin",
-    "X-Rohmat-Security":"media-upload-master-prototype-v1"
+    "X-Rohmat-Security":"media-upload-smart-order-b2"
   });
   if(ctx){
     h.set("X-SDB-Tenant-ID",ctx.tenant_id);
@@ -129,7 +135,10 @@ Deno.serve(async(req:Request)=>{
   if(rl.error)return out(origin,503,{ok:false,error:"rate_limit_unavailable"},ctx);
   if(rl.data?.allowed===false)return out(origin,429,{ok:false,error:"rate_limited",retry_after:rl.data.retry_after||600},ctx);
 
-  const session=await sb.rpc("admin_password_session_info_tenant",{p_tenant_id:ctx.tenant_id,p_token:token});
+  const fp=await fingerprint(req);
+  const session=await sb.rpc("admin_password_session_info_bound_tenant",{
+    p_tenant_id:ctx.tenant_id,p_token:token,p_fingerprint_hash:fp
+  });
   if(session.error||!session.data?.ok){
     await audit(sb,ctx,token,req,false,{reason:"invalid_session",origin});
     return out(origin,401,{ok:false,error:"invalid_session"},ctx);

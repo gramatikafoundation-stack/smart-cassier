@@ -6,7 +6,7 @@ const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a
 const enc=new TextEncoder();
 
 const RPC_MAP:Record<string,string>={
-  admin_password_login:"admin_password_login_tenant",
+  admin_password_login:"admin_password_login_bound_tenant",
   admin_password_logout:"admin_password_logout_tenant",
   admin_password_session_info:"admin_password_session_info_tenant",
   admin_password_change:"admin_password_change_tenant",
@@ -75,6 +75,12 @@ function clientIp(req:Request){
   return(req.headers.get("cf-connecting-ip")||req.headers.get("x-real-ip")||req.headers.get("x-forwarded-for")||"unknown")
     .split(",")[0].trim().slice(0,80);
 }
+function userAgent(req:Request){return(req.headers.get("user-agent")||"unknown").slice(0,240)}
+async function deviceFingerprint(req:Request){
+  const lang=(req.headers.get("accept-language")||"unknown").slice(0,120);
+  const platform=(req.headers.get("sec-ch-ua-platform")||"unknown").slice(0,80);
+  return sha256(userAgent(req)+"|"+lang+"|"+platform);
+}
 function allowedOrigins(ctx:TenantContext){
   return new Set([ctx.admin_origin,ctx.kds_origin].filter(Boolean));
 }
@@ -89,7 +95,7 @@ function baseHeaders(origin:string,ctx?:TenantContext){
     "permissions-policy":"camera=(), microphone=(), geolocation=(), payment=(), usb=()",
     "cross-origin-resource-policy":"cross-origin",
     "vary":"Origin, X-SDB-Tenant-ID",
-    "x-rohmat-security":"secure-api-master-prototype-v1"
+    "x-rohmat-security":"secure-api-smart-order-b2"
   });
   if(ctx){
     h.set("x-sdb-tenant-id",ctx.tenant_id);
@@ -167,8 +173,10 @@ Deno.serve(async(req:Request)=>{
 
   const ip=clientIp(req);
   const ipHash=await sha256(ip);
+  const fp=await deviceFingerprint(req);
   const email=String(args.p_email||"").trim().toLowerCase().slice(0,180);
   const token=String(args.p_token||"").trim();
+  if(rpc==="admin_password_login")args.p_fingerprint_hash=fp;
 
   if(rpc!=="admin_password_login"&&!TOKEN_RE.test(token)){
     await audit(sb,ctx,"auth",rpc,null,ipHash,false,{reason:"invalid_token_format",origin});
@@ -200,7 +208,9 @@ Deno.serve(async(req:Request)=>{
 
   let session:any=null;
   if(rpc!=="admin_password_login"){
-    const s=await sb.rpc("admin_password_session_info_tenant",{p_tenant_id:ctx.tenant_id,p_token:token});
+    const s=await sb.rpc("admin_password_session_info_bound_tenant",{
+      p_tenant_id:ctx.tenant_id,p_token:token,p_fingerprint_hash:fp
+    });
     if(s.error||!s.data?.ok){
       await audit(sb,ctx,"auth",rpc,await sha256(token),ipHash,false,{reason:"invalid_session",origin});
       return json(origin,{ok:false,error:"invalid_session"},401,ctx);
@@ -219,7 +229,7 @@ Deno.serve(async(req:Request)=>{
   const principalHash=token?await sha256(token):email?await sha256(email):null;
   await audit(
     sb,ctx,rpc==="admin_password_login"?"auth":"rpc",rpc,principalHash,ipHash,success,
-    {bucket,duration_ms:Date.now()-started,origin,role:session?.role||null,mapped_rpc:mapped}
+    {bucket,duration_ms:Date.now()-started,origin,role:session?.role||null,mapped_rpc:mapped,fingerprint_bound:true}
   );
 
   if(rpc==="admin_password_login"&&success){

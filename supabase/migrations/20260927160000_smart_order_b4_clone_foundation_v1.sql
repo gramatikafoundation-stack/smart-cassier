@@ -334,6 +334,13 @@ begin
 
   perform private.sync_tenant_public_settings_projection(v_tenant);
 
+  -- Menu INSERT triggers legitimately emit tenant-local sheet events. A fresh clone has
+  -- no writer URL/secret yet, so those bootstrap events must not become a fake backlog.
+  -- The provisioning contract requires a full reconciliation after the tenant-specific
+  -- Google Sheets writer is configured and enabled.
+  delete from public.sheet_sync_outbox
+  where tenant_id=v_tenant;
+
   return jsonb_build_object(
     'ok',true,
     'contract','smart-order-master-clone-v1',
@@ -348,6 +355,8 @@ begin
     'writer_enabled',false,
     'secrets_cloned',false,
     'history_cloned',false,
+    'bootstrap_outbox_cleared',true,
+    'reconciliation_required_on_writer_activation',true,
     'source_edits_required',false,
     'source_clone_required',false,
     'database_project_clone_required',false

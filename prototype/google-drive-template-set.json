@@ -1,0 +1,66 @@
+{
+  "contract": "smart-cashier-google-drive-template-set-v1",
+  "template_set": "smart-cashier-annual-2026-2030-v1",
+  "provider": "google_drive",
+  "timezone": "Asia/Jakarta",
+  "locale": "en_US",
+  "writer_version": 5,
+  "data_start_row": 5,
+  "required_tabs": [
+    "Dashboard",
+    "Data Pemesan",
+    "Data Pesanan Makanan",
+    "Data Pesanan Minuman",
+    "Riwayat Pembayaran"
+  ],
+  "templates": {
+    "2026": {
+      "spreadsheet_id": "1OnUxxqbwRjjQY18J3A2ypkIlPBKqOMMeB11G_OsHzFM",
+      "title": "SMART CASHIER — DATABASE 2026",
+      "extra_tabs": []
+    },
+    "2027": {
+      "spreadsheet_id": "1woA7ETIkuATU0J3I_bLAu_L5aD11mf_RNVBeedB8A1E",
+      "title": "SMART CASHIER — DATABASE 2027",
+      "extra_tabs": [
+        "Form Responses 1"
+      ]
+    },
+    "2028": {
+      "spreadsheet_id": "1RGH2Oz6cuwK04iNmpaqlWYW2TcnpAgixH9tJiPE2kUY",
+      "title": "SMART CASHIER — DATABASE 2028",
+      "extra_tabs": []
+    },
+    "2029": {
+      "spreadsheet_id": "1hEd4MzbaICLwSIfRC47Po4IzRZ2YrOarqxXRoXNPBDE",
+      "title": "SMART CASHIER — DATABASE 2029",
+      "extra_tabs": []
+    },
+    "2030": {
+      "spreadsheet_id": "1Q6LlirORPtNTzPX334xiK9mAsACdpivhRnH7Mheosmo",
+      "title": "SMART CASHIER — DATABASE 2030",
+      "extra_tabs": []
+    }
+  },
+  "clone_policy": {
+    "mode": "copy_each_year_then_rebind",
+    "reuse_master_file_ids": false,
+    "preserve_formatting_formulas_and_extra_tabs": true,
+    "writer_activation": "disabled_until_tenant_url_secret_and_5of5_reconciliation"
+  },
+  "provider_rehearsal": {
+    "performed_on": "2026-09-27",
+    "years_verified": [
+      2026,
+      2027,
+      2028,
+      2029,
+      2030
+    ],
+    "copied_1_to_1": true,
+    "locale_match": true,
+    "timezone_match": true,
+    "sheet_grid_shape_match": true,
+    "cleanup_required": true
+  }
+}

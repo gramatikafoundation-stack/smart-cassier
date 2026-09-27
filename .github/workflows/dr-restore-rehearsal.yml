@@ -148,6 +148,9 @@ jobs:
             apply_sql "$f"
           done
 
+          # Reconstruct the untracked B1 alias cleanup before B2 enforces one canonical alias.
+          apply_sql "supabase/restore/tail-bridges/20260927193500_single_canonical_alias_bridge.sql"
+
           # Production had a KDS realtime contract before B2, but its creation was
           # not represented in the canonical migration ledger. Reconstruct it explicitly.
           apply_sql "supabase/restore/tail-bridges/20260927194000_kds_realtime_contract_bridge.sql"

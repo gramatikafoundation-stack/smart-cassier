@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://smart-digital-for-business.local/schema/tenant.config.schema.json",
-  "title": "SMART DIGITAL FOR BUSINESS Tenant Configuration",
+  "$id": "https://smart-order-sdb.local/schema/tenant.config.v2.json",
+  "title": "SMART ORDER SDB Tenant Configuration v2",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,9 +14,8 @@
     "locale",
     "currency",
     "timezone",
-    "public_url",
-    "admin_url",
-    "kds_url",
+    "canonical_origin",
+    "surface_routes",
     "qris_asset",
     "table_count",
     "require_table_qr_signature",
@@ -27,91 +26,48 @@
     "sheets"
   ],
   "properties": {
-    "schema_version": {
-      "const": 1
-    },
-    "tenant_id": {
-      "type": "string",
-      "format": "uuid"
-    },
+    "schema_version": { "const": 2 },
+    "tenant_id": { "type": "string", "format": "uuid" },
     "tenant_slug": {
       "type": "string",
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
       "minLength": 3,
       "maxLength": 48
     },
-    "business_name": {
-      "type": "string",
-      "minLength": 2,
-      "maxLength": 100
-    },
-    "merchant_name": {
-      "type": "string",
-      "minLength": 2,
-      "maxLength": 100
-    },
-    "merchant_name_acknowledged": {
-      "type": "boolean"
-    },
-    "locale": {
-      "type": "string",
-      "minLength": 2,
-      "maxLength": 32
-    },
-    "currency": {
-      "type": "string",
-      "pattern": "^[A-Z]{3}$"
-    },
-    "timezone": {
-      "type": "string",
-      "minLength": 3,
-      "maxLength": 64
-    },
-    "public_url": {
+    "business_name": { "type": "string", "minLength": 2, "maxLength": 100 },
+    "merchant_name": { "type": "string", "minLength": 2, "maxLength": 100 },
+    "merchant_name_acknowledged": { "type": "boolean" },
+    "locale": { "type": "string", "minLength": 2, "maxLength": 32 },
+    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+    "timezone": { "type": "string", "minLength": 3, "maxLength": 64 },
+    "canonical_origin": {
       "type": "string",
       "pattern": "^https://[^/]+/?$"
     },
-    "admin_url": {
-      "type": "string",
-      "pattern": "^https://[^/]+/?$"
+    "surface_routes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["public", "admin", "kds", "database"],
+      "properties": {
+        "public": { "const": "/" },
+        "admin": { "const": "/admin" },
+        "kds": { "const": "/kds" },
+        "database": { "const": "/database" }
+      }
     },
-    "kds_url": {
-      "type": "string",
-      "pattern": "^https://[^/]+/?$"
-    },
-    "qris_asset": {
-      "type": "string",
-      "minLength": 1
-    },
-    "table_count": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 200
-    },
-    "require_table_qr_signature": {
-      "const": true
-    },
-    "menu_seed": {
-      "type": "string",
-      "pattern": "^prototype/.+\\.json$"
-    },
+    "qris_asset": { "type": "string", "minLength": 1 },
+    "table_count": { "type": "integer", "minimum": 1, "maximum": 200 },
+    "require_table_qr_signature": { "const": true },
+    "menu_seed": { "type": "string", "pattern": "^prototype/.+\\.json$" },
     "admin_owner_email": {
       "type": "string",
       "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
     },
-    "spreadsheet_target": {
-      "type": "string",
-      "minLength": 3,
-      "maxLength": 160
-    },
+    "spreadsheet_target": { "type": "string", "minLength": 3, "maxLength": 160 },
     "storage": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "namespace",
-        "static_bucket",
-        "payment_bucket"
-      ],
+      "required": ["namespace", "static_bucket", "payment_bucket"],
       "properties": {
         "namespace": {
           "type": "string",
@@ -130,35 +86,18 @@
     "sheets": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "start_year",
-        "years",
-        "expected_tabs"
-      ],
+      "required": ["provider", "start_year", "years", "expected_tabs"],
       "properties": {
-        "start_year": {
-          "type": "integer",
-          "minimum": 2026,
-          "maximum": 2100
-        },
-        "years": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 10
-        },
+        "provider": { "const": "google_drive" },
+        "start_year": { "type": "integer", "minimum": 2026, "maximum": 2100 },
+        "years": { "type": "integer", "minimum": 1, "maximum": 10 },
         "expected_tabs": {
           "type": "array",
           "minItems": 5,
           "maxItems": 5,
           "uniqueItems": true,
           "items": {
-            "enum": [
-              "DASHBOARD",
-              "PEMESAN",
-              "PESANAN",
-              "MENU & STOK",
-              "KEUANGAN"
-            ]
+            "enum": ["DASHBOARD", "PEMESAN", "PESANAN", "MENU & STOK", "KEUANGAN"]
           }
         }
       }

@@ -96,8 +96,8 @@ begin
   limit 1;
   if v_proto.id is null then raise exception 'b4_candidate_not_draft'; end if;
 
-  if not coalesce((private.release_preflight_status()->>'ok')::boolean,false) then
-    raise exception 'b4_release_preflight_not_ready';
+  if not coalesce((private.release_engineering_status()->>'ok')::boolean,false) then
+    raise exception 'b4_release_engineering_not_ready';
   end if;
 
   select * into v_snap

@@ -1,0 +1,30 @@
+name: SMART ORDER v1.1 Refinement Gate
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/functions/rohmat-admin-render/index.ts'
+      - 'supabase/functions/rohmat-secure-api-v1/index.ts'
+      - 'supabase/functions/rohmat-admin-cashier-loader-v1/index.ts'
+      - 'supabase/migrations/20260928173000_smart_order_v1_1_categories_database_summary.sql'
+      - 'scripts/smart-order-v1-1-refinement-gate.cjs'
+      - '.github/workflows/smart-order-v1-1-refinement-gate.yml'
+  push:
+    branches:
+      - 'release/smart-order-v1.1.0-refinement'
+    paths:
+      - 'supabase/**'
+      - 'scripts/smart-order-v1-1-refinement-gate.cjs'
+  workflow_dispatch:
+
+jobs:
+  refinement-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate SMART ORDER v1.1 refinement contract
+        run: node scripts/smart-order-v1-1-refinement-gate.cjs

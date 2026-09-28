@@ -15,6 +15,8 @@ const RPC_MAP:Record<string,string>={
   admin_console_snapshot:"admin_console_snapshot_tenant",
   admin_console_update_settings:"admin_console_update_settings_tenant",
   admin_console_save_menu:"admin_console_save_menu_tenant",
+  admin_console_save_category:"admin_console_save_category_tenant",
+  admin_console_database_summary:"admin_console_database_summary_tenant",
   admin_console_set_menu_visible:"admin_console_set_menu_visible_tenant",
   admin_console_update_order:"admin_console_update_order_tenant",
   admin_console_add_admin:"admin_console_add_admin_tenant",
@@ -45,7 +47,7 @@ const RPC_MAP:Record<string,string>={
 };
 
 const READ_RPC=new Set([
-  "admin_password_session_info","admin_console_snapshot","admin_design_system_history",
+  "admin_password_session_info","admin_console_snapshot","admin_console_database_summary","admin_design_system_history",
   "admin_design_system_registry","admin_theme_profile_catalog",
   "kds_snapshot","kds_console_snapshot","smart_cashier_snapshot"
 ]);
@@ -147,7 +149,7 @@ Deno.serve(async(req:Request)=>{
     if(!origins.has(origin))return json(origin,{ok:false,error:"origin_not_allowed"},403,ctx);
     const h=baseHeaders(origin,ctx);
     h.set("access-control-allow-methods","POST, OPTIONS");
-    h.set("access-control-allow-headers","content-type, x-requested-with, x-sdb-tenant-id");
+    h.set("access-control-allow-headers","content-type, x-requested-with, x-sdb-tenant-id, apikey, authorization");
     h.set("access-control-max-age","600");
     return new Response(null,{status:204,headers:h});
   }

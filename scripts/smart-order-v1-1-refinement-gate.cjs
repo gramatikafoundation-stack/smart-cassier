@@ -46,6 +46,7 @@ must(admin, 'Menu Terlaris #2', 'top menu #2 metric');
 must(admin, 'Jam Kunjungan Tersibuk', 'busiest hour metric');
 must(admin, 'Total Transaksi 30 Hari', '30-day transaction metric');
 must(secure, 'admin_console_database_summary:"admin_console_database_summary_tenant"', 'secure summary RPC mapping');
+must(secure, 'content-type, x-requested-with, x-sdb-tenant-id, apikey, authorization', 'secure login CORS headers');
 must(migration, 'create or replace function public.admin_console_database_summary_tenant', 'database summary RPC');
 
 // Receipt: all user-required information and modern line-item structure.

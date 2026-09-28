@@ -147,7 +147,7 @@ Deno.serve(async(req:Request)=>{
     if(!origins.has(origin))return json(origin,{ok:false,error:"origin_not_allowed"},403,ctx);
     const h=baseHeaders(origin,ctx);
     h.set("access-control-allow-methods","POST, OPTIONS");
-    h.set("access-control-allow-headers","content-type, x-requested-with, x-sdb-tenant-id");
+    h.set("access-control-allow-headers","content-type, x-requested-with, x-sdb-tenant-id, apikey, authorization");
     h.set("access-control-max-age","600");
     return new Response(null,{status:204,headers:h});
   }

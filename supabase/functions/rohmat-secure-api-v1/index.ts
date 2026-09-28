@@ -15,6 +15,8 @@ const RPC_MAP:Record<string,string>={
   admin_console_snapshot:"admin_console_snapshot_tenant",
   admin_console_update_settings:"admin_console_update_settings_tenant",
   admin_console_save_menu:"admin_console_save_menu_tenant",
+  admin_console_save_category:"admin_console_save_category_tenant",
+  admin_console_database_summary:"admin_console_database_summary_tenant",
   admin_console_set_menu_visible:"admin_console_set_menu_visible_tenant",
   admin_console_update_order:"admin_console_update_order_tenant",
   admin_console_add_admin:"admin_console_add_admin_tenant",
@@ -45,7 +47,7 @@ const RPC_MAP:Record<string,string>={
 };
 
 const READ_RPC=new Set([
-  "admin_password_session_info","admin_console_snapshot","admin_design_system_history",
+  "admin_password_session_info","admin_console_snapshot","admin_console_database_summary","admin_design_system_history",
   "admin_design_system_registry","admin_theme_profile_catalog",
   "kds_snapshot","kds_console_snapshot","smart_cashier_snapshot"
 ]);

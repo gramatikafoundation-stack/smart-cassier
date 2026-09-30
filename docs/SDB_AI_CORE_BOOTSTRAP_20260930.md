@@ -43,7 +43,7 @@ Temporary host project: Supabase `smart-cassier-platform` (`xrepmvbccalzhlcznrff
 
 The module remains isolated under schema `sdb_ai`. Legacy Rohmat objects are out of scope and must remain untouched.
 
-A dedicated `sdb-ai-core` project should be created after the planned Supabase plan upgrade. The GitHub migration/runtime/config snapshots are portable so this move must be migration, not rebuild.
+Permanent cost architecture: keep only **two active Supabase projects**. Do **not** create a third `sdb-ai-core` project. `sdb_ai` remains an isolated private schema inside `smart-cassier-platform`, with separate Edge Functions, grants, policies, secrets, usage ledger, and cost governor. This avoids an additional PostgreSQL compute charge while preserving logical isolation.
 
 ## Products registered
 
@@ -100,9 +100,7 @@ Source of truth remains PostgreSQL/Supabase.
 3. Verify usage/token/cost ledger from the successful provider call.
 4. Integrate SMART CASHIER backend with read-only gateway using server-to-server authorization compatible with its current custom auth/session model.
 5. Run tenant/outlet/role negative tests on AI access.
-6. After Supabase upgrade, create dedicated `sdb-ai-core` project and migrate this module 1:1.
-7. Configure OpenAI project spend alert + hard spend limit before broad production traffic.
-8. Keep temporary module until dedicated-project parity QA passes.
+6. Keep the Supabase organization at **two active projects only**; do not create a dedicated third AI project.\n7. Configure OpenAI project spend alert + hard spend limit before broad production traffic.\n8. Revalidate schema isolation and project-level cost controls after the Supabase Pro upgrade.
 
 ## No-rework rule
 

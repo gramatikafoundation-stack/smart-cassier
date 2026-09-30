@@ -1,39 +1,49 @@
 # SDB AI Core — Bootstrap & Integration Status
 
-Date: 2026-09-30 (Asia/Jakarta)
+Date: 2026-10-01 (Asia/Jakarta)
 
 ## Purpose
 
-SDB AI Core is the private AI control plane for Smart Digital For Business. It is designed to serve SMART CASHIER, SMART INSIGHT, SMART ASISTEN, Media AI, and future SDB products through one governed backend integration with the OpenAI Responses API.
+SDB AI Core is the private AI control plane for Smart Digital For Business. It serves SMART CASHIER, SMART INSIGHT, SMART ASISTEN, Media AI, and future SDB products through one governed backend integration with the OpenAI Responses API.
+
+## Current validated state
+
+- Supabase secret `OPENAI_API_KEY`: **configured**
+- OpenAI API key: **valid**
+- OpenAI organization/project: **Smart Digital For Business**
+- Live model availability verified: `gpt-6-luna`, `gpt-6-sol`, `gpt-5.6-luna`, `gpt-5.6-sol`
+- Production routing:
+  - simple / standard / vision → `gpt-6-luna`
+  - complex → `gpt-6-sol`
+  - fallbacks → GPT-5.6 equivalents
+- Paid synthetic smoke test reached OpenAI successfully but returned:
+  - HTTP 429
+  - type `insufficient_quota`
+  - code `credit_balance_exhausted`
+- Therefore the only provider-side activation blocker is **OpenAI API prepaid credit/billing**.
+- Temporary paid-smoke endpoint was immediately disabled after the test.
+- Health probe was hardened after validation and no longer accepts anonymous JWTs.
 
 ## Security principles
 
 - No OpenAI secret is stored in GitHub, browser code, or public tables.
-- The current gateway is JWT protected and backend-only.
-- The `sdb_ai` schema is private by default; PUBLIC, anon, and authenticated receive no direct table access.
-- Service-role-only RPCs expose the minimum internal control-plane operations.
+- The `sdb_ai` schema is private by default; PUBLIC, anon, and authenticated have no direct table access.
+- Service-role-only RPCs expose only internal control-plane operations.
 - Prompts/model outputs are not persisted in the usage ledger.
 - Incoming business data is screened for credential/payment-secret field names.
-- Supplied business data is explicitly treated as untrusted data, not model instructions.
+- Business data is treated as untrusted data, never as model instructions.
 - OpenAI requests use `store:false`.
-- V1/V2 gateway has no transaction/refund/write tools. It is read-only analysis.
-- Critical/external actions are modeled in policy but require approval and are not implemented as executable tools.
+- Gateway v2 has no transaction/refund/write tools; current scope is read-only analysis.
+- Critical/external actions remain policy-only and require approval if implemented later.
+- Atomic per-product admission control prevents parallel requests from bypassing local budgets.
 
 ## Current deployment
 
 Temporary host project: Supabase `smart-cassier-platform` (`xrepmvbccalzhlcznrff`).
 
-This is temporary because the Supabase organization is currently at the Free-plan maximum of two active projects. A dedicated `sdb-ai-core` project should be created after the planned Supabase upgrade. Do not delete or pause existing projects to make room.
+The module remains isolated under schema `sdb_ai`. Legacy Rohmat objects are out of scope and must remain untouched.
 
-The temporary module is isolated under schema `sdb_ai` and new function `sdb-ai-gateway`; legacy Rohmat objects are out of scope and must remain untouched.
-
-## OpenAI organization target
-
-- Organization: Smart Digital For Business
-- OpenAI project: Smart Digital For Business
-- API credential strategy: project-scoped, server-side only, expiring/rotated.
-- A 90-day encrypted credential has been created through the official OpenAI connector, but it is not committed here and must not be exposed in chat/source.
-- Live provider traffic remains disabled until a supported secret-store path contains `OPENAI_API_KEY` and API billing is active.
+A dedicated `sdb-ai-core` project should be created after the planned Supabase plan upgrade. The GitHub migration/runtime/config snapshots are portable so this move must be migration, not rebuild.
 
 ## Products registered
 
@@ -51,16 +61,7 @@ The temporary module is isolated under schema `sdb_ai` and new function `sdb-ai-
 - Media AI: `editorial.assist`
 - SDB Core: `business.advisor`
 
-All contracts use structured JSON schemas.
-
-## Model routing
-
-Initial conservative routing:
-- simple/standard/vision: GPT-5.6 Luna primary
-- complex: GPT-5.6 Sol primary
-- server-availability fallback only
-
-Model IDs are configuration, not hard-wired product behavior. Before switching to newer families, verify model availability through the actual SDB API account.
+All contracts use strict structured JSON schemas.
 
 ## Cost & abuse governance
 
@@ -69,35 +70,40 @@ The database control plane implements:
 - per-product daily request limit
 - monthly input token limit
 - monthly output token limit
-- atomic admission using a PostgreSQL advisory transaction lock
+- PostgreSQL advisory-lock atomic admission
 - token/latency/status metadata ledger
-- model-rate registry and estimated USD cost calculation
+- model-rate registry
+- estimated USD cost per request
 
-Gateway v2 performs admission before a provider call. It does not fall back for 4xx/rate-limit/billing errors.
+Current standard text-rate registry includes:
+- GPT-6 Luna: $0.10 / 1M input, $0.50 / 1M output
+- GPT-6 Sol: $2.00 / 1M input, $10.00 / 1M output
+- GPT-5.6 fallbacks retained
+
+Gateway v2 performs admission before provider calls and does not fallback on billing, quota, rate-limit, or other 4xx errors.
 
 ## SMART CASHIER pilot
 
-The first production use case is read-only business insight:
+The first production use case remains read-only business insight:
 1. deterministic SQL/backend calculates business metrics;
-2. only the required aggregate is sent to SDB AI Core;
+2. only required aggregates are sent to SDB AI Core;
 3. AI interprets those metrics;
-4. structured result returns summary, findings, recommended actions, limitations, confidence;
-5. AI cannot modify/refund a transaction.
+4. strict structured result returns findings/actions/limitations/confidence;
+5. AI cannot modify or refund transactions.
 
 Source of truth remains PostgreSQL/Supabase.
 
 ## Remaining activation gates
 
-1. Supabase secret `OPENAI_API_KEY` must be added via a supported secure secret-store flow. Never paste it in chat.
-2. OpenAI API billing/credit must be active.
-3. Run synthetic provider smoke test.
-4. Verify model availability for the business OpenAI project.
-5. Verify token/cost ledger after the test.
-6. Integrate SMART CASHIER UI/backend with the read-only gateway.
-7. After Supabase upgrade, create dedicated `sdb-ai-core` project and migrate this module using the committed migration source.
+1. Add OpenAI API prepaid credits to resolve `credit_balance_exhausted`.
+2. Rerun the tiny synthetic Responses/Structured Output smoke test.
+3. Verify usage/token/cost ledger from the successful provider call.
+4. Integrate SMART CASHIER backend with read-only gateway using server-to-server authorization compatible with its current custom auth/session model.
+5. Run tenant/outlet/role negative tests on AI access.
+6. After Supabase upgrade, create dedicated `sdb-ai-core` project and migrate this module 1:1.
+7. Configure OpenAI project spend alert + hard spend limit before broad production traffic.
 8. Keep temporary module until dedicated-project parity QA passes.
 
 ## No-rework rule
 
-This AI integration extends the validated SMART CASHIER state. It must not redesign or rebuild Batch 1–3. Database-dependent components are adapted/revalidated only where materially affected.
-
+This AI integration extends the validated SMART CASHIER state. It must not redesign or rebuild Batch 1–3. Only dependencies materially affected by AI/database migration are adapted and revalidated.

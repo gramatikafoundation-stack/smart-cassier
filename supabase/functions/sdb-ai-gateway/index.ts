@@ -2,18 +2,18 @@
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
 
-function serviceKey() {
+function serviceCredential() {
   const modern = Deno.env.get("SUPABASE_SECRET_KEYS");
   if (modern) {
     try {
       const parsed = JSON.parse(modern);
       const preferred = parsed.default ?? Object.values(parsed)[0];
-      if (typeof preferred === "string" && preferred) return preferred;
+      if (typeof preferred === "string" && preferred) return { key: preferred, modern: true };
     } catch {}
   }
-  return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  return { key: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "", modern: false };
 }
-const SERVICE_KEY = serviceKey();
+const SERVICE = serviceCredential();
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -69,14 +69,15 @@ function findSensitiveKey(value: unknown, path = "$"): string | null {
 }
 
 async function rpc(name: string, body: Record<string, unknown>) {
-  if (!SUPABASE_URL || !SERVICE_KEY) throw new Error("SUPABASE_BACKEND_NOT_CONFIGURED");
+  if (!SUPABASE_URL || !SERVICE.key) throw new Error("SUPABASE_BACKEND_NOT_CONFIGURED");
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+    apikey: SERVICE.key,
+  };
+  if (!SERVICE.modern) headers.authorization = `Bearer ${SERVICE.key}`;
   const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
     method: "POST",
-    headers: {
-      "content-type": "application/json",
-      apikey: SERVICE_KEY,
-      authorization: `Bearer ${SERVICE_KEY}`,
-    },
+    headers,
     body: JSON.stringify(body),
   });
   if (!r.ok) throw new Error(`RPC_${name}_${r.status}`);

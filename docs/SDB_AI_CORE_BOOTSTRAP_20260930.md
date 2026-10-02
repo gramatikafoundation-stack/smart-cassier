@@ -105,3 +105,15 @@ Source of truth remains PostgreSQL/Supabase.
 ## No-rework rule
 
 This AI integration extends the validated SMART CASHIER state. It must not redesign or rebuild Batch 1–3. Only dependencies materially affected by AI/database migration are adapted and revalidated.
+
+
+## 2026-10-02 live activation validation
+
+- OpenAI API billing is active and has propagated.
+- Supabase -> OpenAI Responses API returned HTTP 200 using `gpt-6-luna`.
+- Strict Structured Output validation passed.
+- Full backend QA passed: gateway config, atomic admission/cost governor, provider request, structured output, usage ledger, and cost estimation.
+- QA sample: 223 input tokens, 279 output tokens, 502 total tokens, estimated cost USD 0.000162, latency 4427 ms.
+- Production `sdb-ai-gateway` upgraded to v4 for modern Supabase `sb_secret_*` RPC authentication: secret keys are sent on `apikey` only; legacy service-role JWT fallback remains transitional.
+- Temporary smoke probe is disabled after validation.
+- Permanent cost architecture remains two active Supabase projects maximum; no third AI project.

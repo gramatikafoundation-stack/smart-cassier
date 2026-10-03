@@ -1,5 +1,3 @@
-const DEFAULT_UPSTREAM = 'https://xrepmvbccalzhlcznrff.supabase.co/functions/v1/rohmat-kds-api';
-
 function firstIp(value) {
   return String(value || '').split(',')[0].trim().slice(0, 80);
 }
@@ -30,13 +28,20 @@ export default async function handler(req, res) {
     return res.status(403).json({ ok: false, error: 'csrf_rejected' });
   }
 
-  const strict = process.env.MASTER_PROTOTYPE_STRICT === '1' || process.env.MASTER_CLONE_STRICT === '1';
   const tenantId = String(process.env.SDB_TENANT_ID || '').trim();
-  if (strict && (!process.env.KDS_BFF_URL || !tenantId)) {
+  const upstream = String(process.env.KDS_BFF_URL || '').trim();
+  const apiKey = String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
+  if (!upstream || !tenantId || !apiKey) {
     return res.status(503).json({ ok: false, error: 'tenant_configuration_incomplete' });
   }
-  const upstream = process.env.KDS_BFF_URL || DEFAULT_UPSTREAM;
-  const projectOrigin = new URL(upstream).origin;
+  let upstreamUrl;
+  try { upstreamUrl = new URL(upstream); } catch {
+    return res.status(503).json({ ok: false, error: 'kds_upstream_invalid' });
+  }
+  if (upstreamUrl.protocol !== 'https:' || upstreamUrl.hostname !== 'yybhpmjuywjxqurrrrxl.supabase.co') {
+    return res.status(503).json({ ok: false, error: 'kds_upstream_not_sdb1' });
+  }
+  const projectOrigin = upstreamUrl.origin;
   const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
   if (Buffer.byteLength(body, 'utf8') > 65536) {
     return res.status(413).json({ ok: false, error: 'request_too_large' });
@@ -47,8 +52,8 @@ export default async function handler(req, res) {
 
   const headers = {
     'content-type': 'application/json',
-    'apikey': String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || ''),
-    'authorization': 'Bearer ' + String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || ''),
+    'apikey': apiKey,
+    'authorization': 'Bearer ' + apiKey,
     'origin': projectOrigin,
     'sec-fetch-site': 'same-origin',
     'user-agent': String(req.headers['user-agent'] || 'Master-KDS-Proxy'),

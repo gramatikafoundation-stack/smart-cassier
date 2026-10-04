@@ -51,6 +51,7 @@ function normalizeLegacyClientRuntime(body) {
 }
 function normalizeStyleRuntime(body) {
   let out = normalizeLegacyClientRuntime(body);
+  out = out.replace(/\(\(\)=>\{'use strict';\s*if\(window\.__rohmatAdminGlobalDesignV49\)[\s\S]*?\}\)\(\);\s*/,'');
   out = out.replace(/add\('rohmat-admin-cashier-safe-v7',[\s\S]*?\);/g, '');
   out = out.replace(/add\('rohmat-admin-database-safe-v10',[\s\S]*?\);/g, "add('rohmat-admin-database-safe-v10','/admin/runtime/database-ui.js');");
   out = out.replace(/add\('rohmat-admin-kds-safe-v6',[\s\S]*?\);/g, '');

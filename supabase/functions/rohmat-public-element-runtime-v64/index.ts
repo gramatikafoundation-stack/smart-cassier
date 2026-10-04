@@ -143,6 +143,73 @@ let queued=false;function schedule(){if(queued)return;queued=true;requestAnimati
 document.addEventListener('rohmat:dom-updated',schedule);document.addEventListener('rohmat:settings-updated',()=>{pricingLoaded=false;loadPricing(true).then(schedule)});document.addEventListener('click',e=>{if(e.target.closest('#pay,#backm,#confirm'))setTimeout(schedule,0)},true);window.addEventListener('pageshow',()=>loadPricing(true).then(schedule));loadPricing().then(schedule);
 })();/* rohmat-unified-receipt-v5-pricing */`;
 
+const LANDING_V26=String.raw`;(()=>{'use strict';
+if(window.__rohmatPublicLandingV26)return;window.__rohmatPublicLandingV26=1;
+const STYLE='rohmatPublicLandingV26Css',SYNC='sdb-theme-sync-v1';
+function css(){
+  let s=document.getElementById(STYLE);
+  if(s)return s;
+  s=window.__rohmatCreateStyleV27?window.__rohmatCreateStyleV27():document.createElement('style');
+  s.id=STYLE;
+  s.textContent='
+html,body{min-height:100%!important}
+body{background:var(--ds-bg,#F5EFE3)!important;color:var(--ds-text,#24362F)!important}
+.hero{min-height:100svh!important;display:grid!important;place-items:center!important;padding:clamp(16px,2.4vw,36px)!important;background:var(--ds-bg,#F5EFE3)!important}
+.welcome{width:min(1460px,calc(100vw - 48px))!important;min-height:clamp(590px,calc(100svh - 64px),840px)!important;display:grid!important;grid-template-columns:minmax(0,48fr) minmax(0,52fr)!important;align-items:stretch!important;background:var(--ds-panel,#FFFDF8)!important;color:var(--ds-text,#24362F)!important;border:1px solid color-mix(in srgb,var(--ds-primary,#315343) 16%,transparent)!important;overflow:hidden!important;box-shadow:0 30px 80px color-mix(in srgb,var(--ds-primary,#315343) 16%,transparent)!important}
+.photo{position:relative!important;isolation:isolate!important;min-height:0!important;height:auto!important;background:color-mix(in srgb,var(--ds-primary,#315343) 88%,var(--ds-bg,#F5EFE3))!important;overflow:hidden!important}
+.photo img{display:block!important;width:100%!important;height:100%!important;min-height:100%!important;max-width:none!important;object-fit:cover!important;object-position:center!important}
+.photo.hero-image-failed img{display:none!important}
+.photo.hero-image-failed:before{content:attr(data-fallback-label);position:absolute;inset:0;display:grid;place-items:center;padding:36px;text-align:center;color:var(--ds-panel,#FFFDF8);font-family:var(--rohmat-general-font,Georgia),serif;font-size:clamp(30px,4vw,58px);font-weight:700;line-height:1.05;background:linear-gradient(145deg,var(--ds-primary,#315343),color-mix(in srgb,var(--ds-primary,#315343) 72%,#000))}
+.copy{display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:stretch!important;padding:clamp(34px,5vw,74px)!important;background:var(--ds-panel,#FFFDF8)!important;gap:clamp(5px,.7vw,10px)!important}
+.brand{max-width:12ch!important;margin:0 0 12px!important;font-size:clamp(48px,5vw,78px)!important;line-height:.98!important;letter-spacing:-.045em!important;color:var(--ds-text,#24362F)!important;text-wrap:balance!important}
+.copy>.ey{margin-top:4px!important;color:var(--ds-accent,#B87444)!important}
+.copy>.muted{max-width:46ch!important;margin:10px 0 12px!important;color:var(--ds-muted,#7C776E)!important}
+.opts{width:100%!important;max-width:none!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;margin:20px 0 12px!important}
+.opts .opt{width:100%!important;max-width:none!important;min-width:0!important;min-height:50px!important;justify-content:center!important;text-align:center!important;margin:0!important;border-color:color-mix(in srgb,var(--ds-primary,#315343) 18%,transparent)!important;background:var(--ds-panel,#FFFDF8)!important}
+.opts .opt.on{background:color-mix(in srgb,var(--ds-primary,#315343) 10%,var(--ds-panel,#FFFDF8))!important;border-color:var(--ds-primary,#315343)!important;box-shadow:inset 3px 0 var(--ds-accent,#B87444)!important}
+.field{margin:12px 0!important}
+.field label{color:var(--ds-text,#24362F)!important}
+.field select,.field input,.field textarea{background:var(--ds-panel,#FFFDF8)!important;color:var(--ds-text,#24362F)!important;border-color:color-mix(in srgb,var(--ds-primary,#315343) 18%,transparent)!important}
+#next{width:100%!important;margin-top:10px!important;background:var(--ds-primary,#315343)!important;color:var(--ds-panel,#FFFDF8)!important}
+@media(max-width:980px){.welcome{width:min(100% - 28px,900px)!important;min-height:auto!important;grid-template-columns:1fr!important}.photo{min-height:360px!important;aspect-ratio:16/9!important}.copy{padding:clamp(28px,5vw,48px)!important}.brand{max-width:none!important;font-size:clamp(44px,8vw,66px)!important}}
+@media(max-width:560px){.hero{padding:10px!important;place-items:start center!important}.welcome{width:100%!important;min-height:auto!important;grid-template-columns:1fr!important}.photo{min-height:0!important;aspect-ratio:16/10!important}.copy{padding:24px 20px 28px!important}.brand{font-size:clamp(38px,12vw,52px)!important;line-height:1!important}.opts{grid-template-columns:1fr 1fr!important;gap:8px!important}.opts .opt{min-height:48px!important}.copy>.muted{margin-bottom:8px!important}}
+';
+  document.head.appendChild(s);return s
+}
+function themeId(){
+  const c=window.__rohmatPublicConfigV25||window.__rohmatPublicConfigV24||null;
+  return String(c?.design_system?.published?.theme?.id||'').trim()
+}
+function patch(){
+  css();
+  const w=document.querySelector('.welcome');if(!w)return;
+  const opts=w.querySelector('.opts');
+  if(opts){
+    const m={display:'grid','grid-template-columns':'repeat(2,minmax(0,1fr))','justify-content':'stretch','align-items':'stretch',width:'100%','max-width':'none','margin-left':'0','margin-right':'0',gap:'12px'};
+    for(const[p,v]of Object.entries(m))opts.style.setProperty(p,v,'important');
+    opts.querySelectorAll('.opt').forEach(b=>{for(const[p,v]of Object.entries({width:'100%','max-width':'none','min-width':'0','min-height':'50px',padding:'12px 14px','justify-content':'center','text-align':'center',margin:'0'}))b.style.setProperty(p,v,'important')})
+  }
+  const photo=w.querySelector('.photo'),img=photo?.querySelector('img'),brand=(w.querySelector('.brand')?.textContent||'Rohmat Nasi Uduk').trim();
+  if(photo){photo.dataset.fallbackLabel=brand}
+  if(img&&!img.dataset.heroGuardV26){
+    img.dataset.heroGuardV26='1';img.loading='eager';img.decoding='async';img.fetchPriority='high';
+    img.addEventListener('load',()=>photo?.classList.remove('hero-image-failed'));
+    img.addEventListener('error',()=>photo?.classList.add('hero-image-failed'));
+    if(img.complete&&img.naturalWidth>0)photo?.classList.remove('hero-image-failed')
+  } else if(photo&&!img){photo.classList.add('hero-image-failed')}
+  const id=themeId();if(id)document.documentElement.dataset.sdbPublicTheme=id;
+  document.documentElement.dataset.rohmatPublicLanding='v26'
+}
+let queued=false;function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;patch()})}
+document.addEventListener('rohmat:dom-updated',schedule);
+document.addEventListener('rohmat:settings-updated',schedule);
+window.addEventListener('pageshow',schedule);
+window.addEventListener('resize',schedule);
+window.addEventListener('storage',e=>{if(e.key===SYNC){window.dispatchEvent(new Event('focus'));setTimeout(schedule,80)}});
+try{const bc=new BroadcastChannel(SYNC);bc.onmessage=()=>{window.dispatchEvent(new Event('focus'));setTimeout(schedule,80)}}catch{}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});else schedule();
+})();/* rohmat-public-landing-v26 */`;
+
 Deno.serve(async(req:Request)=>{
   const ctx=await tenantContext(req);
   if(!ctx)return new Response('/* tenant required or invalid */',{status:400,headers:{'content-type':'application/javascript; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
@@ -157,11 +224,22 @@ Deno.serve(async(req:Request)=>{
     'x-rohmat-identity':'v4-session-8h','x-rohmat-proof':'inline-v77-only',
     'x-rohmat-observers':'app-3-max+web-vitals','x-rohmat-storage':'order-and-customer-session-only',
     'x-rohmat-inp-runtime':'official-web-vitals-6.2.2','x-rohmat-cls':'lkg-head-v1',
-    'x-rohmat-css':'stack-consolidated-v1','x-rohmat-runtime-asset':'embedded-v27-canonical-backend','x-rohmat-receipt':'unified-v5-pricing'
+    'x-rohmat-css':'stack-consolidated-v1','x-rohmat-runtime-asset':'embedded-v27-canonical-backend','x-rohmat-receipt':'unified-v5-pricing','x-rohmat-theme-source':'tenant-design-system-v25','x-rohmat-landing':'premium-full-v26'
   };
   try{
-    const body=(await js()).replaceAll('__SDB_TENANT_ID__',ctx.tenant_id);
-    const receipt=RECEIPT_V4.replaceAll('__SDB_RUNTIME_ORIGIN__',U).replaceAll('__SDB_RUNTIME_KEY__',K).replaceAll('__SDB_TENANT_ID__',ctx.tenant_id);return new Response(req.method==='HEAD'?null:body+IDENTITY+receipt,{
+    let body=(await js()).replaceAll('__SDB_TENANT_ID__',ctx.tenant_id);
+    const legacyFetch="fetch(U+'/rest/v1/site_settings_public_v2?select=updated_at,typography,design_system,merchant_name,payment_instructions&id=eq.1&limit=1',{headers:{apikey:K},cache:'no-store',signal:ac.signal})";
+    const tenantFetch="fetch(U+'/rest/v1/tenant_site_settings_public_v1?select=updated_at,typography,design_system,merchant_name,payment_instructions,hero_image_url&tenant_id=eq."+ctx.tenant_id+"&limit=1',{headers:{apikey:K,Authorization:'Bearer '+K,'X-SDB-Tenant-ID':'"+ctx.tenant_id+"'},cache:'no-store',signal:ac.signal})";
+    if(!body.includes(legacyFetch))throw new Error('public_design_legacy_fetch_marker_missing');
+    body=body.replace(legacyFetch,tenantFetch)
+      .replaceAll('__rohmatPublicConfigV24','__rohmatPublicConfigV25')
+      .replaceAll('__rohmatPublicDesignV24','__rohmatPublicDesignV25')
+      .replaceAll('rohmatPublicDesignV24','rohmatPublicDesignV25')
+      .replaceAll("CACHE='rohmat-public-design-v24'","CACHE='rohmat-public-design-v25-"+ctx.tenant_id+"'")
+      .replaceAll("rohmatPublicDesign='v24'","rohmatPublicDesign='v25'")
+      .replaceAll("rohmatPublicRefresh='single-source-event-driven'","rohmatPublicRefresh='tenant-single-source-event-driven-v25'");
+    const receipt=RECEIPT_V4.replaceAll('__SDB_RUNTIME_ORIGIN__',U).replaceAll('__SDB_RUNTIME_KEY__',K).replaceAll('__SDB_TENANT_ID__',ctx.tenant_id);
+    return new Response(req.method==='HEAD'?null:body+IDENTITY+receipt+LANDING_V26,{
       status:200,
       headers:{...headers,'content-type':'application/javascript; charset=utf-8','x-rohmat-runtime-mode':'full'}
     });

@@ -8,6 +8,7 @@ const API_KEY = String(process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUB
 const CLIENT_KEY = String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
 const TTL_MS = 60_000;
 const cache = new Map();
+const inflight = new Map();
 
 function escapeRe(value) {
   return String(value).replace(/[.*+?^$\u007b\u007d()|[\]\\]/g, '\\$&');
@@ -118,14 +119,27 @@ async function cached(kind) {
   const now = Date.now();
   const hit = cache.get(kind);
   if (hit && now - hit.at < TTL_MS) return { ...hit, state: 'memory-hit' };
-  const body = await moduleBody(kind);
-  const next = {
-    body,
-    at: now,
-    etag: '"' + createHash('sha256').update(body).digest('hex').slice(0, 32) + '"'
-  };
-  cache.set(kind, next);
-  return { ...next, state: 'upstream' };
+  if (inflight.has(kind)) {
+    const shared = await inflight.get(kind);
+    return { ...shared, state: 'coalesced' };
+  }
+  const pending = (async () => {
+    const body = await moduleBody(kind);
+    const next = {
+      body,
+      at: Date.now(),
+      etag: '"' + createHash('sha256').update(body).digest('hex').slice(0, 32) + '"'
+    };
+    cache.set(kind, next);
+    return next;
+  })();
+  inflight.set(kind, pending);
+  try {
+    const next = await pending;
+    return { ...next, state: 'upstream' };
+  } finally {
+    if (inflight.get(kind) === pending) inflight.delete(kind);
+  }
 }
 function kindOf(req) {
   const q = Array.isArray(req?.query?.kind) ? req.query.kind[0] : req?.query?.kind;

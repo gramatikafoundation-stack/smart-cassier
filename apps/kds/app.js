@@ -1,9 +1,25 @@
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const tenant = () => window.__SDB_TENANT_CONFIG || {businessName:'Business',locale:'id-ID',currency:'IDR',timezone:'Asia/Jakarta'};
-const rp = n => new Intl.NumberFormat(tenant().locale||'id-ID',{style:'currency',currency:tenant().currency||'IDR',maximumFractionDigits:0}).format(Number(n)||0);
-const fmt = v => v ? new Date(v).toLocaleString(tenant().locale||'id-ID',{timeZone:tenant().timezone||'Asia/Jakarta',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',',' ·') : '—';
-const today = v => v && new Date(v).toLocaleDateString('en-CA',{timeZone:tenant().timezone||'Asia/Jakarta'}) === new Date().toLocaleDateString('en-CA',{timeZone:tenant().timezone||'Asia/Jakarta'});
+let formatterKey='',moneyFormatter=null,dateTimeFormatter=null,dateOnlyFormatter=null;
+function formatters(){
+  const cfg=tenant(),locale=cfg.locale||'id-ID',currency=cfg.currency||'IDR',timezone=cfg.timezone||'Asia/Jakarta';
+  const key=locale+'|'+currency+'|'+timezone;
+  if(key!==formatterKey){
+    formatterKey=key;
+    moneyFormatter=new Intl.NumberFormat(locale,{style:'currency',currency,maximumFractionDigits:0});
+    dateTimeFormatter=new Intl.DateTimeFormat(locale,{timeZone:timezone,day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    dateOnlyFormatter=new Intl.DateTimeFormat('en-CA',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'});
+  }
+  return {moneyFormatter,dateTimeFormatter,dateOnlyFormatter};
+}
+const rp = n => formatters().moneyFormatter.format(Number(n)||0);
+const fmt = v => v ? formatters().dateTimeFormatter.format(new Date(v)).replace(',',' ·') : '—';
+const today = v => {
+  if(!v)return false;
+  const {dateOnlyFormatter}=formatters();
+  return dateOnlyFormatter.format(new Date(v))===dateOnlyFormatter.format(new Date());
+};
 
 let snap={orders:[],menu:[]}, current='orders', syncBusy=false, syncPromise=null, lastSig='', timer=null;
 const FALLBACK_POLL_MS=8000,DEFAULT_SAFETY_POLL_MS=45000,DEFAULT_STALE_AFTER_MS=75000;

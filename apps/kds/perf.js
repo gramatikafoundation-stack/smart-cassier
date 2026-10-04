@@ -3,10 +3,9 @@
   style.textContent = 'button,.tab,.cashBtn,.sw{touch-action:manipulation}.cashItem[hidden]{display:none!important}.cashItem,.stock{contain:layout paint style}';
   document.head.appendChild(style);
 
-  let fastOrderSig = '';
-  let fastMenuSig = '';
   const stockPending = new Set();
   const baseCashBind = cashBind;
+  const emitCashUi = type => document.dispatchEvent(new CustomEvent(type));
 
   function orderSignature(d){
     return JSON.stringify((d?.orders||[]).map(o=>[o.id,o.order_status,o.payment_status,o.updated_at,o.preparing_at,o.ready_at,o.completed_at]));
@@ -93,12 +92,14 @@
     if(!aside){cashRender();annotateCashMenu();ensureCartPanelId();return}
     aside.innerHTML=cashCartHtml();
     bindCartFast();
+    emitCashUi('rohmat:kds-cart-updated');
   }
 
   cashBind = function(){
     baseCashBind();
     annotateCashMenu();
     ensureCartPanelId();
+    emitCashUi('rohmat:kds-cashier-rendered');
   };
 
   cashRerender = function(fn){
@@ -157,9 +158,5 @@
     }
   };
 
-  // Warm both data sources immediately so tab switching does not wait for a serial request chain.
-  queueMicrotask(()=>{
-    try{void refresh(false)}catch{}
-    try{void cashLoad(false)}catch{}
-  });
+  // Base boot and fast-nav own data warming; avoid duplicate requests during startup.
 })();

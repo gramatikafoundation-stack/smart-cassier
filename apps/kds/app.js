@@ -1,9 +1,21 @@
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const tenant = () => window.__SDB_TENANT_CONFIG || {businessName:'Business',locale:'id-ID',currency:'IDR',timezone:'Asia/Jakarta'};
-const rp = n => new Intl.NumberFormat(tenant().locale||'id-ID',{style:'currency',currency:tenant().currency||'IDR',maximumFractionDigits:0}).format(Number(n)||0);
-const fmt = v => v ? new Date(v).toLocaleString(tenant().locale||'id-ID',{timeZone:tenant().timezone||'Asia/Jakarta',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',',' ·') : '—';
-const today = v => v && new Date(v).toLocaleDateString('en-CA',{timeZone:tenant().timezone||'Asia/Jakarta'}) === new Date().toLocaleDateString('en-CA',{timeZone:tenant().timezone||'Asia/Jakarta'});
+let formatterKey='',moneyFormatter=null,dateTimeFormatter=null,dateOnlyFormatter=null,timeFormatter=null;
+function formatters(){
+  const t=tenant(),locale=t.locale||'id-ID',currency=t.currency||'IDR',timezone=t.timezone||'Asia/Jakarta',key=locale+'|'+currency+'|'+timezone;
+  if(key!==formatterKey){
+    formatterKey=key;
+    moneyFormatter=new Intl.NumberFormat(locale,{style:'currency',currency,maximumFractionDigits:0});
+    dateTimeFormatter=new Intl.DateTimeFormat(locale,{timeZone:timezone,day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    dateOnlyFormatter=new Intl.DateTimeFormat('en-CA',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'});
+    timeFormatter=new Intl.DateTimeFormat('id-ID',{timeZone:timezone,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+  return {moneyFormatter,dateTimeFormatter,dateOnlyFormatter,timeFormatter};
+}
+const rp = n => formatters().moneyFormatter.format(Number(n)||0);
+const fmt = v => v ? formatters().dateTimeFormatter.format(new Date(v)).replace(',',' ·') : '—';
+const today = v => {if(!v)return false;const f=formatters().dateOnlyFormatter;return f.format(new Date(v))===f.format(new Date())};
 
 let snap={orders:[],menu:[]}, current='orders', syncBusy=false, syncPromise=null, lastSig='', timer=null;
 const FALLBACK_POLL_MS=8000,DEFAULT_SAFETY_POLL_MS=45000,DEFAULT_STALE_AFTER_MS=75000;
@@ -59,7 +71,7 @@ function setSyncState(state,label){
 }
 function markFresh(source='snapshot'){
   lastFreshAt=Date.now();
-  const time=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const time=formatters().timeFormatter.format(new Date());
   setSyncState(realtimeConnected?'live':'fallback',(realtimeConnected?'Live':'Hybrid')+' · '+time);
   document.documentElement.dataset.rohmatKdsFreshSource=source;
 }
@@ -247,7 +259,8 @@ async function boot(){
 }
 
 document.addEventListener('click',async e=>{const tab=e.target.closest('[data-tab]');if(tab)return switchTab(tab.dataset.tab);const a=e.target.closest('[data-act]');if(a){a.disabled=true;try{await act(a.dataset.id,a.dataset.act)}catch(error){toast(error.message||'Aksi gagal')}finally{a.disabled=false}return}const pr=e.target.closest('[data-proof]');if(pr)return showProof(pr.dataset.proof);const pi=e.target.closest('[data-print]');if(pi)return printOne(pi.dataset.print);const st=e.target.closest('[data-stock]');if(st){st.disabled=true;try{await stock(st.dataset.stock,st.dataset.next==='1')}catch(error){toast(error.message||'Gagal')}finally{st.disabled=false}}});
-document.addEventListener('input',e=>{if(e.target.id==='search')renderStock()});document.addEventListener('change',e=>{if(e.target.id==='filter')renderStock()});
+let stockRenderQueued=false;function scheduleStockRender(){if(stockRenderQueued)return;stockRenderQueued=true;requestAnimationFrame(()=>{stockRenderQueued=false;renderStock()})}
+document.addEventListener('input',e=>{if(e.target.id==='search')scheduleStockRender()});document.addEventListener('change',e=>{if(e.target.id==='filter')scheduleStockRender()});
 $('refresh').onclick=async()=>{await syncCurrent(true);schedulePolling()};$('logout').onclick=logout;$('closeProof').onclick=()=>{$('proofModal').hidden=true;$('proofImg').src=''};
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPolling();stopRealtime({state:'paused'})}else{syncCurrent(false).catch(()=>{}).finally(()=>schedulePolling(FALLBACK_POLL_MS));startRealtimeHybrid().catch(()=>{})}});
 window.addEventListener('offline',()=>{stopPolling();stopRealtime({state:'offline'})});

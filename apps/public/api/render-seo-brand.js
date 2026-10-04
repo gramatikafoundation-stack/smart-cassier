@@ -161,6 +161,8 @@ export default async function handler(req, res) {
 
   const cfg = await resolvePublicTenantConfig(req);
   if (!cfg.ok) return failTenantConfig(res, cfg.missing);
+  // Reuse this request-scoped tenant resolution downstream instead of resolving the same origin twice.
+  if (req) req.__sdbPublicTenantConfig = cfg;
 
   const end = res.end.bind(res);
   res.end = (body, ...args) => {

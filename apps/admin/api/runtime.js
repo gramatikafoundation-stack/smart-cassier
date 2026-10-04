@@ -8,6 +8,7 @@ const API_KEY = String(process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUB
 const CLIENT_KEY = String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
 const TTL_MS = 60_000;
 const cache = new Map();
+const inflight = new Map();
 
 function escapeRe(value) {
   return String(value).replace(/[.*+?^$\u007b\u007d()|[\]\\]/g, '\\$&');
@@ -67,13 +68,13 @@ function normalizeModuleRuntime(kind, body) {
 }
 
 const NAVIGATION_RUNTIME = "(()=>{'use strict';if(window.__rohmatAdminCanonicalNavigationV60)return;window.__rohmatAdminCanonicalNavigationV60=1;let queued=false;" +
-"function patchLinks(){document.querySelectorAll('a[href]').forEach(a=>{const raw=a.getAttribute('href')||'',txt=(a.textContent||'').trim().toLowerCase();let u;try{u=new URL(raw,location.origin)}catch{return}const path=u.pathname.toLowerCase(),parts=path.split('/').filter(Boolean),kds=txt.includes('kds')||parts.includes('kds')||parts.includes('dapur');if(!kds)return;const login=path.endsWith('/login')||txt.includes('login');const next=login?'/kds/login':'/kds';if(a.getAttribute('href')!==next)a.setAttribute('href',next);if(a.target==='_blank')a.setAttribute('rel','noopener noreferrer')})}" +
+"function patchAnchor(a){const raw=a.getAttribute('href')||'',txt=(a.textContent||'').trim().toLowerCase();let u;try{u=new URL(raw,location.origin)}catch{return}const path=u.pathname.toLowerCase(),parts=path.split('/').filter(Boolean),kds=txt.includes('kds')||parts.includes('kds')||parts.includes('dapur');if(!kds)return;const login=path.endsWith('/login')||txt.includes('login');const next=login?'/kds/login':'/kds';if(a.getAttribute('href')!==next)a.setAttribute('href',next);if(a.target==='_blank')a.setAttribute('rel','noopener noreferrer')}function patchLinks(scope=document){if(scope&&scope.matches&&scope.matches('a[href]'))patchAnchor(scope);if(scope&&scope.querySelectorAll)scope.querySelectorAll('a[href]').forEach(patchAnchor)}" +
 "function active(b){const nav=b&&b.closest('.subnav');if(!nav)return;nav.querySelectorAll('button[data-sub]').forEach(x=>x.classList.toggle('on',x===b))}" +
 "function fire(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;patchLinks();document.dispatchEvent(new CustomEvent('rohmat:navigation'))})}" +
 "document.addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.closest('.subnav button[data-sub]');if(b)active(b)},true);" +
 "document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('[data-main],[data-sub]'))fire()},false);" +
-"document.addEventListener('rohmat:navigation',patchLinks);" +
-"const start=()=>{patchLinks();const root=document.getElementById('root');if(root){let p=false;new MutationObserver(()=>{if(p)return;p=true;requestAnimationFrame(()=>{p=false;patchLinks()})}).observe(root,{childList:true,subtree:true})}};" +
+"document.addEventListener('rohmat:navigation',()=>patchLinks());" +
+"const start=()=>{patchLinks();const root=document.getElementById('root');if(root){let p=false,pending=new Set();new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes||[])if(node&&node.nodeType===1)pending.add(node);if(p||!pending.size)return;p=true;requestAnimationFrame(()=>{p=false;const nodes=[...pending];pending.clear();nodes.forEach(patchLinks)})}).observe(root,{childList:true,subtree:true})}};" +
 "if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();})();";
 
 export function buildCanonicalCoreFromHtml(html, styleRuntime) {
@@ -118,14 +119,27 @@ async function cached(kind) {
   const now = Date.now();
   const hit = cache.get(kind);
   if (hit && now - hit.at < TTL_MS) return { ...hit, state: 'memory-hit' };
-  const body = await moduleBody(kind);
-  const next = {
-    body,
-    at: now,
-    etag: '"' + createHash('sha256').update(body).digest('hex').slice(0, 32) + '"'
-  };
-  cache.set(kind, next);
-  return { ...next, state: 'upstream' };
+  if (inflight.has(kind)) {
+    const shared = await inflight.get(kind);
+    return { ...shared, state: 'coalesced' };
+  }
+  const pending = (async () => {
+    const body = await moduleBody(kind);
+    const next = {
+      body,
+      at: Date.now(),
+      etag: '"' + createHash('sha256').update(body).digest('hex').slice(0, 32) + '"'
+    };
+    cache.set(kind, next);
+    return next;
+  })();
+  inflight.set(kind, pending);
+  try {
+    const next = await pending;
+    return { ...next, state: 'upstream' };
+  } finally {
+    if (inflight.get(kind) === pending) inflight.delete(kind);
+  }
 }
 function kindOf(req) {
   const q = Array.isArray(req?.query?.kind) ? req.query.kind[0] : req?.query?.kind;

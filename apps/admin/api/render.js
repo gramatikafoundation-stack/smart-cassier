@@ -266,6 +266,15 @@ body .topbar h2{font-size:13px!important}
   body #rohmatCashierSafe .rc6Menu{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
 
+
+/* smart-order-premium-admin-v3 */
+body{background:#f4f6f7!important;color:#18211e!important;font-size:13px!important}
+.shell{grid-template-columns:210px minmax(0,1fr)!important;background:#f4f6f7!important}.sidebar{background:#0e191d!important;color:#eef5f2!important;border-right:1px solid #1d2b30!important;padding:12px 10px!important}.logo{padding:8px 8px 16px!important;gap:10px!important}.logoMark{width:38px!important;height:38px!important;border-radius:11px!important;background:#23b99a!important;color:#06261f!important}.logo b{font-size:13px!important}.logo small{font-size:9px!important;color:#82958e!important}.mainNav{gap:5px!important}.mainNav button{min-height:42px!important;padding:9px 11px!important;border-radius:9px!important;font-size:11px!important;color:#aebdb7!important}.mainNav button.on{background:#172a2e!important;color:#fff!important;box-shadow:inset 3px 0 #23b99a!important}
+.topbar{min-height:62px!important;background:rgba(255,255,255,.94)!important;border-bottom:1px solid #e1e6e4!important;padding:10px 18px!important;box-shadow:0 5px 18px rgba(13,30,26,.035)!important}.topbar h2{font-size:17px!important;letter-spacing:-.02em!important;color:#17201d!important}.subnav{gap:6px!important}.subnav button{min-height:36px!important;padding:7px 11px!important;border-radius:8px!important;font-size:11px!important}.subnav button.on{background:#152521!important;border-color:#152521!important;color:#fff!important;box-shadow:none!important}.content{padding:18px!important;max-width:1600px!important}
+.card{border:1px solid #e1e6e4!important;border-radius:13px!important;padding:16px!important;background:#fff!important;box-shadow:0 7px 22px rgba(14,33,28,.035)!important}.stat{border-radius:12px!important;padding:14px 15px!important;box-shadow:0 5px 16px rgba(14,33,28,.03)!important}.tableWrap{border-radius:11px!important;box-shadow:0 5px 16px rgba(14,33,28,.03)!important}button,input,select,textarea{font-size:12px!important}
+body #rohmatCashierSafe .rc6Layout{grid-template-columns:minmax(0,1fr) 310px!important;gap:12px!important}body #rohmatCashierSafe .rc6Panel{padding:11px!important;border-radius:11px!important;box-shadow:0 5px 18px rgba(14,33,28,.035)!important}body #rohmatCashierSafe .rc6Menu{gap:10px!important}body #rohmatCashierSafe .rc6Item{border-radius:10px!important;box-shadow:0 5px 16px rgba(14,33,28,.035)!important}body #rohmatCashierSafe .rc6Item h4{margin:9px 10px 0!important;font-size:12px!important}body #rohmatCashierSafe .rc6Price{margin:6px 10px!important;font-size:11px!important;color:#d85d30!important}body #rohmatCashierSafe .rc6Btn{min-height:36px!important;padding:7px 10px!important;border-radius:8px!important;font-size:10px!important}body #rohmatCashierSafe .rc6Btn.primary{background:#152521!important;border-color:#152521!important;color:#fff!important}body #rohmatCashierSafe .rc6Field input,body #rohmatCashierSafe .rc6Field select,body #rohmatCashierSafe .rc6Field textarea{min-height:38px!important;padding:8px 9px!important;border-radius:8px!important;font-size:11px!important}
+.refOrderQueue{border-radius:11px!important;padding:12px!important;box-shadow:0 5px 18px rgba(14,33,28,.035)!important}.refQueueHead h2,.refProductHead h2{font-size:15px!important}.refQueueCard{border-radius:9px!important;padding:10px!important}.refQueueCode{font-size:11px!important}.refQueuePlace{font-size:12px!important}.refQueueMeta{font-size:10px!important}
+@media(max-width:1050px){.shell{grid-template-columns:178px minmax(0,1fr)!important}.content{padding:14px!important}body #rohmatCashierSafe .rc6Layout{grid-template-columns:minmax(0,1fr) 270px!important}}@media(max-width:760px){.shell{grid-template-columns:1fr!important}.sidebar{position:static!important;padding:8px!important}.mainNav{display:flex!important;overflow:auto!important}.mainNav button{min-width:max-content!important}.topbar{min-height:54px!important;padding:8px 10px!important}.content{padding:10px!important}body #rohmatCashierSafe .rc6Layout{grid-template-columns:1fr!important}}
 </style><!-- smart-order-admin-foodcode-v1 -->`;
 const REQUIRED_MARKERS = [
   'Studio Pengelola',
@@ -393,7 +402,13 @@ export function canonicalizeAdminShell(html) {
     out = out.replace(/<head>/i, '<head><meta name="robots" content="noindex,nofollow,noarchive">');
   }
   if (!out.includes('smart-order-admin-foodcode-v1')) {
-    out = out.replace(/<\/head>/i, FUTURE_ADMIN_UI_PATCH + '</head>');
+    const premiumCss = FUTURE_ADMIN_UI_PATCH
+      .replace(/^<style\b[^>]*>/i, '')
+      .replace(/<\/style><!-- smart-order-admin-foodcode-v1 -->$/i, '');
+    const foundation = /(<style\b[^>]*\bid=["']admin-foundation-css-v1["'][^>]*>)([\s\S]*?)(<\/style>)/i;
+    out = out.replace(foundation, (_m, open, css, close) =>
+      open + css + '\n/* smart-order-admin-foodcode-v1 */\n' + premiumCss + close
+    );
   }
   return out;
 }

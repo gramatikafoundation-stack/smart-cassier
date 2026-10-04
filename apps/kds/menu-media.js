@@ -20,7 +20,7 @@ function normalize(){
 }
 let queued=false;
 function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;normalize()})}
-const root=document.getElementById('cashierRoot')||document.documentElement;
-new MutationObserver(schedule).observe(root,{childList:true,subtree:true});
+document.addEventListener('rohmat:kds-cashier-rendered',schedule);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',normalize,{once:true});else normalize();
+window.addEventListener('pageshow',schedule);
 })();

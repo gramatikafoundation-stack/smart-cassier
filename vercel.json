@@ -102,6 +102,10 @@
       "destination": "/apps/kds/app.js"
     },
     {
+      "source": "/kds-assets/v4/perf.js",
+      "destination": "/apps/kds/perf.js"
+    },
+    {
       "source": "/kds-assets/v4/menu-media.js",
       "destination": "/apps/kds/menu-media.js"
     },

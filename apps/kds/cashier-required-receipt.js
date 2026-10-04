@@ -1,6 +1,6 @@
 (()=>{'use strict';
-if(window.__rohmatKdsCashierRequiredReceiptV3)return;
-window.__rohmatKdsCashierRequiredReceiptV3=1;
+if(window.__rohmatKdsCashierRequiredReceiptV4)return;
+window.__rohmatKdsCashierRequiredReceiptV4=1;
 
 const nativeFetch=window.fetch.bind(window);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -10,22 +10,48 @@ const ft=v=>new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',hour:'2-dig
 const table=r=>r?.service_mode==='dine-in'?String(r?.table_number||'—'):'Take Away';
 const moneyFromText=v=>Number(String(v||'').replace(/[^0-9]/g,''))||0;
 
-function receiptRows(r){
+function receiptData(r){
   const items=Array.isArray(r?.items)?r.items:[];
-  return '<div class="cashLine"><b>KODE PEMBAYARAN</b><strong>'+esc(r?.payment_code||'—')+'</strong></div>'+
-    '<div class="cashLine"><b>Nama Pemesan</b><strong>'+esc(r?.customer_name||'—')+'</strong></div>'+
-    '<div class="cashLine"><b>Meja</b><strong>'+esc(table(r))+'</strong></div>'+
-    '<div class="cashLine"><b>Tanggal Pesanan</b><strong>'+esc(fd(r?.created_at))+'</strong></div>'+
-    '<div class="cashLine"><b>Waktu Pesanan</b><strong>'+esc(ft(r?.created_at))+'</strong></div>'+
-    '<div class="cashLine"><div><b>Menu, Jumlah, dan Harga Pesanan</b></div><div>'+items.map(i=>'<div class="cashLine"><span>'+esc(i.name)+'</span><strong>'+Number(i.quantity||0)+' × '+rp(i.price)+'</strong></div>').join('')+'</div></div>'+
-    '<div class="cashTotal"><span>Total Pesanan</span><b>'+rp(r?.total_amount)+'</b></div>';
+  const itemSubtotal=items.reduce((sum,i)=>sum+(Number(i?.quantity)||0)*(Number(i?.price)||0),0);
+  const subtotal=Math.max(0,Number(r?.subtotal_amount??r?.subtotal??itemSubtotal)||itemSubtotal);
+  const total=Math.max(0,Number(r?.total_amount??r?.grand_total??subtotal)||0);
+  const explicitTax=Math.max(0,Number(r?.tax_amount??r?.tax??0)||0);
+  const tax=explicitTax||Math.max(0,total-itemSubtotal);
+  const service=r?.service_mode==='dine-in'?'Makan di Tempat':'Bawa Pulang';
+  const payment=String(r?.payment_method||r?.payment?.method||'').trim();
+  return {items,subtotal,tax,total,service,payment};
+}
+
+function receiptRows(r){
+  const d=receiptData(r);
+  return '<section class="receiptUnifiedV4">'+
+    '<div class="receiptCodeV4"><span>Kode Transaksi</span><strong>'+esc(r?.payment_code||r?.public_order_code||'—')+'</strong></div>'+
+    '<div class="receiptMetaV4">'+
+      '<div><span>Nama Pemesan</span><strong>'+esc(r?.customer_name||'—')+'</strong></div>'+
+      '<div><span>Layanan</span><strong>'+esc(d.service)+'</strong></div>'+
+      '<div><span>Nomor Meja</span><strong>'+esc(r?.service_mode==='dine-in'?String(r?.table_number||'—'):'—')+'</strong></div>'+
+      (d.payment?'<div><span>Metode Pembayaran</span><strong>'+esc(d.payment.toUpperCase())+'</strong></div>':'')+
+      '<div><span>Tanggal Pemesanan</span><strong>'+esc(fd(r?.created_at))+'</strong></div>'+
+      '<div><span>Waktu Pemesanan</span><strong>'+esc(ft(r?.created_at))+'</strong></div>'+
+    '</div>'+
+    '<div class="receiptItemsV4"><div class="receiptSectionV4">Rincian Pesanan</div>'+
+      d.items.map(i=>'<div class="receiptItemV4"><div><strong>'+esc(i.name)+'</strong><span>'+Number(i.quantity||0)+' × '+rp(i.price)+'</span></div><b>'+rp((Number(i.quantity)||0)*(Number(i.price)||0))+'</b></div>').join('')+
+    '</div>'+
+    '<div class="receiptTotalsV4">'+
+      '<div><span>Subtotal</span><b>'+rp(d.subtotal)+'</b></div>'+
+      '<div><span>Pajak</span><b>'+rp(d.tax)+'</b></div>'+
+      '<div class="receiptGrandV4"><span>Total Pembayaran</span><strong>'+rp(d.total)+'</strong></div>'+
+    '</div>'+
+  '</section>';
 }
 
 function printReceipt(r){
-  const w=open('','_blank','width=560,height=760');
+  const w=open('','_blank','width=640,height=820');
   if(!w)return;
-  const items=Array.isArray(r?.items)?r.items:[];
-  w.document.write('<!doctype html><meta charset="utf-8"><title>Struk '+esc(r?.payment_code||'')+'</title><style>body{font:14px Arial,sans-serif;padding:24px;color:#1f332c}h2{margin:0 0 18px}.row{display:grid;grid-template-columns:190px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid #ddd}.items div{display:flex;justify-content:space-between;gap:12px;padding:3px 0}@media print{button{display:none}}</style><h2>Struk Pembayaran & Pemesanan</h2><div class="row"><b>KODE PEMBAYARAN</b><strong>'+esc(r?.payment_code||'—')+'</strong></div><div class="row"><b>Nama Pemesan</b><strong>'+esc(r?.customer_name||'—')+'</strong></div><div class="row"><b>Meja</b><strong>'+esc(table(r))+'</strong></div><div class="row"><b>Tanggal Pesanan</b><strong>'+esc(fd(r?.created_at))+'</strong></div><div class="row"><b>Waktu Pesanan</b><strong>'+esc(ft(r?.created_at))+'</strong></div><div class="row"><b>Menu, Jumlah, dan Harga Pesanan</b><div class="items">'+items.map(i=>'<div><span>'+esc(i.name)+'</span><strong>'+Number(i.quantity||0)+' × '+rp(i.price)+'</strong></div>').join('')+'</div></div><div class="row"><b>Total Pesanan</b><strong>'+rp(r?.total_amount)+'</strong></div><script>onload=()=>print()<\/script>');
+  const d=receiptData(r);
+  const rows=receiptRows(r);
+  w.document.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>Struk '+esc(r?.payment_code||r?.public_order_code||'')+'</title><style>'+
+  '*{box-sizing:border-box}body{margin:0;padding:28px;background:#f5f7f6;color:#17211d;font:14px/1.45 Arial,sans-serif}.sheet{max-width:720px;margin:auto;background:#fff;border:1px solid #e1e7e3;border-radius:20px;padding:26px}.head{display:flex;justify-content:space-between;gap:18px;padding-bottom:18px;border-bottom:1px solid #e4e9e6}.head h2{margin:0;font-size:24px}.head p{margin:5px 0 0;color:#748079}.receiptCodeV4{text-align:right;background:#f3f6f4;border:1px solid #e0e6e2;border-radius:12px;padding:10px 12px}.receiptCodeV4 span,.receiptCodeV4 strong{display:block}.receiptCodeV4 span{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#75817c}.receiptMetaV4{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;padding:14px 0}.receiptMetaV4>div{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-bottom:1px solid #eef1ef}.receiptMetaV4 span{color:#68756f}.receiptItemsV4{margin-top:14px;border:1px solid #e2e8e4;border-radius:13px;overflow:hidden}.receiptSectionV4{background:#f4f7f5;padding:9px 12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.receiptItemV4{display:flex;justify-content:space-between;gap:16px;padding:10px 12px;border-top:1px solid #edf1ee}.receiptItemV4 strong,.receiptItemV4 span{display:block}.receiptItemV4 span{color:#7b8782;font-size:12px}.receiptTotalsV4{width:min(100%,340px);margin:14px 0 0 auto}.receiptTotalsV4>div{display:flex;justify-content:space-between;padding:7px 0}.receiptGrandV4{border-top:1px solid #dfe6e2;margin-top:3px;padding-top:12px!important;font-size:16px}.receiptGrandV4 strong{font-size:19px;color:#173f33}@media print{body{padding:0}.sheet{border:0;border-radius:0;box-shadow:none;max-width:80mm;padding:6mm}.head{display:block}.receiptCodeV4{text-align:left;margin-top:8px}.receiptMetaV4{grid-template-columns:1fr}}</style></head><body><main class="sheet"><div class="head"><div><h2>Struk Pembayaran &amp; Pemesanan</h2><p>Dokumen transaksi</p></div><div class="receiptCodeV4"><span>Kode Transaksi</span><strong>'+esc(r?.payment_code||r?.public_order_code||'—')+'</strong></div></div>'+rows.replace(/^<section class="receiptUnifiedV4"><div class="receiptCodeV4">[\s\S]*?<\/div>/,'<section class="receiptUnifiedV4">')+'</main><script>onload=()=>print()<\/script></body></html>');
   w.document.close();
 }
 
@@ -35,7 +61,7 @@ function showReceipt(r){
   const modal=document.createElement('div');
   modal.id='cashReceiptModal';
   modal.className='modal';
-  modal.innerHTML='<div class="modalbox"><div class="mh"><div><small>RINGKASAN PESANAN</small><h2>Struk Pembayaran & Pemesanan</h2></div><button type="button" class="btn" data-cash-receipt-close>Tutup</button></div>'+receiptRows(r)+'<div class="row"><button type="button" class="btn green" data-cash-receipt-print>Cetak Struk</button></div></div>';
+  modal.innerHTML='<div class="modalbox receiptModalV4"><div class="receiptHeaderV4"><div><h2>Struk Pembayaran & Pemesanan</h2><p>Dokumen transaksi</p></div><button type="button" class="btn" data-cash-receipt-close>Tutup</button></div>'+receiptRows(r)+'<div class="receiptActionsV4"><button type="button" class="btn green" data-cash-receipt-print>Cetak Struk</button></div></div>';
   document.body.appendChild(modal);
   modal.querySelector('[data-cash-receipt-close]')?.addEventListener('click',()=>modal.remove());
   modal.querySelector('[data-cash-receipt-print]')?.addEventListener('click',()=>printReceipt(r));
@@ -83,8 +109,8 @@ function gateState(){
 let queued=false;
 function scheduleGate(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;gateState();});}
 
-const root=document.getElementById('cashierRoot');
-if(root)new MutationObserver(scheduleGate).observe(root,{childList:true,subtree:true});
+document.addEventListener('rohmat:kds-cashier-rendered',scheduleGate);
+document.addEventListener('rohmat:kds-cart-updated',scheduleGate);
 document.addEventListener('input',e=>{if(['cashName','cashMoney','cashNote'].includes(e.target?.id))scheduleGate();});
 document.addEventListener('change',e=>{if(['cashTable','cashQrisOk'].includes(e.target?.id))scheduleGate();});
 document.addEventListener('click',e=>{

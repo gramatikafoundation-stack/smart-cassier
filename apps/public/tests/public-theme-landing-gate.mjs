@@ -13,5 +13,7 @@ assert.ok(runtime.includes('grid-template-columns:minmax(0,48fr) minmax(0,52fr)'
 assert.ok(runtime.includes("document.documentElement.dataset.sdbPublicTheme=id"),'public active theme identity marker missing');
 assert.ok(runtime.includes("img.addEventListener('error'"),'hero image failure guard missing');
 assert.ok(runtime.includes("window.addEventListener('storage'"),'cross-tab theme refresh listener missing');
+assert.ok(runtime.includes("s.id='rohmatPublicDesignV24';document.body.appendChild(s)"),'tenant theme style must be placed after legacy body stylesheet');
+assert.ok(runtime.includes('document.body.appendChild(s);return s'),'premium landing style must be placed after legacy body stylesheet');
 assert.ok(media.includes('/rohmat-assets/hero/rohmat-nasi-uduk-hero-v1.jpg'),'canonical Rohmat hero contract missing');
 console.log('PUBLIC_THEME_LANDING_GATE_PASS=1');

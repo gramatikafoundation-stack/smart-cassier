@@ -176,7 +176,7 @@ function css(){
   s=window.__rohmatCreateStyleV27?window.__rohmatCreateStyleV27():document.createElement('style');
   s.id=STYLE;
   s.textContent=__LANDING_CSS__
-  document.head.appendChild(s);return s
+  document.body.appendChild(s);return s
 }
 function themeId(){
   const c=window.__rohmatPublicConfigV25||window.__rohmatPublicConfigV24||null;
@@ -236,6 +236,10 @@ Deno.serve(async(req:Request)=>{
     body=body.replace(legacyFetch,tenantFetch)
       .replaceAll("CACHE='rohmat-public-design-v24'","CACHE='rohmat-public-design-v24-"+ctx.tenant_id+"'")
       .replaceAll("rohmatPublicRefresh='single-source-event-driven'","rohmatPublicRefresh='tenant-single-source-event-driven-v25'");
+    const designStyleHead="let s=document.getElementById('rohmatPublicDesignV24');if(!s){s=window.__rohmatCreateStyleV27();s.id='rohmatPublicDesignV24';document.head.appendChild(s)}";
+    const designStyleBody="let s=document.getElementById('rohmatPublicDesignV24');if(!s){s=window.__rohmatCreateStyleV27();s.id='rohmatPublicDesignV24';document.body.appendChild(s)}";
+    if(!body.includes(designStyleHead))throw new Error('public_design_style_host_marker_missing');
+    body=body.replace(designStyleHead,designStyleBody);
     const receipt=RECEIPT_V4.replaceAll('__SDB_RUNTIME_ORIGIN__',U).replaceAll('__SDB_RUNTIME_KEY__',K).replaceAll('__SDB_TENANT_ID__',ctx.tenant_id);
     return new Response(req.method==='HEAD'?null:body+IDENTITY+receipt+LANDING_V26,{
       status:200,

@@ -16,6 +16,8 @@ assert.match(src,/v29-secure-canonical-rpc/,'secure canonical RPC runtime marker
 assert.ok(src.includes("__SDB_SUPABASE_ORIGIN__"),'runtime must use deployment Supabase origin placeholder');
 assert.ok(src.includes("__SDB_SUPABASE_PUBLISHABLE_KEY__"),'runtime must use deployment publishable key placeholder');
 assert.ok(src.includes("trim().toUpperCase()==='PENGATURAN'"),'settings navigation must dedupe by visible label');
+assert.ok(src.includes("PUBLIC_THEME_SYNC='sdb-theme-sync-v1'"),'Admin must emit the cross-tab Public theme sync signal');
+assert.ok(src.includes('setTimeout(signalPublicTheme,760)'),'Admin theme apply must notify Public immediately after persistence revalidation');
 assert.match(src,/setTimeout\(\(\)=>syncTheme\(true\),220\)/,'theme must revalidate promptly after apply');
 assert.match(src,/setTimeout\(\(\)=>syncTheme\(true\),700\)/,'theme must confirm persisted state without long delay');
 console.log('ADMIN_SETTINGS_THEME_GATE_PASS=1');

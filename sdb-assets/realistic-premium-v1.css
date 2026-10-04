@@ -4157,3 +4157,33 @@ label{color:#485b6c!important;font-weight:700!important}
 .modal-wrap{background:rgba(28,34,39,.26)!important;backdrop-filter:blur(5px)!important}
 @media(max-width:1100px){.nav{font-size:12px!important}.contact-copy h2,.about-copy h2{font-size:44px!important}.contact-copy .lead,.about-copy .lead{font-size:15.5px!important}}
 @media(max-width:760px){.header{background:#fbfbf9!important}.nav{background:#fbfbf9!important;border-color:rgba(31,45,57,.13)!important;box-shadow:0 12px 28px rgba(42,48,54,.10)!important;border-radius:10px!important}.hero-photo{opacity:.58!important}.hero-photo:before{background:linear-gradient(90deg,#f8f7f3 0%,rgba(248,247,243,.97) 48%,rgba(248,247,243,.70) 75%,rgba(248,247,243,.18) 100%)!important}.about-photo,.contact-photo{opacity:.48!important;filter:saturate(.88) contrast(1) brightness(1.03)!important}.home-copy h1{letter-spacing:-.025em!important}}
+
+
+/* ================================================================
+   SDB REALISTIC PREMIUM V2 — targeted harmony corrections
+   ================================================================ */
+.header>.cta{background:#2b5877!important;border-radius:10px!important;box-shadow:0 6px 15px rgba(37,50,60,.12)!important}
+.home-copy{background:linear-gradient(90deg,rgba(250,249,246,.91),rgba(250,249,246,.82))!important;border:1px solid rgba(39,49,58,.10)!important;border-radius:14px!important;padding:28px 32px!important;box-shadow:0 16px 42px rgba(31,39,45,.09)!important;backdrop-filter:blur(5px)!important;-webkit-backdrop-filter:blur(5px)!important}
+.home-copy h1{font-size:clamp(48px,4.55vw,74px)!important;line-height:.98!important}.home-copy .lead{font-size:clamp(17px,1.25vw,21px)!important;line-height:1.48!important}.home-kicker{color:#566b79!important}
+.products-page{background:#f5f6f4!important}.products-page:after,.products-page .product-card:before{display:none!important}
+.products-page .product-card{background:#fff!important;background-image:none!important;border:1px solid rgba(31,45,57,.13)!important;border-radius:14px!important;box-shadow:0 10px 26px rgba(42,48,54,.065)!important}
+.products-page .product-card:hover{border-color:rgba(49,95,130,.23)!important;box-shadow:0 14px 32px rgba(42,48,54,.085)!important}
+.products-page .product-card .picon{background:#eef1f2!important;background-image:none!important;color:#315f82!important;border:1px solid rgba(43,67,86,.10)!important;border-radius:11px!important;box-shadow:none!important}
+.products-page .product-card .picon svg{filter:none!important}.products-page .product-card p{color:#626b74!important}
+.products-page .product-link{background:#eef1f2!important;color:#315f82!important;border:1px solid rgba(43,67,86,.10)!important;box-shadow:none!important;border-radius:50%!important}
+.needs-page{background:#f5f6f4!important}.needs-page .needs-visual{opacity:.15!important;filter:saturate(.80) contrast(.96) brightness(1.025)!important}
+.needs-page .need-card{background:#fff!important;background-image:none!important;border-color:rgba(31,45,57,.13)!important;box-shadow:0 8px 22px rgba(42,48,54,.055)!important;border-radius:14px!important}
+.pkl-page{background:#f5f6f4!important;background-image:none!important;color:#203247!important}
+.pkl-hero:after,.pkl-hero-visual:before{display:none!important}
+.pkl-product-icon,.pkl-icon,.pkl-step-icon,.pkl-fit-icon{background:#eef1f2!important;background-image:none!important;color:#315f82!important;border:1px solid rgba(43,67,86,.10)!important;box-shadow:none!important}
+.pkl-primary{background:#315f82!important;background-image:none!important;border-radius:10px!important;box-shadow:0 6px 16px rgba(37,50,60,.12)!important}
+.pkl-secondary{background:#eef1f2!important;color:#46596b!important;border:1px solid rgba(31,45,57,.10)!important;border-radius:10px!important}
+.pkl-device{transform:none!important;background:#263847!important;background-image:none!important;border:1px solid rgba(27,40,51,.20)!important;border-radius:16px!important;box-shadow:0 18px 38px rgba(31,39,45,.14)!important}
+.pkl-device-screen{inset:6px!important;border-radius:10px!important;box-shadow:none!important}.pkl-device-base,.pkl-device-base:before{display:none!important}
+.pkl-problem,.pkl-benefit,.pkl-feature,.pkl-preview,.pkl-step,.pkl-implementation article,.pkl-faq,.pkl-fit{background:#fff!important;background-image:none!important;border:1px solid rgba(31,45,57,.13)!important;border-radius:14px!important;box-shadow:0 8px 22px rgba(42,48,54,.055)!important}
+.pkl-workflow:before{background:#d8dddf!important}.pkl-step>span,.pkl-section-head>div>span{background:#315f82!important;box-shadow:none!important}
+.pkl-preview-screen{background:#f1f3f3!important;background-image:none!important;border-bottom-color:rgba(31,45,57,.10)!important}
+.pkl-section-head h2,.pkl-problem h3,.pkl-benefit h3,.pkl-feature h3,.pkl-step h3,.pkl-preview h3,.pkl-fit h3{color:#203247!important}
+.pkl-problem p,.pkl-benefit p,.pkl-feature p,.pkl-step p,.pkl-preview p,.pkl-fit p,.pkl-implementation p{color:#626b74!important}
+@media(max-width:1100px){.home-copy{padding:24px 26px!important}}
+@media(max-width:760px){.home-copy{background:rgba(250,249,246,.90)!important;border-radius:12px!important;padding:20px 20px!important;box-shadow:0 12px 30px rgba(31,39,45,.09)!important}.home-copy h1{font-size:clamp(36px,10.5vw,46px)!important}}

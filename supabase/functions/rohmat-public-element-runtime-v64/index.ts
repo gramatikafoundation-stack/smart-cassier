@@ -146,8 +146,8 @@ document.addEventListener('rohmat:dom-updated',schedule);document.addEventListen
 const LANDING_V26_CSS=String.raw`
 html,body{min-height:100%!important}
 body{background:var(--ds-bg,#F5EFE3)!important;color:var(--ds-text,#24362F)!important}
-.hero{min-height:100svh!important;display:grid!important;place-items:center!important;padding:clamp(16px,2.4vw,36px)!important;background:var(--ds-bg,#F5EFE3)!important}
-.welcome{width:min(1460px,calc(100vw - 48px))!important;min-height:clamp(590px,calc(100svh - 64px),840px)!important;display:grid!important;grid-template-columns:minmax(0,48fr) minmax(0,52fr)!important;align-items:stretch!important;background:var(--ds-panel,#FFFDF8)!important;color:var(--ds-text,#24362F)!important;border:1px solid color-mix(in srgb,var(--ds-primary,#315343) 16%,transparent)!important;overflow:hidden!important;box-shadow:0 30px 80px color-mix(in srgb,var(--ds-primary,#315343) 16%,transparent)!important}
+.hero{min-height:100svh!important;box-sizing:border-box!important;display:grid!important;place-items:center!important;padding:clamp(16px,2.4vw,36px)!important;background:var(--ds-bg,#F5EFE3)!important}
+.welcome{width:min(1460px,calc(100vw - 48px))!important;min-height:clamp(590px,calc(100svh - clamp(32px,4.8vw,72px)),840px)!important;display:grid!important;grid-template-columns:minmax(0,48fr) minmax(0,52fr)!important;align-items:stretch!important;background:var(--ds-panel,#FFFDF8)!important;color:var(--ds-text,#24362F)!important;border:1px solid color-mix(in srgb,var(--ds-primary,#315343) 16%,transparent)!important;overflow:hidden!important;box-shadow:0 30px 80px color-mix(in srgb,var(--ds-primary,#315343) 16%,transparent)!important}
 .photo{position:relative!important;isolation:isolate!important;min-height:0!important;height:auto!important;background:color-mix(in srgb,var(--ds-primary,#315343) 88%,var(--ds-bg,#F5EFE3))!important;overflow:hidden!important}
 .photo img{display:block!important;width:100%!important;height:100%!important;min-height:100%!important;max-width:none!important;object-fit:cover!important;object-position:center!important}
 .photo.hero-image-failed img{display:none!important}

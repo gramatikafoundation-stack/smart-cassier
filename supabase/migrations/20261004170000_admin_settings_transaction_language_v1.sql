@@ -30,7 +30,7 @@ begin
     'color_accent','color_text','color_muted','typography','merchant_name','payment_instructions',
     'qris_image_url','qris_enabled','admin_design','kds_design','design_system',
     'require_table_qr_signature','google_sheet_url',
-    'transaction_payment','language'
+    'transaction_payment','language','transaction_settings','language_settings'
   ]);
 
   update private.tenant_runtime_config c

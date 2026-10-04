@@ -106,7 +106,7 @@ async function coreBody() {
 async function moduleBody(kind) {
   if (kind === 'core') return coreBody();
   const map = {
-    'visual-editor': 'rohmat-admin-visual-editor-v1?tenant=' + encodeURIComponent(TENANT_ID) + '&v=25',
+    'visual-editor': 'rohmat-admin-visual-editor-v1?tenant=' + encodeURIComponent(TENANT_ID) + '&v=26',
     cashier: 'rohmat-admin-cashier-loader-v1?tenant=' + encodeURIComponent(TENANT_ID) + '&v=36',
     'database-ui': 'rohmat-admin-database-ui-v1?tenant=' + encodeURIComponent(TENANT_ID) + '&v=19'
   };

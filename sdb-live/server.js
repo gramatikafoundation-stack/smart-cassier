@@ -1,12 +1,22 @@
 const http=require("http");
+const fs=require("fs");
+const path=require("path");
 
 const ORIGIN="https://smart-digital-for-business.vercel.app";
 const PORT=Number(process.env.PORT||3000);
+const ASSET_DIR=path.join(__dirname,"assets");
+
+const assetMap={
+  "/__sdb_assets/home.webp": ["home.webp","image/webp"],
+  "/__sdb_assets/about.webp": ["about.webp","image/webp"],
+  "/__sdb_assets/contact.webp": ["contact.webp","image/webp"],
+  "/__sdb_assets/needs.webp": ["needs.webp","image/webp"]
+};
 
 const VISUAL_CSS=String.raw`
 /* SDB TRUE-HQ VISUAL RECOVERY — presentation layer only */
 .hero-photo{
-  background:#fff url("https://unsplash.com/photos/QVVHV24DA_o/download?force=true") center center/cover no-repeat!important;
+  background:#fff url("/__sdb_assets/home.webp") center center/cover no-repeat!important;
   filter:none!important;box-shadow:none!important;
 }
 .hero-photo:before{
@@ -16,7 +26,7 @@ const VISUAL_CSS=String.raw`
 .hero-photo:after{display:none!important}
 
 .about-photo{
-  background-image:linear-gradient(90deg,rgba(255,255,255,.18),transparent 28%),url("https://unsplash.com/photos/kI54hVB5tm0/download?force=true")!important;
+  background-image:linear-gradient(90deg,rgba(255,255,255,.18),transparent 28%),url("/__sdb_assets/about.webp")!important;
   background-size:cover!important;background-position:center center!important;background-repeat:no-repeat!important;
   filter:none!important;
 }
@@ -31,14 +41,14 @@ const VISUAL_CSS=String.raw`
 }
 
 .contact-photo{
-  background-image:url("https://unsplash.com/photos/wlHBYkK2y4k/download?force=true")!important;
+  background-image:url("/__sdb_assets/contact.webp")!important;
   background-size:cover!important;background-position:56% center!important;background-repeat:no-repeat!important;
   filter:none!important;
 }
 .contact-photo:before,.contact-photo:after{display:none!important}
 
 .needs-visual{
-  background-image:url("https://unsplash.com/photos/kI54hVB5tm0/download?force=true")!important;
+  background-image:url("/__sdb_assets/needs.webp")!important;
   background-size:cover!important;background-position:center center!important;
   opacity:.11!important;filter:none!important;
 }
@@ -75,12 +85,28 @@ function copyHeaders(src,res,isHtml){
   if(isHtml){
     res.setHeader("content-type","text/html; charset=utf-8");
     res.setHeader("cache-control","no-store, max-age=0");
-    res.setHeader("x-sdb-visual-recovery","true-hq-live");
+    res.setHeader("x-sdb-visual-recovery","true-hq-live-v2");
   }
 }
 
 http.createServer(async(req,res)=>{
   try{
+    const reqUrl=new URL(req.url||"/","http://localhost");
+    const local=assetMap[reqUrl.pathname];
+    if(local){
+      const [file,type]=local;
+      const full=path.join(ASSET_DIR,file);
+      const stat=fs.statSync(full);
+      res.statusCode=200;
+      res.setHeader("content-type",type);
+      res.setHeader("content-length",String(stat.size));
+      res.setHeader("cache-control","public, max-age=31536000, immutable");
+      res.setHeader("x-content-type-options","nosniff");
+      if((req.method||"GET").toUpperCase()==="HEAD"){res.end();return;}
+      fs.createReadStream(full).pipe(res);
+      return;
+    }
+
     const target=new URL(req.url||"/",ORIGIN);
     const headers={};
     for(const [k,v] of Object.entries(req.headers)){
@@ -93,7 +119,7 @@ http.createServer(async(req,res)=>{
     res.statusCode=upstream.status;
     if(isHtml){
       let html=await upstream.text();
-      const marker='<meta name="sdb-visual-recovery" content="true-hq-live">';
+      const marker='<meta name="sdb-visual-recovery" content="true-hq-live-v2">';
       const style='<style id="sdb-true-hq-live">'+VISUAL_CSS+'</style>';
       if(html.includes("</head>")) html=html.replace("</head>",marker+style+"</head>");
       else html=marker+style+html;
@@ -107,4 +133,4 @@ http.createServer(async(req,res)=>{
     res.setHeader("content-type","text/plain; charset=utf-8");
     res.end("SDB recovery proxy error: "+String(err&&err.message||err));
   }
-}).listen(PORT,"0.0.0.0",()=>console.log("SDB Visual Recovery listening on",PORT));
+}).listen(PORT,"0.0.0.0",()=>console.log("SDB Visual Recovery v2 listening on",PORT));

@@ -17,6 +17,7 @@ assert.match(renderSrc,/script-src 'self'/);
 assert.doesNotMatch(renderSrc,/script-src 'self' \$\{SUPABASE_ORIGIN\}/);
 assert.match(runtimeSrc,/canonical runtime v60/);
 assert.match(runtimeSrc,/same-origin-proxy-v60/);
+assert.match(runtimeSrc,/rohmat-admin-visual-editor-v1\?tenant=.*&v=23/);
 assert.match(visualEditorSrc,/v22-typography-authoritative/);
 assert.ok(visualEditorSrc.includes("String(t.family).replace(/[^A-Za-z0-9 .-]/g,'' )") || visualEditorSrc.includes("String(t.family).replace(/[^A-Za-z0-9 .-]/g,'')"));
 assert.ok(visualEditorSrc.includes("n.style.setProperty('font-family'"));

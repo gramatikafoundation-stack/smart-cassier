@@ -112,7 +112,8 @@ http.createServer(async(req,res)=>{
     for(const [k,v] of Object.entries(req.headers)){
       if(v && !["host","connection","content-length","accept-encoding"].includes(k.toLowerCase())) headers[k]=v;
     }
-    headers["x-sdb-origin-bypass"]="1";\n    const upstream=await fetch(target,{method:req.method||"GET",headers,redirect:"follow"});
+    headers["x-sdb-origin-bypass"]="1";
+    const upstream=await fetch(target,{method:req.method||"GET",headers,redirect:"follow"});
     const ct=upstream.headers.get("content-type")||"";
     const isHtml=ct.includes("text/html");
     copyHeaders(upstream,res,isHtml);

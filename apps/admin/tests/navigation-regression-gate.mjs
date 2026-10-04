@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const renderer=fs.readFileSync(new URL('../../../supabase/functions/rohmat-admin-render/index.ts',import.meta.url),'utf8');
+const database=fs.readFileSync(new URL('../../../supabase/functions/rohmat-admin-database-ui-v1/index.ts',import.meta.url),'utf8');
+const visual=fs.readFileSync(new URL('../../../supabase/functions/rohmat-admin-visual-editor-v1/index.ts',import.meta.url),'utf8');
+assert.ok(renderer.includes("database:['Riwayat Pesanan','Spreadsheet']"),'Riwayat Pesanan must remain in canonical DATABASE navigation');
+assert.ok(renderer.includes("sub==='Riwayat Pesanan'||sub==='Riwayat'"),'renderer must preserve Riwayat Pesanan compatibility');
+assert.ok(database.includes("s==='Riwayat Pesanan'||s==='Riwayat'"),'database runtime must render restored Riwayat Pesanan');
+assert.ok(renderer.includes("root.style.setProperty(x[0],x[1],'important')"),'canonical theme tokens must override stale static important values');
+assert.ok(visual.includes("trim().toUpperCase()==='PENGATURAN'"),'PENGATURAN dedupe by visible label missing');
+console.log('ADMIN_NAVIGATION_REGRESSION_GATE_PASS=1');

@@ -13,7 +13,7 @@ const source=s=>s==='cashier_admin'?'Smart Cashier Admin':s==='cashier_kds'?'Sma
 const service=s=>s==='dine-in'?'Dine In':s==='take-away'?'Take Away':(s||'—');
 const pay=s=>s==='cash'?'Cash':s==='qris_cashier'?'QRIS Kasir':s==='qris'?'QRIS':(s||'—');
 const ord=s=>({confirmed:'Pesanan Baru',preparing:'Sedang Diproses',ready:'Siap',completed:'Pesanan Selesai',payment_review:'Menunggu Verifikasi'}[s]||s||'—');
-function isDb(){return tx(document.querySelector('.mainNav button.on')?.textContent).toUpperCase()==='DATABASE'}function isHistory(){return isDb()&&tx(document.querySelector('.subnav button.on')?.textContent)==='Riwayat'}
+function isDb(){return tx(document.querySelector('.mainNav button.on')?.textContent).toUpperCase()==='DATABASE'}function isHistory(){const s=tx(document.querySelector('.subnav button.on')?.textContent);return isDb()&&(s==='Riwayat Pesanan'||s==='Riwayat')}
 function token(){let v=localStorage.getItem('rohmat-admin-session-v4')||sessionStorage.getItem('rohmat-admin-session-v4')||'';if(v&&v[0]==='{'){try{const j=JSON.parse(v);v=j.token||j.access_token||''}catch{}}return String(v||'')}
 function dt(v,t){if(!v)return'—';try{return t==='d'?new Date(v).toLocaleDateString(LOCALE,{timeZone:TIMEZONE,day:'2-digit',month:'2-digit',year:'numeric'}):new Date(v).toLocaleTimeString(LOCALE,{timeZone:TIMEZONE,hour:'2-digit',minute:'2-digit',second:'2-digit'})+' WIB'}catch{return'—'}}
 function items(o){return(Array.isArray(o?.items)?o.items:[]).map(i=>({name:String(i?.name??i?.menu_name??'Menu'),qty:Math.max(1,Number(i?.quantity??i?.qty??1)||1),price:Math.max(0,Number(i?.price??i?.unit_price??0)||0)}))}

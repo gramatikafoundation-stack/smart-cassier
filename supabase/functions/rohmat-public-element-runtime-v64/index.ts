@@ -232,11 +232,7 @@ Deno.serve(async(req:Request)=>{
     const tenantFetch="fetch(U+'/rest/v1/tenant_site_settings_public_v1?select=updated_at,typography,design_system,merchant_name,payment_instructions,hero_image_url&tenant_id=eq."+ctx.tenant_id+"&limit=1',{headers:{apikey:K,Authorization:'Bearer '+K,'X-SDB-Tenant-ID':'"+ctx.tenant_id+"'},cache:'no-store',signal:ac.signal})";
     if(!body.includes(legacyFetch))throw new Error('public_design_legacy_fetch_marker_missing');
     body=body.replace(legacyFetch,tenantFetch)
-      .replaceAll('__rohmatPublicConfigV24','__rohmatPublicConfigV25')
-      .replaceAll('__rohmatPublicDesignV24','__rohmatPublicDesignV25')
-      .replaceAll('rohmatPublicDesignV24','rohmatPublicDesignV25')
-      .replaceAll("CACHE='rohmat-public-design-v24'","CACHE='rohmat-public-design-v25-"+ctx.tenant_id+"'")
-      .replaceAll("rohmatPublicDesign='v24'","rohmatPublicDesign='v25'")
+      .replaceAll("CACHE='rohmat-public-design-v24'","CACHE='rohmat-public-design-v24-"+ctx.tenant_id+"'")
       .replaceAll("rohmatPublicRefresh='single-source-event-driven'","rohmatPublicRefresh='tenant-single-source-event-driven-v25'");
     const receipt=RECEIPT_V4.replaceAll('__SDB_RUNTIME_ORIGIN__',U).replaceAll('__SDB_RUNTIME_KEY__',K).replaceAll('__SDB_TENANT_ID__',ctx.tenant_id);
     return new Response(req.method==='HEAD'?null:body+IDENTITY+receipt+LANDING_V26,{

@@ -210,7 +210,7 @@ window.addEventListener('resize',schedule);
 window.addEventListener('storage',e=>{if(e.key===SYNC){window.dispatchEvent(new Event('focus'));setTimeout(schedule,80)}});
 try{const bc=new BroadcastChannel(SYNC);bc.onmessage=()=>{window.dispatchEvent(new Event('focus'));setTimeout(schedule,80)}}catch{}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});else schedule();
-})();/* rohmat-public-landing-v26 */`;.replace('__LANDING_CSS__',JSON.stringify(LANDING_V26_CSS));
+})();/* rohmat-public-landing-v26 */`.replace('__LANDING_CSS__',JSON.stringify(LANDING_V26_CSS));
 
 Deno.serve(async(req:Request)=>{
   const ctx=await tenantContext(req);

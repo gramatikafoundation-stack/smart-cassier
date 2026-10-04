@@ -9,7 +9,7 @@
     "dev": "vercel dev",
     "build": "echo 'Unified build complete'",
     "start": "vercel dev",
-    "test": "node prototype/validate-config.mjs"
+    "test": "node prototype/validate-config.mjs && node apps/admin/tests/visual-editor-typography-gate.mjs"
   },
   "keywords": [
     "rohmat",

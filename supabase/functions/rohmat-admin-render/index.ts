@@ -116,7 +116,7 @@ function integrate(raw:string,optimized=false){
   if(!out.includes('rohmat-admin-a11y-v1')){out=out.replace('</head>','<style id="rohmat-admin-a11y-css-v1">'+A11Y_CSS+'</style></head>');out=out.replace('</body>','<script id="rohmat-admin-a11y-v1">'+A11Y_JS+'</script></body>')}
   if(!out.includes('rohmat-admin-settings-theme-v2'))out=out.replace('</body>',ADMIN_SETTINGS_THEME_RUNTIME_V2+'</body>');
   if(optimized){
-    const helper=`<script id="rohmat-admin-bootstrap-dedup-v1">(()=>{'use strict';if(window.__rohmatAdminBootstrap)return;let p=null;window.__rohmatAdminBootstrap=()=>{if(!p)p=fetch('${U}/functions/v1/rohmat-admin-render?mode=bootstrap',{cache:'force-cache',headers:{'x-sdb-tenant-id':'__SDB_TENANT_ID__'}}).then(r=>{if(!r.ok)throw new Error('bootstrap_'+r.status);return r.json()});return p.then(j=>({json:async()=>j}))}})();<\/script>`;
+    const helper=`<script id="rohmat-admin-bootstrap-dedup-v2">(()=>{'use strict';if(window.__rohmatAdminBootstrap)return;let p=null;window.__rohmatAdminBootstrap=(force=false)=>{if(force)p=null;if(!p)p=fetch('${U}/functions/v1/rohmat-admin-render?mode=bootstrap',{cache:'no-store',headers:{'x-sdb-tenant-id':'__SDB_TENANT_ID__','cache-control':'no-cache'}}).then(r=>{if(!r.ok)throw new Error('bootstrap_'+r.status);return r.json()});return p.then(j=>({json:async()=>j}))}})();<\/script>`;
     if(!out.includes('rohmat-admin-bootstrap-dedup-v1'))out=out.replace('<script id="admin-design-system-runtime-v43">',helper+'<script id="admin-design-system-runtime-v43">');
     const a="fetch(U+'/rest/v1/site_settings?select=design_system,kds_url&id=eq.1&limit=1',{headers:{apikey:K,Authorization:'Bearer '+K},cache:'no-store'})";
     const b="fetch(U+'/rest/v1/site_settings?select=design_system&id=eq.1&limit=1',{headers:{apikey:K,Authorization:'Bearer '+K},cache:'no-store'})";
@@ -124,6 +124,13 @@ function integrate(raw:string,optimized=false){
     out=out.split(a).join("window.__rohmatAdminBootstrap()")
            .split(b).join("window.__rohmatAdminBootstrap()")
            .split(d).join("window.__rohmatAdminBootstrap()");
+    out=out.replace("async function load(){try{const r=await window.__rohmatAdminBootstrap(),a=await r.json();STATE=a&&a[0]||{};apply()}catch{}}","async function load(force=false){try{const r=await window.__rohmatAdminBootstrap(force),a=await r.json();STATE=a&&a[0]||{};document.documentElement.dataset.rohmatAdminDesign='v44';document.documentElement.dataset.rohmatAdminDesignVersion=String(STATE?.design_system?.publishedVersionId||'');apply()}catch(e){document.documentElement.dataset.rohmatAdminDesign='error'}}");
+    out=out.replace("if(/\\/rpc\\/(admin_console_update_settings|admin_design_system_)/.test(u))setTimeout(load,80)","if(/\\/rpc\\/(admin_console_update_settings|admin_design_system_)/.test(u))setTimeout(()=>load(true),80)");
+    out=out.replace("document.addEventListener('rohmat:settings-updated',()=>load())","document.addEventListener('rohmat:settings-updated',()=>load(true))");
+    for(const k of ['--bg','--panel','--primary','--accent','--ink','--muted','--ds-font','--ds-base-size','--ds-line-height','--ds-login-brand-font','--ds-login-brand-size','--ds-login-brand-align','--ds-login-brand-weight','--ds-login-brand-style','--ds-login-brand-color','--ds-max','--ds-density','--ds-radius','--ds-motion']){
+      out=out.replace(new RegExp("r\\.setProperty\\('"+k.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')+"',([^;]+)\\);"),"r.setProperty('"+k+"',$1,'important');");
+    }
+    out=out.replaceAll('admin-design-system-runtime-v43','admin-design-system-runtime-v44').replaceAll('adminTypographyAuthorityV43','adminTypographyAuthorityV44');
   }
   return out
 }

@@ -371,7 +371,7 @@ body.kdsPage{background:radial-gradient(circle at 82% -20%,rgba(54,202,162,.10),
 
 /* kds-design-system-authority-v2 */
 html,body{font-family:var(--kds-font)!important;font-size:var(--kds-size)!important;line-height:var(--kds-line-height)!important}
-body.kdsPage,.loginPage,.loginPane{background:var(--kds-bg)!important;color:var(--kds-text)!important}
+body.kdsPage,body.loginPage{font-family:var(--kds-font)!important;font-size:var(--kds-size)!important;line-height:var(--kds-line-height)!important}body.kdsPage,.loginPage,.loginPane{background:var(--kds-bg)!important;color:var(--kds-text)!important}
 .bar,.stat,.lane,.panel,.modalbox{background:var(--kds-panel)!important;color:var(--kds-text)!important;border-color:color-mix(in srgb,var(--kds-muted) 38%,transparent)!important}
 .bar h1,.lh h2,.code,.stock b,.cashTop h2,.cashPanel b,.modalbox b,.loginBrand h1,.loginCard h2{font-family:var(--kds-head-font)!important}
 .tenantBrand,.muted,.name,.meta,.stat small,.lh p,.count,.timeline,.cashEmpty{color:var(--kds-muted)!important}

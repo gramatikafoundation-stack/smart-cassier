@@ -164,12 +164,12 @@ body{background:var(--ds-bg,#F5EFE3)!important;color:var(--ds-text,#24362F)!impo
 .field select,.field input,.field textarea{background:var(--ds-panel,#FFFDF8)!important;color:var(--ds-text,#24362F)!important;border-color:color-mix(in srgb,var(--ds-primary,#315343) 18%,transparent)!important}
 #next{width:100%!important;margin-top:10px!important;background:var(--ds-primary,#315343)!important;color:var(--ds-panel,#FFFDF8)!important}
 @media(max-width:980px){.welcome{width:min(100% - 28px,900px)!important;min-height:auto!important;grid-template-columns:1fr!important}.photo{min-height:360px!important;aspect-ratio:16/9!important}.copy{padding:clamp(28px,5vw,48px)!important}.brand{max-width:none!important;font-size:clamp(44px,8vw,66px)!important}}
-@media(max-width:560px){.hero{padding:10px!important;place-items:start center!important}.welcome{width:100%!important;min-height:auto!important;grid-template-columns:1fr!important}.photo{min-height:0!important;aspect-ratio:16/10!important}.copy{padding:24px 20px 28px!important}.brand{font-size:clamp(38px,12vw,52px)!important;line-height:1!important}.opts{grid-template-columns:1fr 1fr!important;gap:8px!important}.opts .opt{min-height:48px!important}.copy>.muted{margin-bottom:8px!important}}
+@media(max-width:560px){html,body,#app{max-width:100%!important;overflow-x:hidden!important}.hero{width:100%!important;max-width:100vw!important;padding:10px!important;place-items:start center!important;overflow-x:hidden!important}.welcome{width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important;min-width:0!important;min-height:auto!important;grid-template-columns:minmax(0,1fr)!important;box-sizing:border-box!important}.photo,.copy{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important}.photo{min-height:0!important;aspect-ratio:16/10!important}.copy{padding:24px 20px 28px!important;overflow:hidden!important}.brand{width:100%!important;max-width:100%!important;min-width:0!important;font-size:clamp(34px,10vw,44px)!important;line-height:1.02!important;overflow-wrap:normal!important;word-break:normal!important;text-wrap:balance!important}.copy>.ey,.copy>.muted{max-width:100%!important}.opts{width:100%!important;max-width:100%!important;min-width:0!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:8px!important}.opts .opt{width:100%!important;max-width:100%!important;min-width:0!important;min-height:48px!important;padding:10px 8px!important;overflow:hidden!important}.field,#next{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important}.copy>.muted{margin-bottom:8px!important}}
 `;
 
 const LANDING_V26=String.raw`;(()=>{'use strict';
-if(window.__rohmatPublicLandingV26)return;window.__rohmatPublicLandingV26=1;
-const STYLE='rohmatPublicLandingV26Css',SYNC='sdb-theme-sync-v1';
+if(window.__rohmatPublicLandingV27)return;window.__rohmatPublicLandingV27=1;
+const STYLE='rohmatPublicLandingV27Css',SYNC='sdb-theme-sync-v1';
 function css(){
   let s=document.getElementById(STYLE);
   if(s)return s;
@@ -187,9 +187,9 @@ function patch(){
   const w=document.querySelector('.welcome');if(!w)return;
   const opts=w.querySelector('.opts');
   if(opts){
-    const m={display:'grid','grid-template-columns':'repeat(2,minmax(0,1fr))','justify-content':'stretch','align-items':'stretch',width:'100%','max-width':'none','margin-left':'0','margin-right':'0',gap:'12px'};
+    const mobile=matchMedia('(max-width:560px)').matches;const m={display:'grid','grid-template-columns':'repeat(2,minmax(0,1fr))','justify-content':'stretch','align-items':'stretch',width:'100%','max-width':'100%','min-width':'0','margin-left':'0','margin-right':'0',gap:mobile?'8px':'12px'};
     for(const[p,v]of Object.entries(m))opts.style.setProperty(p,v,'important');
-    opts.querySelectorAll('.opt').forEach(b=>{for(const[p,v]of Object.entries({width:'100%','max-width':'none','min-width':'0','min-height':'50px',padding:'12px 14px','justify-content':'center','text-align':'center',margin:'0'}))b.style.setProperty(p,v,'important')})
+    opts.querySelectorAll('.opt').forEach(b=>{for(const[p,v]of Object.entries({width:'100%','max-width':'100%','min-width':'0','min-height':'50px',padding:mobile?'10px 8px':'12px 14px','justify-content':'center','text-align':'center',margin:'0'}))b.style.setProperty(p,v,'important')})
   }
   const photo=w.querySelector('.photo'),img=photo?.querySelector('img'),brand=(w.querySelector('.brand')?.textContent||'Rohmat Nasi Uduk').trim();
   if(photo){photo.dataset.fallbackLabel=brand}
@@ -210,7 +210,7 @@ window.addEventListener('resize',schedule);
 window.addEventListener('storage',e=>{if(e.key===SYNC){window.dispatchEvent(new Event('focus'));setTimeout(schedule,80)}});
 try{const bc=new BroadcastChannel(SYNC);bc.onmessage=()=>{window.dispatchEvent(new Event('focus'));setTimeout(schedule,80)}}catch{}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});else schedule();
-})();/* rohmat-public-landing-v26 */`.replace('__LANDING_CSS__',JSON.stringify(LANDING_V26_CSS));
+})();/* rohmat-public-landing-v27 */`.replace('__LANDING_CSS__',JSON.stringify(LANDING_V26_CSS));
 
 Deno.serve(async(req:Request)=>{
   const ctx=await tenantContext(req);

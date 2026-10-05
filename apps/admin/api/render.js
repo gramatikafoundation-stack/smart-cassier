@@ -18,14 +18,14 @@ const FUTURE_ADMIN_UI_PATCH = String.raw`<style id="smart-order-admin-foodcode-v
  --bg:#f5f7f6;--panel:#fff;--panel2:#f0f4f2;--ink:#15231f;--muted:#70807a;--primary:#10201d;--accent:#00bfae;
  --line:#e1e8e4;--radius:16px;--shadow:0 16px 42px rgba(9,19,23,.065)
 }
-html,body{background:var(--bg)!important;color:var(--ink)!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important}
+html,body{background:var(--bg)!important;color:var(--ink)!important;font-family:var(--ds-font,Inter),ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important}
 body{background:radial-gradient(circle at 82% -10%,rgba(0,191,174,.065),transparent 31rem),var(--bg)!important}
 button,input,select,textarea{font-family:inherit!important}
 button{transition:transform .15s ease,background-color .15s ease,border-color .15s ease,box-shadow .15s ease}
 button:not(:disabled):hover{transform:translateY(-1px)}
 .auth{grid-template-columns:minmax(360px,.88fr) minmax(480px,1.12fr)!important;background:var(--bg)!important}
 .authBrand{background:linear-gradient(145deg,#091317 0%,#102a25 100%)!important;padding:clamp(38px,7vw,88px)!important}
-.authBrand h1{font-family:Inter,ui-sans-serif,system-ui!important;font-weight:800!important;letter-spacing:-.055em!important;line-height:.96!important}
+.authBrand h1{font-family:var(--ds-login-brand-font,Georgia),serif!important;font-size:var(--ds-login-brand-size,54px)!important;text-align:var(--ds-login-brand-align,left)!important;font-weight:var(--ds-login-brand-weight,700)!important;font-style:var(--ds-login-brand-style,normal)!important;color:var(--ds-login-brand-color,#fff)!important;letter-spacing:-.035em!important;line-height:1.02!important}
 .authBrand p{color:#c5d4cf!important}.authPane{padding:32px!important}
 .login{border:1px solid var(--line)!important;border-radius:24px!important;padding:34px!important;box-shadow:0 28px 72px rgba(9,19,23,.10)!important}
 .login h2{letter-spacing:-.035em!important}.ey{color:#c87942!important;letter-spacing:.16em!important}
@@ -71,7 +71,7 @@ button:not(:disabled):hover{transform:translateY(-1px)}
 
 /* smart-order-reference-exact-admin-v2 */
 :root{\n  --line:#e6e7e9!important;--radius:9px!important;\n}
-html,body{background:#f5f5f6!important;color:#141414!important;font-size:13px!important}
+html,body{background:#f5f5f6!important;color:#141414!important;font-size:var(--ds-base-size,13px)!important}
 body{background:#f5f5f6!important}
 .shell{grid-template-columns:164px minmax(0,1fr)!important;min-height:100vh!important}
 .sidebar{
@@ -264,13 +264,13 @@ body .topbar h2{font-size:13px!important}
 
 
 /* smart-order-premium-admin-v3 */
-body{background:#f4f6f7!important;color:#18211e!important;font-size:13px!important}
+body{background:#f4f6f7!important;color:#18211e!important;font-size:var(--ds-base-size,13px)!important}
 .shell{grid-template-columns:210px minmax(0,1fr)!important;background:var(--bg,#f4f6f7)!important}.sidebar{background:var(--primary,#264b3e)!important;color:var(--panel,#fff)!important;border-right:1px solid var(--line,#1d2b30)!important;padding:12px 10px!important}.logo{padding:8px 8px 16px!important;gap:10px!important}.logoMark{width:38px!important;height:38px!important;border-radius:11px!important;background:var(--accent,#b87444)!important;color:var(--primary,#315343)!important}.logo b{font-size:13px!important}.logo small{font-size:9px!important;color:rgba(255,255,255,.66)!important}.mainNav{gap:5px!important}.mainNav button{min-height:42px!important;padding:9px 11px!important;border-radius:9px!important;font-size:11px!important;color:rgba(255,255,255,.78)!important}.mainNav button.on{background:rgba(255,255,255,.12)!important;color:var(--panel,#fff)!important;box-shadow:inset 3px 0 var(--accent,#b87444)!important}
 .topbar{min-height:62px!important;background:rgba(255,255,255,.94)!important;border-bottom:1px solid #e1e6e4!important;padding:10px 18px!important;box-shadow:0 5px 18px rgba(13,30,26,.035)!important}.topbar h2{font-size:17px!important;letter-spacing:-.02em!important;color:#17201d!important}.subnav{gap:6px!important}.subnav button{min-height:36px!important;padding:7px 11px!important;border-radius:8px!important;font-size:11px!important}.subnav button.on{background:#152521!important;border-color:#152521!important;color:#fff!important;box-shadow:none!important}.content{padding:18px!important;max-width:1600px!important}
-.card{border:1px solid #e1e6e4!important;border-radius:13px!important;padding:16px!important;background:#fff!important;box-shadow:0 7px 22px rgba(14,33,28,.035)!important}.stat{border-radius:12px!important;padding:14px 15px!important;box-shadow:0 5px 16px rgba(14,33,28,.03)!important}.tableWrap{border-radius:11px!important;box-shadow:0 5px 16px rgba(14,33,28,.03)!important}button,input,select,textarea{font-size:12px!important}
+.card{border:1px solid #e1e6e4!important;border-radius:13px!important;padding:16px!important;background:#fff!important;box-shadow:0 7px 22px rgba(14,33,28,.035)!important}.stat{border-radius:12px!important;padding:14px 15px!important;box-shadow:0 5px 16px rgba(14,33,28,.03)!important}.tableWrap{border-radius:11px!important;box-shadow:0 5px 16px rgba(14,33,28,.03)!important}button,input,select,textarea{font-size:calc(var(--ds-base-size,15px) * .8)!important}
 body #rohmatCashierSafe .rc6Layout{grid-template-columns:minmax(0,1fr) 310px!important;gap:12px!important}body #rohmatCashierSafe .rc6Panel{padding:11px!important;border-radius:11px!important;box-shadow:0 5px 18px rgba(14,33,28,.035)!important}body #rohmatCashierSafe .rc6Menu{gap:10px!important}body #rohmatCashierSafe .rc6Item{border-radius:10px!important;box-shadow:0 5px 16px rgba(14,33,28,.035)!important}body #rohmatCashierSafe .rc6Item h4{margin:9px 10px 0!important;font-size:12px!important}body #rohmatCashierSafe .rc6Price{margin:6px 10px!important;font-size:11px!important;color:#d85d30!important}body #rohmatCashierSafe .rc6Btn{min-height:36px!important;padding:7px 10px!important;border-radius:8px!important;font-size:10px!important}body #rohmatCashierSafe .rc6Btn.primary{background:#152521!important;border-color:#152521!important;color:#fff!important}body #rohmatCashierSafe .rc6Field input,body #rohmatCashierSafe .rc6Field select,body #rohmatCashierSafe .rc6Field textarea{min-height:38px!important;padding:8px 9px!important;border-radius:8px!important;font-size:11px!important}
 .refOrderQueue{border-radius:11px!important;padding:12px!important;box-shadow:0 5px 18px rgba(14,33,28,.035)!important}.refQueueHead h2,.refProductHead h2{font-size:15px!important}.refQueueCard{border-radius:9px!important;padding:10px!important}.refQueueCode{font-size:11px!important}.refQueuePlace{font-size:12px!important}.refQueueMeta{font-size:10px!important}
-@media(max-width:1050px){.shell{grid-template-columns:178px minmax(0,1fr)!important}.content{padding:14px!important}body #rohmatCashierSafe .rc6Layout{grid-template-columns:minmax(0,1fr) 270px!important}}@media(max-width:760px){.shell{grid-template-columns:1fr!important}.sidebar{position:static!important;padding:8px!important}.mainNav{display:flex!important;overflow:auto!important}.mainNav button{min-width:max-content!important}.topbar{min-height:54px!important;padding:8px 10px!important}.content{padding:10px!important}body #rohmatCashierSafe .rc6Layout{grid-template-columns:1fr!important}}
+@media(max-width:1050px){.shell{grid-template-columns:178px minmax(0,1fr)!important}.content{padding:14px!important}body #rohmatCashierSafe .rc6Layout{grid-template-columns:minmax(0,1fr) 270px!important}}@media(max-width:840px){.auth{grid-template-columns:1fr!important}.authBrand{display:none!important}.authPane{min-width:0!important;width:100%!important}.login{max-width:min(480px,calc(100vw - 28px))!important}}@media(max-width:760px){.shell{grid-template-columns:1fr!important}.sidebar{position:static!important;padding:8px!important}.mainNav{display:flex!important;overflow:auto!important}.mainNav button{min-width:max-content!important}.topbar{min-height:54px!important;padding:8px 10px!important}.content{padding:10px!important}body #rohmatCashierSafe .rc6Layout{grid-template-columns:1fr!important}}
 </style><!-- smart-order-admin-foodcode-v1 -->`;
 const REQUIRED_MARKERS = [
   'Studio Pengelola',

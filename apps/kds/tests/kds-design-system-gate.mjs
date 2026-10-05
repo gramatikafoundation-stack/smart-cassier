@@ -22,6 +22,7 @@ assert.ok(css.includes('font-size:var(--kds-size)!important'),'KDS surface must 
 assert.ok(css.includes('.loginBrand{background:var(--kds-primary)!important'),'KDS login brand must use tenant primary token');
 assert.ok(css.includes('.loginBrand h1,.loginCard h2{font-family:var(--kds-head-font)!important'),'KDS login headings must use tenant heading font');
 assert.ok(css.includes('.ticket.stage-ready .th'),'KDS ready-stage visual state missing');
+assert.ok(css.includes('.loginBrand,.loginPane{width:100%;max-width:100%;min-width:0;box-sizing:border-box}'),'KDS mobile login must not overflow 320px viewport');
 assert.ok(!api.includes("hostname !== 'yybhpmjuywjxqurrrrxl.supabase.co'"),'legacy KDS project pin must never return');
 
 console.log('KDS_DESIGN_SYSTEM_GATE_PASS=1');

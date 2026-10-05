@@ -263,6 +263,8 @@ Deno.serve(async(req:Request)=>{
     const rpc=String(body?.rpc||"");
     const rpcMap:Record<string,string>={
       kds_snapshot:"kds_snapshot_tenant",
+      kds_delta:"kds_delta_tenant",
+      kds_ack_visible:"kds_ack_visible_tenant",
       kds_update_order:"kds_update_order_tenant",
       kds_set_availability:"kds_set_availability_tenant"
     };

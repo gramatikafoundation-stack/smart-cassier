@@ -367,3 +367,28 @@ body.kdsPage{background:radial-gradient(circle at 82% -20%,rgba(54,202,162,.10),
 #cashReceiptModal .receiptGrandV4 strong{font-size:20px;color:#173f33!important}
 #cashReceiptModal .receiptActionsV4{display:flex;justify-content:flex-end;padding-top:18px;margin-top:18px;border-top:1px solid #e4e9e6}
 @media(max-width:620px){#cashReceiptModal{padding:6px!important}#cashReceiptModal .receiptModalV4{width:100%!important;padding:18px!important;border-radius:16px!important}#cashReceiptModal .receiptHeaderV4{flex-direction:column}#cashReceiptModal .receiptCodeV4{text-align:left}#cashReceiptModal .receiptMetaV4{grid-template-columns:1fr}#cashReceiptModal .receiptTotalsV4{width:100%}}
+
+
+/* kds-design-system-authority-v2 */
+html,body{font-family:var(--kds-font)!important;font-size:var(--kds-size)!important;line-height:var(--kds-line-height)!important}
+body.kdsPage,.loginPage,.loginPane{background:var(--kds-bg)!important;color:var(--kds-text)!important}
+.bar,.stat,.lane,.panel,.modalbox{background:var(--kds-panel)!important;color:var(--kds-text)!important;border-color:color-mix(in srgb,var(--kds-muted) 38%,transparent)!important}
+.bar h1,.lh h2,.code,.stock b,.cashTop h2,.cashPanel b,.modalbox b,.loginBrand h1,.loginCard h2{font-family:var(--kds-head-font)!important}
+.tenantBrand,.muted,.name,.meta,.stat small,.lh p,.count,.timeline,.cashEmpty{color:var(--kds-muted)!important}
+.ey,.item b,.timeline span.on,.cashEy{color:var(--kds-accent)!important}
+.btn,.pill,.tab,.cashBtn{font-family:var(--kds-font)!important;border-radius:var(--kds-btn-r)!important}
+.btn.green,.tab.on,.sw,.cashBtn.on,.cashBtn.primary{background:var(--kds-primary)!important;border-color:var(--kds-primary)!important;color:#fff!important}
+.loginBrand{background:var(--kds-primary)!important;color:#fff!important}
+.loginBrand small,.loginCard small{color:var(--kds-accent)!important}
+.loginCard{background:var(--kds-panel)!important;color:var(--kds-text)!important;border-color:color-mix(in srgb,var(--kds-muted) 35%,transparent)!important;border-radius:var(--kds-card-r)!important}
+.loginCard .muted{color:var(--kds-muted)!important}
+.field{color:var(--kds-text)!important}
+.field input,.stockTools input,.stockTools select,.cashField input,.cashField select,.cashField textarea{font-family:var(--kds-font)!important;border-radius:var(--kds-input-r)!important}
+.cashierSurface{--c-bg:var(--kds-bg)!important;--c-panel:var(--kds-panel)!important;--c-ink:var(--kds-text)!important;--c-muted:var(--kds-muted)!important;--c-primary:var(--kds-primary)!important;--c-accent:var(--kds-accent)!important;background:var(--kds-bg)!important;color:var(--kds-text)!important}
+.cashPanel,.cashItem,.cashTop{background:var(--kds-panel)!important;color:var(--kds-text)!important}
+.ticket.stage-new .th{background:color-mix(in srgb,var(--kds-primary) 72%,#335d7e)!important;color:#fff!important}
+.ticket.stage-processing .th{background:#b97c29!important;color:#fffaf2!important}
+.ticket.stage-ready .th{background:#3d8952!important;color:#fff!important}
+.stat:nth-child(1):before{background:color-mix(in srgb,var(--kds-primary) 60%,#4d9bdf)!important}
+.stat:nth-child(2):before{background:#d99a39!important}
+.stat:nth-child(3):before{background:#4fa963!important}

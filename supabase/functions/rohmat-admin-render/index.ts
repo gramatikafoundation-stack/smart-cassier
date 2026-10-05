@@ -117,7 +117,7 @@ function integrate(raw:string,optimized=false){
   if(!out.includes('rohmat-admin-settings-theme-v2'))out=out.replace('</body>',ADMIN_SETTINGS_THEME_RUNTIME_V2+'</body>');
   if(optimized){
     const helper=`<script id="rohmat-admin-bootstrap-dedup-v2">(()=>{'use strict';if(window.__rohmatAdminBootstrap)return;let p=null;window.__rohmatAdminBootstrap=(force=false)=>{if(force)p=null;if(!p)p=fetch('${U}/functions/v1/rohmat-admin-render?mode=bootstrap',{cache:'no-store',headers:{'x-sdb-tenant-id':'__SDB_TENANT_ID__','cache-control':'no-cache'}}).then(r=>{if(!r.ok)throw new Error('bootstrap_'+r.status);return r.json()});return p.then(j=>({json:async()=>j}))}})();<\/script>`;
-    if(!out.includes('rohmat-admin-bootstrap-dedup-v1'))out=out.replace('<script id="admin-design-system-runtime-v43">',helper+'<script id="admin-design-system-runtime-v43">');
+    if(!out.includes('rohmat-admin-bootstrap-dedup-v1'))out=out.replace('<script id="admin-design-system-runtime-v41">',helper+'<script id="admin-design-system-runtime-v41">');
     const a="fetch(U+'/rest/v1/site_settings?select=design_system,kds_url&id=eq.1&limit=1',{headers:{apikey:K,Authorization:'Bearer '+K},cache:'no-store'})";
     const b="fetch(U+'/rest/v1/site_settings?select=design_system&id=eq.1&limit=1',{headers:{apikey:K,Authorization:'Bearer '+K},cache:'no-store'})";
     const d="fetch(U+'/rest/v1/site_settings?select=kds_url&id=eq.1&limit=1',{headers:{apikey:K,Authorization:'Bearer '+K},cache:'no-store'})";
@@ -130,7 +130,7 @@ function integrate(raw:string,optimized=false){
     for(const k of ['--bg','--panel','--primary','--accent','--ink','--muted','--ds-font','--ds-base-size','--ds-line-height','--ds-login-brand-font','--ds-login-brand-size','--ds-login-brand-align','--ds-login-brand-weight','--ds-login-brand-style','--ds-login-brand-color','--ds-max','--ds-density','--ds-radius','--ds-motion']){
       out=out.replace(new RegExp("r\\.setProperty\\('"+k.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')+"',([^;]+)\\);"),"r.setProperty('"+k+"',$1,'important');");
     }
-    out=out.replaceAll('admin-design-system-runtime-v43','admin-design-system-runtime-v44').replaceAll('adminTypographyAuthorityV43','adminTypographyAuthorityV44');
+    out=out.replaceAll('adminTypographyAuthorityV43','adminTypographyAuthorityV44');
   }
   return out
 }

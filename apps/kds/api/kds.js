@@ -38,10 +38,20 @@ export default async function handler(req, res) {
   try { upstreamUrl = new URL(upstream); } catch {
     return res.status(503).json({ ok: false, error: 'kds_upstream_invalid' });
   }
-  if (upstreamUrl.protocol !== 'https:' || upstreamUrl.hostname !== 'yybhpmjuywjxqurrrrxl.supabase.co') {
-    return res.status(503).json({ ok: false, error: 'kds_upstream_not_sdb1' });
+  let trustedProjectOrigin = '';
+  try {
+    trustedProjectOrigin = new URL(String(process.env.SUPABASE_URL || process.env.SUPABASE_ORIGIN || '')).origin;
+  } catch {}
+  const expectedPath = '/functions/v1/rohmat-kds-api';
+  if (
+    upstreamUrl.protocol !== 'https:' ||
+    !trustedProjectOrigin ||
+    upstreamUrl.origin !== trustedProjectOrigin ||
+    upstreamUrl.pathname !== expectedPath
+  ) {
+    return res.status(503).json({ ok: false, error: 'kds_upstream_not_canonical' });
   }
-  const projectOrigin = upstreamUrl.origin;
+  const projectOrigin = trustedProjectOrigin;
   const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
   if (Buffer.byteLength(body, 'utf8') > 65536) {
     return res.status(413).json({ ok: false, error: 'request_too_large' });

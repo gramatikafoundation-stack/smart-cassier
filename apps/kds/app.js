@@ -41,21 +41,21 @@ function where(o){return o.service_mode==='dine-in'?'Meja '+(o.table_number||'�
 function items(o){const a=Array.isArray(o.items)?o.items:[];return '<div class="items">'+a.map(i=>'<div class="item"><span><b>'+Number(i.quantity||0)+'×</b> '+esc(i.name)+'</span><strong>'+rp(Number(i.subtotal??(Number(i.price||0)*Number(i.quantity||0))))+'</strong></div>').join('')+'</div>'}
 function newTime(o){return o.verified_at||o.payment_submitted_at||o.kitchen_sent_at||o.created_at}
 function processTime(o){return o.preparing_at||o.ready_at}
-function completeTime(o){return o.completed_at}
-function timeline(o){return '<div class="timeline"><span class="on">Pesanan Baru: '+fmt(newTime(o))+'</span><span class="'+(processTime(o)?'on':'')+'">Sedang Diproses: '+fmt(processTime(o))+'</span><span class="'+(completeTime(o)?'on':'')+'">Pesanan Selesai: '+fmt(completeTime(o))+'</span></div>'}
+function readyTime(o){return o.ready_at}
+function timeline(o){return '<div class="timeline"><span class="on">Pesanan Baru: '+fmt(newTime(o))+'</span><span class="'+(processTime(o)?'on':'')+'">Sedang Diproses: '+fmt(processTime(o))+'</span><span class="'+(readyTime(o)?'on':'')+'">Pesanan Siap: '+fmt(readyTime(o))+'</span></div>'}
 
 function card(o,stage){
   const review=o.payment_status==='submitted'&&o.order_status==='payment_review';
   let actions='';
   if(stage==='new') actions=review?'<button class="btn green" data-act="verify_start" data-id="'+o.id+'">Verifikasi & Proses</button><button class="btn red" data-act="reject_payment" data-id="'+o.id+'">Tolak</button>':'<button class="btn green" data-act="start" data-id="'+o.id+'">Proses Pesanan</button>';
-  else if(stage==='processing') actions='<button class="btn green" data-act="finish" data-id="'+o.id+'">Selesaikan Pesanan</button>';
+  else if(stage==='processing') actions='<button class="btn green" data-act="ready" data-id="'+o.id+'">Tandai Pesanan Siap</button>';
   const proofBtn=o.payment_proof_url?'<button class="btn" data-proof="'+esc(o.payment_proof_url)+'">Lihat Bukti</button>':'';
   const printBtn=!review?'<button class="btn" data-print="'+o.id+'">Cetak</button>':'';
-  return '<article class="ticket stage-'+esc(stage)+' '+(review?'review':'')+'"><div class="th"><div><div class="code">#'+esc(o.public_order_code||o.id)+'</div><div class="name">'+esc(o.customer_name||'Pelanggan')+' · '+esc(where(o))+'</div></div><span class="badge">'+(review?'MENUNGGU BAYAR':esc(payLabel(o)))+'</span></div>'+items(o)+(o.customer_note?'<div class="note"><b>Keterangan:</b> '+esc(o.customer_note)+'</div>':'')+'<div class="meta">Total '+rp(o.total_amount||0)+'</div><div class="statusTime"><b>Waktu status:</b> '+fmt(stage==='new'?newTime(o):stage==='processing'?processTime(o):completeTime(o))+'</div>'+timeline(o)+'<div class="row">'+actions+proofBtn+printBtn+'</div></article>';
+  return '<article class="ticket stage-'+esc(stage)+' '+(review?'review':'')+'"><div class="th"><div><div class="code">#'+esc(o.public_order_code||o.id)+'</div><div class="name">'+esc(o.customer_name||'Pelanggan')+' · '+esc(where(o))+'</div></div><span class="badge">'+(review?'MENUNGGU BAYAR':esc(payLabel(o)))+'</span></div>'+items(o)+(o.customer_note?'<div class="note"><b>Keterangan:</b> '+esc(o.customer_note)+'</div>':'')+'<div class="meta">Total '+rp(o.total_amount||0)+'</div><div class="statusTime"><b>Waktu status:</b> '+fmt(stage==='new'?newTime(o):stage==='processing'?processTime(o):readyTime(o))+'</div>'+timeline(o)+'<div class="row">'+actions+proofBtn+printBtn+'</div></article>';
 }
 function lane(title,desc,list,stage){return '<section class="lane lane-'+esc(stage)+'"><div class="lh"><div><h2>'+title+'</h2><p>'+desc+'</p></div><span class="count">'+list.length+' tiket</span></div><div class="cards">'+(list.length?list.map(o=>card(o,stage)).join(''):'<div class="empty">Belum ada pesanan.</div>')+'</div></section>'}
-function classify(){const o=snap.orders||[];return{n:o.filter(x=>(x.payment_status==='submitted'&&x.order_status==='payment_review')||(x.payment_status==='verified'&&x.order_status==='confirmed')),p:o.filter(x=>x.order_status==='preparing'||x.order_status==='ready'),d:o.filter(x=>x.order_status==='completed'&&today(x.completed_at||x.updated_at))}}
-function hasActiveOrders(){const {n,p}=classify();return n.length>0||p.length>0}
+function classify(){const o=snap.orders||[];return{n:o.filter(x=>(x.payment_status==='submitted'&&x.order_status==='payment_review')||(x.payment_status==='verified'&&x.order_status==='confirmed')),p:o.filter(x=>x.payment_status==='verified'&&x.order_status==='preparing'),r:o.filter(x=>x.payment_status==='verified'&&x.order_status==='ready')}}
+function hasActiveOrders(){const {n,p,r}=classify();return n.length>0||p.length>0||r.length>0}
 function pollDelay(){return realtimeConnected?safetyPollMs:FALLBACK_POLL_MS}
 function stopPolling(){if(timer){clearTimeout(timer);timer=null}}
 function schedulePolling(delay=pollDelay()){stopPolling();if(document.hidden||!navigator.onLine)return;timer=setTimeout(async()=>{if(document.hidden||!navigator.onLine)return;try{await syncCurrent(false)}finally{schedulePolling()}},Math.max(1000,Number(delay)||pollDelay()))}
@@ -175,7 +175,7 @@ async function startRealtimeHybrid(){
   })();
   return rtStarting;
 }
-function renderOrders(){const {n,p,d}=classify();$('sNew').textContent=n.length;$('sProc').textContent=p.length;$('sDone').textContent=d.length;$('lanes').innerHTML=lane('Pesanan Baru','Pesanan masuk dan siap ditangani dapur',n,'new')+lane('Sedang Diproses','Semua pesanan yang sedang dikerjakan dapur',p,'processing')+lane('Pesanan Selesai','Pesanan yang selesai hari ini',d,'done')}
+function renderOrders(){const {n,p,r}=classify();$('sNew').textContent=n.length;$('sProc').textContent=p.length;$('sReady').textContent=r.length;$('lanes').innerHTML=lane('Pesanan Baru','Pesanan masuk dan siap ditangani dapur',n,'new')+lane('Sedang Diproses','Pesanan yang sedang dikerjakan dapur',p,'processing')+lane('Pesanan Siap','Pesanan siap disajikan atau diserahkan',r,'ready')}
 function renderStock(){const q=($('search').value||'').toLowerCase(),f=$('filter').value,m=snap.menu||[];$('stockgrid').innerHTML=m.filter(x=>(!q||String(x.name).toLowerCase().includes(q)||String(x.category).toLowerCase().includes(q))&&(f==='all'||(f==='on'&&x.is_available)||(f==='off'&&!x.is_available))).map(x=>'<article class="stock '+(x.is_available?'':'off')+'"><div><b>'+esc(x.name)+'</b><div class="muted">'+esc(x.category)+' · '+rp(x.price)+'</div></div><button class="sw '+(x.is_available?'':'off')+'" data-stock="'+esc(x.id)+'" data-next="'+(x.is_available?'0':'1')+'">'+(x.is_available?'Tersedia':'Habis')+'</button></article>').join('')||'<div class="empty">Menu tidak ditemukan.</div>'}
 
 async function refresh(manual=false,afterBusy=false){
@@ -192,7 +192,7 @@ async function refresh(manual=false,afterBusy=false){
   try{return await task}finally{if(syncPromise===task)syncPromise=null;syncBusy=false;if(manual){b.disabled=false;b.textContent='↻ Perbarui'}}
 }
 async function run(id,command){return rpc('kds_update_order',{p_id:id,p_action:command})}
-async function act(id,action){stopPolling();try{if(action==='verify_start')await run(id,'verify_start');else if(action==='finish')await run(id,'finish');else await run(id,action);toast(action==='start'||action==='verify_start'?'Pesanan masuk ke Sedang Diproses':action==='finish'?'Pesanan selesai':'Status diperbarui');await refresh(false,true)}finally{schedulePolling()}}
+async function act(id,action){stopPolling();try{if(action==='verify_start')await run(id,'verify_start');else await run(id,action);toast(action==='start'||action==='verify_start'?'Pesanan masuk ke Sedang Diproses':action==='ready'?'Pesanan masuk ke Pesanan Siap':'Status diperbarui');await refresh(false,true)}finally{schedulePolling()}}
 async function stock(id,on){stopPolling();try{await rpc('kds_set_availability',{p_id:id,p_available:on,p_note:on?'':'Habis'});toast(on?'Menu kembali tersedia':'Menu ditandai habis');await refresh(false,true)}finally{schedulePolling()}}
 async function showProof(path){try{const d=await proof(path);$('proofImg').src=d.url;$('proofModal').hidden=false}catch(error){toast(error.message||'Bukti gagal dibuka')}}
 function printOne(id){const o=(snap.orders||[]).find(x=>x.id===id);if(!o)return;const w=open('','_blank','width=420,height=700'),its=Array.isArray(o.items)?o.items:[];w.document.write('<!doctype html><style>@page{size:80mm auto;margin:4mm}body{font:13px monospace}h2{text-align:center}.x{border-top:1px dashed;margin:8px 0}</style><h2>'+esc(String(tenant().businessName||'').toUpperCase())+'<br>KITCHEN TICKET</h2><div class=x></div><b>#'+esc(o.public_order_code)+'</b><br>'+esc(where(o))+'<div class=x></div>'+its.map(i=>'<p><b>'+Number(i.quantity)+'×</b> '+esc(i.name)+' — '+rp(Number(i.subtotal??(Number(i.price||0)*Number(i.quantity||0))))+'</p>').join('')+'<div class=x></div><b>'+esc(payLabel(o))+' · '+rp(o.total_amount)+'</b>');w.document.close();setTimeout(()=>{try{w.focus();w.print()}catch{}},80);rpc('kds_update_order',{p_id:id,p_action:'print'}).catch(()=>{})}

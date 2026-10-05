@@ -20,7 +20,7 @@ const today = v => {if(!v)return false;const f=formatters().dateOnlyFormatter;re
 let snap={orders:[],menu:[]}, current='orders', syncBusy=false, syncPromise=null, lastSig='', timer=null;
 const FALLBACK_POLL_MS=8000,DEFAULT_SAFETY_POLL_MS=45000,DEFAULT_STALE_AFTER_MS=75000;
 let safetyPollMs=DEFAULT_SAFETY_POLL_MS,staleAfterMs=DEFAULT_STALE_AFTER_MS,lastFreshAt=0;
-let realtimeConnected=false,realtimeState='booting',rtSocket=null,rtHeartbeatTimer=null,rtReconnectTimer=null,rtJoinTimer=null,rtStaleTimer=null,rtStarting=null,rtTopic='',rtEvent='kds_change',rtRef=0,rtAttempt=0,rtIntentionalClose=false,rtSyncTimer=null;
+let realtimeConnected=false,realtimeState='booting',rtSocket=null,rtHeartbeatTimer=null,rtReconnectTimer=null,rtJoinTimer=null,rtStaleTimer=null,rtStarting=null,rtTopic='',rtEvent='kds_change',rtRef=0,rtAttempt=0,rtIntentionalClose=false,rtSyncTimer=null;\nconst rtVersions=new Map(),rtDeltaTimers=new Map();
 let cashSnap=null,cashBusy=false,cashPromise=null,cashSig='',cashCat='Semua',cashMode='dine-in',cashPay='cash',cart={};
 const cashDraft={name:'',table:'',note:'',cash:'',qrisOk:false};
 
@@ -60,7 +60,7 @@ function hasActiveOrders(){const {n,p,r}=classify();return n.length>0||p.length>
 function pollDelay(){return realtimeConnected?safetyPollMs:FALLBACK_POLL_MS}
 function stopPolling(){if(timer){clearTimeout(timer);timer=null}}
 function schedulePolling(delay=pollDelay()){stopPolling();if(document.hidden||!navigator.onLine)return;timer=setTimeout(async()=>{if(document.hidden||!navigator.onLine)return;try{await syncCurrent(false)}finally{schedulePolling()}},Math.max(1000,Number(delay)||pollDelay()))}
-async function syncCurrent(manual=false){if(current==='cashier')return cashLoad(manual);return refresh(manual)}
+async function syncCurrent(manual=false){const orders=refresh(manual);if(current==='cashier')return Promise.all([orders,cashLoad(manual)]);return orders}
 
 function setSyncState(state,label){
   realtimeState=state;
@@ -102,10 +102,38 @@ function realtimeSend(topic,event,payload,joinRef=null){
   rtSocket.send(JSON.stringify({topic,event,payload,ref:String(rtRef),join_ref:joinRef}));
   return String(rtRef);
 }
-function queueRealtimeSync(){
-  if(rtSyncTimer)clearTimeout(rtSyncTimer);
+function rtVersion(v){const n=Date.parse(String(v||''));return Number.isFinite(n)?n:0}
+function rtUpsert(list,row){const a=Array.isArray(list)?list.slice():[],i=a.findIndex(x=>x.id===row.id);if(i>=0)a[i]=row;else a.unshift(row);return a}
+async function applyRealtimeDelta(change={}){
+  const kind=String(change.kind||''),id=String(change.entity_id||''),tenantId=String(change.tenant_id||'');
+  if(tenantId&&tenantId!==String(tenant().tenantId||''))return;
+  if(!id||!['orders','menu'].includes(kind)){await refresh(false,true);return}
+  const key=kind+':'+id,nextVersion=rtVersion(change.version),seen=Number(rtVersions.get(key)||0);
+  if(nextVersion&&seen&&nextVersion<seen)return;
+  const args=kind==='orders'?{p_order_id:id,p_menu_id:null}:{p_order_id:null,p_menu_id:id};
+  const d=await rpc('kds_delta',args);
+  const resolvedVersion=rtVersion(d?.version||change.version);
+  if(resolvedVersion&&seen&&resolvedVersion<seen)return;
+  if(resolvedVersion)rtVersions.set(key,resolvedVersion);
+  if(kind==='orders'){
+    const row=d?.order||null;
+    snap.orders=row?rtUpsert(snap.orders,row):(snap.orders||[]).filter(x=>x.id!==id);
+    lastSig='';renderOrders();markFresh('realtime-order');
+    document.dispatchEvent(new CustomEvent('rohmat:kds-order-delta',{detail:{order:row,orderId:id,operation:change.operation||'update'}}));
+    if(row&&!row.kds_received_at)rpc('kds_ack_visible',{p_order_id:id}).catch(()=>{});
+    return;
+  }
+  const row=d?.menu||null;
+  snap.menu=row?rtUpsert(snap.menu,row):(snap.menu||[]).filter(x=>x.id!==id);
+  lastSig='';renderStock();markFresh('realtime-menu');
+  if(current==='cashier')cashLoad(false,true).catch(()=>{});
+}
+function queueRealtimeSync(change={}){
+  const kind=String(change.kind||''),id=String(change.entity_id||''),key=(kind&&id)?kind+':'+id:'__full__';
+  const old=rtDeltaTimers.get(key);if(old)clearTimeout(old);
   setSyncState('syncing','Menyinkronkan');
-  rtSyncTimer=setTimeout(()=>{rtSyncTimer=null;syncCurrent(false).catch(()=>setSyncState('stale','Data mungkin terlambat'))},120);
+  const t=setTimeout(()=>{rtDeltaTimers.delete(key);applyRealtimeDelta(change).catch(()=>refresh(false,true).catch(()=>setSyncState('stale','Data mungkin terlambat')))},80);
+  rtDeltaTimers.set(key,t);
 }
 function stopRealtime({reconnect=false,state='paused'}={}){
   rtIntentionalClose=!reconnect;
@@ -151,7 +179,7 @@ async function startRealtimeHybrid(){
         rtJoinTimer=setTimeout(()=>fail('realtime_join_timeout'),8000);
         ws.onopen=()=>{
           const key=String(cfg.publishableKey||'');
-          joinRef=realtimeSend('realtime:'+rtTopic,'phx_join',{config:{broadcast:{ack:false,self:false},presence:{key:''},postgres_changes:[]},access_token:key},'1')||'';
+          joinRef=realtimeSend('realtime:'+rtTopic,'phx_join',{config:{broadcast:{ack:false,self:false},presence:{key:''},postgres_changes:[],private:false},access_token:key},'1')||'';
         };
         ws.onmessage=event=>{
           let m;try{m=JSON.parse(String(event.data))}catch{return}
@@ -160,10 +188,11 @@ async function startRealtimeHybrid(){
             if(settled)return;settled=true;clearTimeout(rtJoinTimer);rtJoinTimer=null;
             realtimeConnected=true;rtAttempt=0;markFresh('realtime-connected');armStaleMonitor();schedulePolling(safetyPollMs);
             rtHeartbeatTimer=setInterval(()=>realtimeSend('phoenix','heartbeat',{},null),25000);
+            refresh(false,true).catch(()=>setSyncState('stale','Data mungkin terlambat'));
             resolve();
             return;
           }
-          if(m.event==='broadcast'&&m.payload?.event===rtEvent)queueRealtimeSync();
+          if(m.event==='broadcast'&&m.payload?.event===rtEvent)queueRealtimeSync(m.payload?.payload||{});
         };
         ws.onerror=()=>{if(!settled)fail('realtime_socket_error')};
         ws.onclose=()=>{const intentional=rtIntentionalClose;realtimeConnected=false;if(!intentional&&!document.hidden&&navigator.onLine)scheduleRealtimeReconnect()};

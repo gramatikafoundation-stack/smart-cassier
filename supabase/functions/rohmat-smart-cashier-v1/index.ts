@@ -175,15 +175,21 @@ Deno.serve(async(req:Request)=>{
 
     const items=Array.isArray(body.items)?body.items:[];
     if(items.length<1||items.length>30)return json(origin,{ok:false,error:"invalid_items"},400,requestId,ctx);
+    const clientOrderId=String(body.clientOrderId||"").trim().toLowerCase();
+    const expectedPrefix=source==="cashier_admin"?"cashier-admin-":"cashier-kds-";
+    if(!clientOrderId.startsWith(expectedPrefix)||!/^(cashier-admin|cashier-kds)-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clientOrderId)){
+      return json(origin,{ok:false,error:"invalid_client_order_id"},400,requestId,ctx);
+    }
 
-    const {data,error}=await sb.rpc("smart_cashier_create_tenant",{
+    const {data,error}=await sb.rpc("smart_cashier_create_idempotent_tenant",{
       p_tenant_id:ctx.tenant_id,p_token:token,p_source:source,
       p_customer_name:String(body.customerName||"").slice(0,80),
       p_service_mode:String(body.serviceMode||""),
       p_table_number:body.serviceMode==="dine-in"?Number(body.tableNumber||0):null,
       p_items:items,p_payment_method:String(body.paymentMethod||""),
       p_cash_received:body.paymentMethod==="cash"?Number(body.cashReceived||0):null,
-      p_note:String(body.note||"").slice(0,500)
+      p_note:String(body.note||"").slice(0,500),
+      p_client_order_id:clientOrderId
     });
     if(error)throw error;
     if(!data?.ok){
@@ -194,8 +200,9 @@ Deno.serve(async(req:Request)=>{
     }
     const chain=UUID_RE.test(String(data.request_id||""))?String(data.request_id):requestId;
     await audit(sb,ctx,action,token,req,true,{origin,source,role:sess.data.role,fingerprint_bound:true,request_id:chain});
-    await integration(sb,ctx,chain,action,"success",201,started,{origin,source,edge_request_id:requestId},String(data?.order?.id||"")||null);
-    return json(origin,data,201,chain,ctx);
+    const status=data?.duplicate===true?200:201;
+    await integration(sb,ctx,chain,action,"success",status,started,{origin,source,edge_request_id:requestId,duplicate:data?.duplicate===true,client_order_id:clientOrderId},String(data?.order?.id||"")||null);
+    return json(origin,data,status,chain,ctx);
   }catch{
     await audit(sb,ctx,action,token,req,false,{origin,reason:"service_error"});
     await integration(sb,ctx,requestId,action,"failed",500,started,{origin},null,"cashier_service_failed");

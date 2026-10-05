@@ -75,10 +75,22 @@ Deno.serve(async(req:Request)=>{
 
   let body:any={};
   try{body=await req.json()}catch{}
+  const action=String(body.action||"snapshot");
   const limit=Math.max(1,Math.min(1000,Number(body.limit||500)||500));
   const offset=Math.max(0,Number(body.offset||0)||0);
 
   try{
+    if(action==="realtime"){
+      const {data,error}=await sb.rpc("kds_realtime_ticket_tenant",{p_tenant_id:ctx.tenant_id,p_token:token});
+      if(error||!data?.ok||!String(data?.topic||"").startsWith("kds:")){
+        return json(origin,{ok:false,error:"realtime_unavailable"},503,ctx);
+      }
+      return json(origin,{ok:true,tenant_id:ctx.tenant_id,realtime:{
+        topic:String(data.topic),event:String(data.event||"kds_change"),
+        safety_poll_seconds:45,stale_after_seconds:75
+      }},200,ctx);
+    }
+    if(action!=="snapshot")return json(origin,{ok:false,error:"invalid_action"},400,ctx);
     const {data,error}=await sb.rpc("admin_order_history_snapshot_tenant",{
       p_tenant_id:ctx.tenant_id,p_token:token,p_limit:limit,p_offset:offset
     });
@@ -86,6 +98,6 @@ Deno.serve(async(req:Request)=>{
     if(!data?.ok)return json(origin,data||{ok:false,error:"invalid_session"},data?.error==="invalid_session"?401:400,ctx);
     return json(origin,data,200,ctx);
   }catch{
-    return json(origin,{ok:false,error:"history_service_failed"},500,ctx);
+    return json(origin,{ok:false,error:action==="realtime"?"realtime_service_failed":"history_service_failed"},500,ctx);
   }
 });

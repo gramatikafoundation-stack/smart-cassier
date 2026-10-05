@@ -118,6 +118,8 @@ function integrate(raw:string,optimized=false){
   if(optimized){
     const helper=`<script id="rohmat-admin-bootstrap-dedup-v2">(()=>{'use strict';if(window.__rohmatAdminBootstrap)return;let p=null;window.__rohmatAdminBootstrap=(force=false)=>{if(force)p=null;if(!p)p=fetch('${U}/functions/v1/rohmat-admin-render?mode=bootstrap',{cache:'no-store',headers:{'x-sdb-tenant-id':'__SDB_TENANT_ID__','cache-control':'no-cache'}}).then(r=>{if(!r.ok)throw new Error('bootstrap_'+r.status);return r.json()});return p.then(j=>({json:async()=>j}))}})();<\/script>`;
     if(!out.includes('rohmat-admin-bootstrap-dedup-v1'))out=out.replace('<script id="admin-design-system-runtime-v41">',helper+'<script id="admin-design-system-runtime-v41">');
+    const inlineBoot="if(!window.__rohmatAdminBootstrap){let __abp=null;window.__rohmatAdminBootstrap=(force=false)=>{if(force)__abp=null;if(!__abp)__abp=fetch(U+'/functions/v1/rohmat-admin-render?mode=bootstrap',{cache:'no-store',headers:{'x-sdb-tenant-id':'__SDB_TENANT_ID__','cache-control':'no-cache'}}).then(r=>{if(!r.ok)throw new Error('bootstrap_'+r.status);return r.json()});return __abp.then(j=>({json:async()=>j}))}};";
+    out=out.replace("LS='rohmat-admin-session-v4';let STATE=null","LS='rohmat-admin-session-v4';"+inlineBoot+"let STATE=null");
     const a="fetch(U+'/rest/v1/site_settings?select=design_system,kds_url&id=eq.1&limit=1',{headers:{apikey:K,Authorization:'Bearer '+K},cache:'no-store'})";
     const b="fetch(U+'/rest/v1/site_settings?select=design_system&id=eq.1&limit=1',{headers:{apikey:K,Authorization:'Bearer '+K},cache:'no-store'})";
     const d="fetch(U+'/rest/v1/site_settings?select=kds_url&id=eq.1&limit=1',{headers:{apikey:K,Authorization:'Bearer '+K},cache:'no-store'})";

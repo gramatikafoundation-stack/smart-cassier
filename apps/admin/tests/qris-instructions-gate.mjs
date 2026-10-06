@@ -12,6 +12,9 @@ for(const marker of [
   "pinstr.style.height='auto'",
   "pinstr.scrollHeight+2",
   "pinstr?.addEventListener('input',fitPaymentInstructions)",
+  "setTimeout(fitPaymentInstructions,120)",
+  "'ResizeObserver'in window",
+  "pinstrResizeObserver.observe(pinstr)",
   'Seluruh instruksi ditampilkan utuh'
 ]) assert.ok(src.includes(marker),'QRIS instruction UX marker missing: '+marker);
 

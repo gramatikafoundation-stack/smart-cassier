@@ -300,6 +300,18 @@ function inlineScriptHashes(html) {
   return hashes;
 }
 
+const SDB_PARENT_BRAND_CSS = String.raw`<style id="sdb-parent-brand-admin-v1">
+.sdbParentSignature{display:inline-flex;align-items:center;gap:8px;min-height:44px;color:inherit;text-decoration:none;border-radius:10px;padding:5px 7px;opacity:.86;transition:opacity .18s ease,transform .18s ease,background-color .18s ease}
+.sdbParentSignature:hover{opacity:1;transform:translateY(-1px);background:color-mix(in srgb,currentColor 6%,transparent)}
+.sdbParentSignature:focus-visible{outline:3px solid color-mix(in srgb,var(--accent,#b87444) 28%,transparent);outline-offset:2px}
+.sdbParentSignature img{width:44px;height:44px;object-fit:contain;border-radius:9px;background:#fff;display:block;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.sdbParentSignature span{font-size:9px;line-height:1.25;letter-spacing:.04em;text-transform:uppercase;font-weight:800}
+.sidebarFoot .sdbParentSignature{margin-top:5px;border-top:1px solid color-mix(in srgb,currentColor 14%,transparent);padding-top:10px}
+.authBrand .sdbParentSignature{align-self:flex-start;margin-top:14px;color:#fff}.authBrand .sdbParentSignature img{width:52px;height:52px}
+@media(max-width:760px){.sidebarFoot .sdbParentSignature{display:none}}
+@media(prefers-reduced-motion:reduce){.sdbParentSignature{transition:none}}
+</style>`;
+
 function contentSecurityPolicy(body) {
   const hashes = inlineScriptHashes(body).join(' ');
   return [
@@ -315,6 +327,21 @@ function contentSecurityPolicy(body) {
     "form-action 'self'",
     "upgrade-insecure-requests"
   ].join('; ');
+}
+
+function injectSdbParentBrand(html) {
+  let out = String(html || '');
+  if (!out.includes('sdb-parent-brand-admin-v1')) {
+    out = out.replace('</head>', SDB_PARENT_BRAND_CSS + '</head>');
+  }
+  const loginNeedle = '<small>Rohmat Nasi Uduk . Design System Studio</small></section><section class="authPane">';
+  const loginReplacement = '<small>Rohmat Nasi Uduk . Design System Studio</small><a class="sdbParentSignature" data-sdb-parent-signature="admin-login" href="https://smart-digital-for-business.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Kunjungi Smart Digital for Business"><span>Bagian dari</span><img src="/sdb-parent-brand.jpg" alt="Smart Digital for Business" loading="lazy" decoding="async"></a></section><section class="authPane">';
+  if (out.includes(loginNeedle) && !out.includes('data-sdb-parent-signature="admin-login"')) out = out.replace(loginNeedle, loginReplacement);
+
+  const sideNeedle = "<small>'+esc(data.role||'')+'</small></div></aside>";
+  const sideReplacement = "<small>'+esc(data.role||'')+'</small><a class=\"sdbParentSignature\" data-sdb-parent-signature=\"admin-sidebar\" href=\"https://smart-digital-for-business.vercel.app/\" target=\"_blank\" rel=\"noopener noreferrer\" aria-label=\"Kunjungi Smart Digital for Business\"><span>Bagian dari</span><img src=\"/sdb-parent-brand.jpg\" alt=\"Smart Digital for Business\" loading=\"lazy\" decoding=\"async\"></a></div></aside>";
+  if (out.includes(sideNeedle) && !out.includes('data-sdb-parent-signature="admin-sidebar"')) out = out.replace(sideNeedle, sideReplacement);
+  return out;
 }
 
 function ensureCashierIntegration(html) {
@@ -379,6 +406,7 @@ export function canonicalizeAdminShell(html) {
   out = out.split('https://smart-cassier.vercel.app/login').join('/kds/login');
   out = consolidateCss(out);
   out = applyReferenceExactStructure(out);
+  out = injectSdbParentBrand(out);
 
   const v41 = scriptRe('admin-design-system-runtime-v41');
   if (v41.test(out)) out = out.replace(v41, CORE_LOADER);

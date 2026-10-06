@@ -9,7 +9,7 @@
     "dev": "vercel dev",
     "build": "echo 'Unified build complete'",
     "start": "vercel dev",
-    "test": "node prototype/validate-config.mjs && node apps/admin/tests/visual-editor-typography-gate.mjs && node apps/admin/tests/runtime-typography-propagation-gate.mjs && node apps/kds/tests/unified-receipt-gate.mjs && node apps/kds/tests/kds-canonical-upstream-gate.mjs && node apps/kds/tests/kds-design-system-gate.mjs && node apps/admin/tests/settings-theme-gate.mjs && node apps/admin/tests/theme-single-source-gate.mjs && node apps/admin/tests/navigation-regression-gate.mjs && node apps/public/tests/public-theme-landing-gate.mjs && node apps/admin/tests/design-system-concurrency-gate.mjs && node apps/kds/tests/kds-three-stage-gate.mjs"
+    "test": "node prototype/validate-config.mjs && node apps/admin/tests/visual-editor-typography-gate.mjs && node apps/admin/tests/runtime-typography-propagation-gate.mjs && node apps/kds/tests/unified-receipt-gate.mjs && node apps/kds/tests/kds-canonical-upstream-gate.mjs && node apps/kds/tests/kds-design-system-gate.mjs && node apps/admin/tests/settings-theme-gate.mjs && node apps/admin/tests/theme-single-source-gate.mjs && node apps/admin/tests/navigation-regression-gate.mjs && node apps/public/tests/public-theme-landing-gate.mjs && node apps/admin/tests/design-system-concurrency-gate.mjs && node apps/kds/tests/kds-three-stage-gate.mjs && node scripts/sdb-parent-brand-gate.mjs"
   },
   "keywords": [
     "rohmat",

@@ -246,6 +246,16 @@ body{background:linear-gradient(180deg,#fbf8f6 0%,#f3e8e2 100%)!important}
 @media(max-width:560px){.headin{min-height:62px!important}.cats{top:62px!important}.grid{gap:10px!important}.grid .body h3{font-size:13px!important}.grid .foot .btn{min-height:38px!important}}
 </style><script id="rohmat-menu-single-media-v6">(()=>{'use strict';if(window.__rohmatMenuSingleMediaV6)return;window.__rohmatMenuSingleMediaV6=1;const NAME_KEY='rohmat-customer-name-v2';function readName(){try{return String(localStorage.getItem(NAME_KEY)||'').trim().slice(0,60)}catch{return''}}function saveName(v){v=String(v||'').trim().slice(0,60);if(!v)return;try{localStorage.setItem(NAME_KEY,v)}catch{}}function bindName(){const n=document.getElementById('name');if(!n)return;const saved=readName();if(!String(n.value||'').trim()&&saved){n.value=saved;n.dispatchEvent(new Event('input',{bubbles:true}));n.dispatchEvent(new Event('change',{bubbles:true}))}if(n.dataset.rohmatRememberName==='1')return;n.dataset.rohmatRememberName='1';const persist=()=>saveName(n.value);n.addEventListener('input',persist);n.addEventListener('change',persist);n.addEventListener('blur',persist)}function cleanMedia(){document.querySelectorAll('.grid .food').forEach(food=>{food.style.setProperty('aspect-ratio','70 / 41','important');food.style.setProperty('padding','0','important');food.style.setProperty('overflow','hidden','important');food.style.setProperty('background','#c79666','important');food.style.removeProperty('--rohmat-menu-bg')});document.querySelectorAll('.grid .food img').forEach(img=>{img.style.setProperty('background-image','none','important');img.style.setProperty('background','#c79666','important');img.style.setProperty('object-fit','cover','important');img.style.setProperty('object-position','center','important');img.style.setProperty('width','100%','important');img.style.setProperty('height','100%','important');img.style.setProperty('padding','0','important');img.style.setProperty('margin','0','important')})}function patch(){bindName();cleanMedia();document.documentElement.dataset.rohmatMenuReference='v6-reference-70x41'}let queued=false;function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;setTimeout(patch,0)})}document.addEventListener('rohmat:dom-updated',schedule);window.addEventListener('pageshow',schedule);document.addEventListener('click',e=>{if(e.target.closest('#confirm,#pay,#close,.cat,[data-id]'))schedule();if(e.target.closest('#pay')){const n=document.getElementById('name');if(n)saveName(n.value)}},true);if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(patch,0),{once:true});else setTimeout(patch,0)})();</script><!-- rohmat-menu-single-media-v6 -->`;
 
+const SDB_PARENT_SIGNATURE = String.raw`<style id="sdb-parent-brand-public-v1">
+.sdbParentSignaturePublic{display:flex;justify-content:center;align-items:center;padding:18px 16px 24px;border-top:1px solid rgba(20,35,30,.08);background:transparent}
+.sdbParentSignaturePublic a{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:5px 10px;border-radius:12px;color:var(--so-muted,#70807a);font-size:11px;font-weight:760;letter-spacing:.01em;opacity:.88;transition:opacity .18s ease,transform .18s ease,background-color .18s ease}
+.sdbParentSignaturePublic a:hover{opacity:1;transform:translateY(-1px);background:rgba(255,255,255,.62)}
+.sdbParentSignaturePublic a:focus-visible{outline:3px solid rgba(0,191,174,.22);outline-offset:2px}
+.sdbParentSignaturePublic img{width:54px;height:54px;object-fit:contain;border-radius:11px;display:block;background:#fff;box-shadow:0 5px 18px rgba(9,19,23,.08)}
+@media(max-width:560px){.sdbParentSignaturePublic{padding:14px 12px 20px}.sdbParentSignaturePublic img{width:48px;height:48px}}
+@media(prefers-reduced-motion:reduce){.sdbParentSignaturePublic a{transition:none}}
+</style><footer class="sdbParentSignaturePublic" data-sdb-parent-signature="public"><a href="https://smart-digital-for-business.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Kunjungi Smart Digital for Business"><span>Bagian dari</span><img src="/sdb-parent-brand.jpg" alt="Smart Digital for Business" loading="lazy" decoding="async"></a></footer><!-- sdb-parent-brand-public-v1 -->`;
+
 function countOccurrences(text, needle) {
   if (!needle) return 0;
   return text.split(needle).length - 1;
@@ -278,6 +288,7 @@ function injectPublicPatch(html) {
   };
   if (!out.includes('rohmat-menu-single-media-v6')) out = add(out, PUBLIC_UX_PATCH);
   if (!out.includes('smart-order-public-foodcode-v1')) out = add(out, FUTURE_PUBLIC_UI_PATCH);
+  if (!out.includes('sdb-parent-brand-public-v1')) out = add(out, SDB_PARENT_SIGNATURE);
   return out;
 }
 

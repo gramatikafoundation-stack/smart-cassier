@@ -392,3 +392,15 @@ body.kdsPage,body.loginPage{font-family:var(--kds-font)!important;font-size:var(
 .stat:nth-child(1):before{background:color-mix(in srgb,var(--kds-primary) 60%,#4d9bdf)!important}
 .stat:nth-child(2):before{background:#d99a39!important}
 .stat:nth-child(3):before{background:#4fa963!important}
+
+/* sdb-parent-brand-kds-v1 */
+.sdbParentSignature{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:5px 8px;border-radius:10px;color:var(--muted,#82938c);text-decoration:none;opacity:.84;transition:opacity .18s ease,transform .18s ease,background-color .18s ease}
+.sdbParentSignature:hover{opacity:1;transform:translateY(-1px);background:rgba(255,255,255,.04)}
+.sdbParentSignature:focus-visible{outline:3px solid rgba(49,214,166,.24);outline-offset:2px}
+.sdbParentSignature span{font-size:10px;line-height:1.2;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.sdbParentSignature img{width:46px;height:46px;object-fit:contain;border-radius:9px;display:block;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.16)}
+.loginPane>.sdbParentSignature{margin-top:12px;color:var(--muted,#70807a)}
+.sdbParentBar{display:flex;justify-content:flex-end;padding-top:8px;padding-bottom:14px}
+.sdbParentBar .sdbParentSignature{margin-left:auto}
+@media(max-width:640px){.sdbParentBar{justify-content:center}.sdbParentBar .sdbParentSignature{margin-left:0}.sdbParentSignature img{width:42px;height:42px}}
+@media(prefers-reduced-motion:reduce){.sdbParentSignature{transition:none}}

@@ -20,7 +20,8 @@ const today = v => {if(!v)return false;const f=formatters().dateOnlyFormatter;re
 let snap={orders:[],menu:[]}, current='orders', syncBusy=false, syncPromise=null, lastSig='', timer=null;
 const FALLBACK_POLL_MS=8000,DEFAULT_SAFETY_POLL_MS=45000,DEFAULT_STALE_AFTER_MS=75000;
 let safetyPollMs=DEFAULT_SAFETY_POLL_MS,staleAfterMs=DEFAULT_STALE_AFTER_MS,lastFreshAt=0;
-let realtimeConnected=false,realtimeState='booting',rtSocket=null,rtHeartbeatTimer=null,rtReconnectTimer=null,rtJoinTimer=null,rtStaleTimer=null,rtStarting=null,rtTopic='',rtEvent='kds_change',rtRef=0,rtAttempt=0,rtIntentionalClose=false,rtSyncTimer=null;\nconst rtVersions=new Map(),rtDeltaTimers=new Map();
+let realtimeConnected=false,realtimeState='booting',rtSocket=null,rtHeartbeatTimer=null,rtReconnectTimer=null,rtJoinTimer=null,rtStaleTimer=null,rtStarting=null,rtTopic='',rtEvent='kds_change',rtRef=0,rtAttempt=0,rtIntentionalClose=false,rtSyncTimer=null;
+const rtVersions=new Map(),rtDeltaTimers=new Map();
 let cashSnap=null,cashBusy=false,cashPromise=null,cashSig='',cashCat='Semua',cashMode='dine-in',cashPay='cash',cart={},cashClientOrderId='';
 const cashDraft={name:'',table:'',note:'',cash:'',qrisOk:false};
 

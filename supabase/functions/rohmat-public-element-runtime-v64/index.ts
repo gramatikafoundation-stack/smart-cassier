@@ -154,8 +154,8 @@ body{background:var(--ds-bg,#F5EFE3)!important;color:var(--ds-text,#24362F)!impo
 .photo.hero-image-failed:before{content:attr(data-fallback-label);position:absolute;inset:0;display:grid;place-items:center;padding:36px;text-align:center;color:var(--ds-panel,#FFFDF8);font-family:var(--rohmat-general-font,Georgia),serif;font-size:clamp(30px,4vw,58px);font-weight:700;line-height:1.05;background:linear-gradient(145deg,var(--ds-primary,#315343),color-mix(in srgb,var(--ds-primary,#315343) 72%,#000))}
 .copy{display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:stretch!important;padding:clamp(34px,5vw,74px)!important;background:var(--ds-panel,#FFFDF8)!important;gap:clamp(5px,.7vw,10px)!important}
 .brand{max-width:12ch!important;margin:0 0 12px!important;font-size:clamp(48px,5vw,78px)!important;line-height:.98!important;letter-spacing:-.045em!important;color:var(--ds-text,#24362F)!important;text-wrap:balance!important}
-.copy>.ey{margin-top:4px!important;color:var(--ds-accent,#B87444)!important}
-.copy>.muted{max-width:46ch!important;margin:10px 0 12px!important;color:var(--ds-muted,#7C776E)!important}
+.copy>.ey{margin-top:4px!important;color:color-mix(in srgb,var(--ds-accent,#B87444) 80%,var(--ds-text,#24362F) 20%)!important}
+.copy>.muted{max-width:46ch!important;margin:10px 0 12px!important;color:color-mix(in srgb,var(--ds-muted,#7C776E) 80%,var(--ds-text,#24362F) 20%)!important}
 .opts{width:100%!important;max-width:none!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;margin:20px 0 12px!important}
 .opts .opt{width:100%!important;max-width:none!important;min-width:0!important;min-height:50px!important;justify-content:center!important;text-align:center!important;margin:0!important;border-color:color-mix(in srgb,var(--ds-primary,#315343) 18%,transparent)!important;background:var(--ds-panel,#FFFDF8)!important}
 .opts .opt.on{background:color-mix(in srgb,var(--ds-primary,#315343) 10%,var(--ds-panel,#FFFDF8))!important;border-color:var(--ds-primary,#315343)!important;box-shadow:inset 3px 0 var(--ds-accent,#B87444)!important}

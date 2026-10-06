@@ -248,8 +248,8 @@ body{background:linear-gradient(180deg,#fbf8f6 0%,#f3e8e2 100%)!important}
 
 const SDB_PARENT_SIGNATURE = String.raw`<style id="sdb-parent-brand-public-v1">
 .sdbParentSignaturePublic{display:flex;justify-content:center;align-items:center;padding:18px 16px 24px;border-top:1px solid rgba(20,35,30,.08);background:transparent}
-.sdbParentSignaturePublic a{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:5px 10px;border-radius:12px;color:var(--so-muted,#70807a);font-size:11px;font-weight:760;letter-spacing:.01em;opacity:.88;transition:opacity .18s ease,transform .18s ease,background-color .18s ease}
-.sdbParentSignaturePublic a:hover{opacity:1;transform:translateY(-1px);background:rgba(255,255,255,.62)}
+.sdbParentSignaturePublic a{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:5px 10px;border-radius:12px;color:color-mix(in srgb,var(--ds-muted,var(--so-muted,#70807a)) 80%,var(--ds-text,#24362F) 20%);font-size:11px;font-weight:760;letter-spacing:.01em;opacity:1;transition:transform .18s ease,background-color .18s ease}
+.sdbParentSignaturePublic a:hover{transform:translateY(-1px);background:rgba(255,255,255,.62)}
 .sdbParentSignaturePublic a:focus-visible{outline:3px solid rgba(0,191,174,.22);outline-offset:2px}
 .sdbParentSignaturePublic img{width:54px;height:54px;object-fit:contain;border-radius:11px;display:block;background:#fff;box-shadow:0 5px 18px rgba(9,19,23,.08)}
 @media(max-width:560px){.sdbParentSignaturePublic{padding:14px 12px 20px}.sdbParentSignaturePublic img{width:48px;height:48px}}

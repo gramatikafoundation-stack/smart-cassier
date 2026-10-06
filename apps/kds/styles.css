@@ -404,3 +404,10 @@ body.kdsPage,body.loginPage{font-family:var(--kds-font)!important;font-size:var(
 .sdbParentBar .sdbParentSignature{margin-left:auto}
 @media(max-width:640px){.sdbParentBar{justify-content:center}.sdbParentBar .sdbParentSignature{margin-left:0}.sdbParentSignature img{width:42px;height:42px}}
 @media(prefers-reduced-motion:reduce){.sdbParentSignature{transition:none}}
+
+
+/* kds-accessible-heritage-contrast-v1 */
+.loginBrand small{color:color-mix(in srgb,var(--kds-panel,#FFFDF8) 75%,var(--kds-accent,#B87444) 25%)!important}
+.loginCard small{color:color-mix(in srgb,var(--kds-accent,#B87444) 80%,var(--kds-text,#24362F) 20%)!important}
+.loginCard .muted{color:color-mix(in srgb,var(--kds-muted,#7C776E) 80%,var(--kds-text,#24362F) 20%)!important}
+.sdbParentSignature{color:color-mix(in srgb,var(--kds-muted,#7C776E) 80%,var(--kds-text,#24362F) 20%)!important;opacity:1!important}

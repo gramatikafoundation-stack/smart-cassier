@@ -14,7 +14,10 @@ const vercel = JSON.parse(read("vercel.json"));
 const asset = new URL("sdb-parent-brand.jpg", root);
 
 assert.ok(fs.existsSync(asset), "canonical SDB asset missing");
-assert.ok(fs.statSync(asset).size > 10000, "SDB asset unexpectedly small");
+const assetBuffer=fs.readFileSync(asset);
+assert.equal(assetBuffer.length,3879,"official SDB social-profile asset byte size drifted");
+const {createHash}=await import('node:crypto');
+assert.equal(createHash('sha256').update(assetBuffer).digest('hex').toUpperCase(),'6477E2A4C4AD02C63C1383F39D1CEFFFC5E91C20EF4FB785C88EB9F932E9A7C9','official SDB social-profile asset hash drifted');
 
 for (const pair of [
   ["public", publicRender],

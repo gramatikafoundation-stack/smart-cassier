@@ -15,7 +15,9 @@ assert.ok(runtime.includes("img.addEventListener('error'"),'hero image failure g
 assert.ok(runtime.includes("window.addEventListener('storage'"),'cross-tab theme refresh listener missing');
 assert.ok(runtime.includes("s.id='rohmatPublicDesignV24';document.body.appendChild(s)"),'tenant theme style must be placed after legacy body stylesheet');
 assert.ok(runtime.includes('document.body.appendChild(s);return s'),'premium landing style must be placed after legacy body stylesheet');
-assert.ok(runtime.includes("width:calc(100vw - 20px)!important"),'mobile landing must stay inside viewport');
+assert.ok(runtime.includes(".hero{width:100%!important;max-width:100%!important"),'mobile hero must size against the containing block, not viewport units');
+assert.ok(runtime.includes(".welcome{width:100%!important;max-width:100%!important"),'mobile landing must not use scrollbar-inclusive 100vw sizing');
+assert.ok(!runtime.includes("width:calc(100vw - 20px)!important"),'mobile landing must not reintroduce scrollbar-width clipping');
 assert.ok(runtime.includes("grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important"),'mobile service controls must remain symmetric');
 assert.ok(runtime.includes("overflow-x:hidden!important"),'mobile horizontal overflow guard missing');
 assert.ok(runtime.includes("font-size:clamp(34px,10vw,44px)!important"),'mobile heading scale guard missing');

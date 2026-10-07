@@ -14,7 +14,7 @@ const SDB_WRITER = (function() {
     BUSINESS_NAME: String(props.getProperty('SDB_BUSINESS_NAME') || 'Business').trim() || 'Business',
     DATA_ENDPOINT: dataEndpoint,
     TARGETS: Object.freeze(targets),
-    PII_RETENTION_DAYS: Math.max(1, Number(props.getProperty('SDB_PII_RETENTION_DAYS') || 365)),
+    PII_RETENTION_DAYS: null, // External Google Sheets are permanent archives: no automatic reset.
     HEADERS: Object.freeze({
       'PEMESAN': ['ID Pesanan','Kode Pesanan','Tanggal Pesan','Waktu Pesan','Nama Pemesan','No. WhatsApp','Sumber Pesanan','Layanan','Nomor Meja','Pesanan','Jumlah Item','Total Belanja'],
       'PESANAN': ['ID Pesanan','Kode Pesanan','Tanggal','Waktu','Sumber','Layanan','Nomor Meja','Daftar Menu','Jumlah Item','Total','Metode Bayar','Status Bayar','Status Pesanan','Waktu Pesanan Baru','Waktu Diproses','Waktu Selesai','Catatan Konsumen','Petugas Kasir'],
@@ -380,26 +380,7 @@ function json_(obj) {
  * Preserves transaction rows and financial facts; clears only PII cells after retention expiry.
  */
 function enforcePiiRetention() {
-  const lock = LockService.getScriptLock();
-  if (!lock.tryLock(5000)) return {ok:false,error:'writer_busy'};
-  try {
-    const cutoff = new Date(Date.now() - SDB_WRITER.PII_RETENTION_DAYS * 86400000);
-    const results = [];
-    Object.keys(SDB_WRITER.TARGETS).sort().forEach(function(year) {
-      const ss = SpreadsheetApp.openById(SDB_WRITER.TARGETS[year]);
-      try { ss.setSpreadsheetTimeZone(SDB_WRITER.TZ); } catch (_) {}
-      results.push({
-        year: Number(year),
-        spreadsheetId: SDB_WRITER.TARGETS[year],
-        retention: enforcePiiRetentionForSpreadsheet_(ss, cutoff)
-      });
-    });
-    const out = {ok:true,retention_days:SDB_WRITER.PII_RETENTION_DAYS,cutoff:cutoff.toISOString(),results:results};
-    console.log(JSON.stringify(out));
-    return out;
-  } finally {
-    lock.releaseLock();
-  }
+  return {ok:true,disabled:true,retention_days:null,reason:'external_google_sheet_archive_is_permanent'};
 }
 
 function enforcePiiRetentionForSpreadsheet_(ss, cutoff) {
@@ -467,6 +448,5 @@ function installPiiRetentionTrigger() {
   ScriptApp.getProjectTriggers()
     .filter(function(t){ return t.getHandlerFunction() === 'enforcePiiRetention'; })
     .forEach(function(t){ ScriptApp.deleteTrigger(t); });
-  ScriptApp.newTrigger('enforcePiiRetention').timeBased().everyDays(1).atHour(3).create();
-  return {ok:true,handler:'enforcePiiRetention',cadence:'daily',retention_days:SDB_WRITER.PII_RETENTION_DAYS};
+  return {ok:true,disabled:true,handler:'enforcePiiRetention',cadence:'none',reason:'external_google_sheet_archive_is_permanent'};
 }

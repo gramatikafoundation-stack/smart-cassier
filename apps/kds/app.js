@@ -108,26 +108,13 @@ function rtUpsert(list,row){const a=Array.isArray(list)?list.slice():[],i=a.find
 async function applyRealtimeDelta(change={}){
   const kind=String(change.kind||''),id=String(change.entity_id||''),tenantId=String(change.tenant_id||'');
   if(tenantId&&tenantId!==String(tenant().tenantId||''))return;
-  if(!id||!['orders','menu'].includes(kind)){await refresh(false,true);return}
-  const key=kind+':'+id,nextVersion=rtVersion(change.version),seen=Number(rtVersions.get(key)||0);
-  if(nextVersion&&seen&&nextVersion<seen)return;
-  const args=kind==='orders'?{p_order_id:id,p_menu_id:null}:{p_order_id:null,p_menu_id:id};
-  const d=await rpc('kds_delta',args);
-  const resolvedVersion=rtVersion(d?.version||change.version);
-  if(resolvedVersion&&seen&&resolvedVersion<seen)return;
-  if(resolvedVersion)rtVersions.set(key,resolvedVersion);
-  if(kind==='orders'){
-    const row=d?.order||null;
-    snap.orders=row?rtUpsert(snap.orders,row):(snap.orders||[]).filter(x=>x.id!==id);
-    lastSig='';renderOrders();markFresh('realtime-order');
+  // Realtime broadcasts are invalidation signals. The canonical snapshot is the
+  // authoritative read model for KDS, avoiding unsupported delta RPCs.
+  await refresh(false,true);
+  if(kind==='orders'&&id){
+    const row=(snap.orders||[]).find(x=>String(x.id)===id)||null;
     document.dispatchEvent(new CustomEvent('rohmat:kds-order-delta',{detail:{order:row,orderId:id,operation:change.operation||'update'}}));
-    if(row&&!row.kds_received_at)rpc('kds_ack_visible',{p_order_id:id}).catch(()=>{});
-    return;
   }
-  const row=d?.menu||null;
-  snap.menu=row?rtUpsert(snap.menu,row):(snap.menu||[]).filter(x=>x.id!==id);
-  lastSig='';renderStock();markFresh('realtime-menu');
-  if(current==='cashier')cashLoad(false,true).catch(()=>{});
 }
 function queueRealtimeSync(change={}){
   const kind=String(change.kind||''),id=String(change.entity_id||''),key=(kind&&id)?kind+':'+id:'__full__';

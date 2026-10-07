@@ -14,26 +14,8 @@
     return JSON.stringify((d?.menu||[]).map(m=>[m.id,m.is_available]));
   }
 
-  refresh = async function(manual=false){
-    if(syncBusy)return;
-    syncBusy=true;
-    const b=$('refresh');
-    if(manual){b.disabled=true;b.textContent='↻ Memperbarui…'}
-    try{
-      const d=await rpc('kds_snapshot');
-      const nextOrderSig=orderSignature(d),nextMenuSig=menuSignature(d);
-      snap=d;
-      if(nextOrderSig!==fastOrderSig){fastOrderSig=nextOrderSig;renderOrders()}
-      if(nextMenuSig!==fastMenuSig){fastMenuSig=nextMenuSig;renderStock()}
-      $('sync').textContent='● Live · '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    }catch(error){
-      $('sync').textContent='● Gangguan';
-      if(manual)toast(error.message||'Gagal memperbarui');
-    }finally{
-      syncBusy=false;
-      if(manual){b.disabled=false;b.textContent='↻ Perbarui'}
-    }
-  };
+  // app.js is the single owner of KDS snapshot/realtime refresh state.
+  // Keep this performance layer focused on DOM/cart optimizations only.
 
   function annotateCashMenu(){
     if(!cashSnap)return;
@@ -136,7 +118,7 @@
     const prevSnap=sm?.is_available,prevCash=cm?.is_available;
     if(sm)sm.is_available=on;
     if(cm)cm.is_available=on;
-    fastMenuSig=menuSignature(snap);
+    lastSig='';
     if(cashSnap)cashSig=cashSignature(cashSnap);
     renderStock();
     updateCashAvailabilityDom(id,on);
@@ -148,7 +130,7 @@
     }catch(error){
       if(sm)sm.is_available=prevSnap;
       if(cm)cm.is_available=prevCash;
-      fastMenuSig=menuSignature(snap);
+      lastSig='';
       if(cashSnap)cashSig=cashSignature(cashSnap);
       renderStock();
       updateCashAvailabilityDom(id,!!(prevCash??prevSnap));

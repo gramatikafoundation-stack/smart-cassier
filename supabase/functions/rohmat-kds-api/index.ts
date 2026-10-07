@@ -263,6 +263,8 @@ Deno.serve(async(req:Request)=>{
     const rpc=String(body?.rpc||"");
     const rpcMap:Record<string,string>={
       kds_snapshot:"kds_snapshot_tenant",
+      kds_delta:"kds_delta_tenant",
+      kds_ack_visible:"kds_ack_visible_tenant",
       kds_update_order:"kds_update_order_tenant",
       kds_set_availability:"kds_set_availability_tenant"
     };
@@ -294,19 +296,25 @@ Deno.serve(async(req:Request)=>{
     if(p.action==="create_order"){
       const items=Array.isArray(p.items)?p.items:[];
       if(items.length<1||items.length>30)return out(origin,400,{ok:false,error:"invalid_items"},requestId,ctx);
-      const r=await sb.rpc("smart_cashier_create_tenant",{
+      const clientOrderId=String(p.clientOrderId||"").trim().toLowerCase();
+      if(!/^cashier-kds-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clientOrderId)){
+        return out(origin,400,{ok:false,error:"invalid_client_order_id"},requestId,ctx);
+      }
+      const r=await sb.rpc("smart_cashier_create_idempotent_tenant",{
         p_tenant_id:ctx.tenant_id,p_token:token,p_source:"cashier_kds",
         p_customer_name:String(p.customerName||"").slice(0,80),
         p_service_mode:String(p.serviceMode||""),
         p_table_number:p.serviceMode==="dine-in"?Number(p.tableNumber||0):null,
         p_items:items,p_payment_method:String(p.paymentMethod||""),
         p_cash_received:p.paymentMethod==="cash"?Number(p.cashReceived||0):null,
-        p_note:String(p.note||"").slice(0,500)
+        p_note:String(p.note||"").slice(0,500),
+        p_client_order_id:clientOrderId
       });
       if(r.error)return out(origin,500,{ok:false,error:"cashier_create_failed"},requestId,ctx);
       const chain=UUID_RE.test(String(r.data?.request_id||""))?String(r.data.request_id):requestId;
-      later(integration(sb,ctx,chain,"cashier_create_order",r.data?.ok?"success":"failed",r.data?.ok?201:400,started,{edge_request_id:requestId},String(r.data?.order?.id||"")||null,r.data?.ok?null:(r.data?.error||"cashier_create_failed")));
-      return out(origin,r.data?.ok?201:400,r.data||{ok:false,error:"cashier_create_failed"},chain,ctx);
+      const status=r.data?.ok?(r.data?.duplicate===true?200:201):400;
+      later(integration(sb,ctx,chain,"cashier_create_order",r.data?.ok?"success":"failed",status,started,{edge_request_id:requestId,duplicate:r.data?.duplicate===true,client_order_id:clientOrderId},String(r.data?.order?.id||"")||null,r.data?.ok?null:(r.data?.error||"cashier_create_failed")));
+      return out(origin,status,r.data||{ok:false,error:"cashier_create_failed"},chain,ctx);
     }
     return out(origin,400,{ok:false,error:"invalid_cashier_action"},requestId,ctx);
   }

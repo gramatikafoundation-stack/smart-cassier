@@ -254,7 +254,7 @@ const SDB_PARENT_SIGNATURE = String.raw`<style id="sdb-parent-brand-public-v1">
 .sdbParentSignaturePublic img{width:54px;height:54px;object-fit:contain;border-radius:11px;display:block;background:#fff;box-shadow:0 5px 18px rgba(9,19,23,.08)}
 @media(max-width:560px){.sdbParentSignaturePublic{padding:14px 12px 20px}.sdbParentSignaturePublic img{width:48px;height:48px}}
 @media(prefers-reduced-motion:reduce){.sdbParentSignaturePublic a{transition:none}}
-</style><footer class="sdbParentSignaturePublic" data-sdb-parent-signature="public"><a href="https://smart-digital-for-business.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Kunjungi Smart Digital for Business"><span>Bagian dari</span><img src="/sdb-parent-brand.jpg" alt="Smart Digital for Business" loading="lazy" decoding="async"></a></footer><!-- sdb-parent-brand-public-v1 -->`;
+</style><footer class="sdbParentSignaturePublic" data-sdb-parent-signature="public"><a href="https://smart-digital-for-business.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Kunjungi Smart Digital for Business"><span>Bagian dari</span><img src="/sdb-parent-brand.jpg?v=20261007-official-logo" alt="Smart Digital for Business" loading="lazy" decoding="async"></a></footer><!-- sdb-parent-brand-public-v1 -->`;
 
 function countOccurrences(text, needle) {
   if (!needle) return 0;

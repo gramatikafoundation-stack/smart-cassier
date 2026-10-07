@@ -335,11 +335,11 @@ function injectSdbParentBrand(html) {
     out = out.replace('</head>', SDB_PARENT_BRAND_CSS + '</head>');
   }
   const loginNeedle = '<small>Rohmat Nasi Uduk . Design System Studio</small></section><section class="authPane">';
-  const loginReplacement = '<small>Rohmat Nasi Uduk . Design System Studio</small><a class="sdbParentSignature" data-sdb-parent-signature="admin-login" href="https://smart-digital-for-business.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Kunjungi Smart Digital for Business"><span>Bagian dari</span><img src="/sdb-parent-brand.jpg" alt="Smart Digital for Business" loading="lazy" decoding="async"></a></section><section class="authPane">';
+  const loginReplacement = '<small>Rohmat Nasi Uduk . Design System Studio</small><a class="sdbParentSignature" data-sdb-parent-signature="admin-login" href="https://smart-digital-for-business.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Kunjungi Smart Digital for Business"><span>Bagian dari</span><img src="/sdb-parent-brand.jpg?v=20261007-official-logo" alt="Smart Digital for Business" loading="lazy" decoding="async"></a></section><section class="authPane">';
   if (out.includes(loginNeedle) && !out.includes('data-sdb-parent-signature="admin-login"')) out = out.replace(loginNeedle, loginReplacement);
 
   const sideNeedle = "<small>'+esc(data.role||'')+'</small></div></aside>";
-  const sideReplacement = "<small>'+esc(data.role||'')+'</small><a class=\"sdbParentSignature\" data-sdb-parent-signature=\"admin-sidebar\" href=\"https://smart-digital-for-business.vercel.app/\" target=\"_blank\" rel=\"noopener noreferrer\" aria-label=\"Kunjungi Smart Digital for Business\"><span>Bagian dari</span><img src=\"/sdb-parent-brand.jpg\" alt=\"Smart Digital for Business\" loading=\"lazy\" decoding=\"async\"></a></div></aside>";
+  const sideReplacement = "<small>'+esc(data.role||'')+'</small><a class=\"sdbParentSignature\" data-sdb-parent-signature=\"admin-sidebar\" href=\"https://smart-digital-for-business.vercel.app/\" target=\"_blank\" rel=\"noopener noreferrer\" aria-label=\"Kunjungi Smart Digital for Business\"><span>Bagian dari</span><img src=\"/sdb-parent-brand.jpg?v=20261007-official-logo\" alt=\"Smart Digital for Business\" loading=\"lazy\" decoding=\"async\"></a></div></aside>";
   if (out.includes(sideNeedle) && !out.includes('data-sdb-parent-signature="admin-sidebar"')) out = out.replace(sideNeedle, sideReplacement);
   return out;
 }

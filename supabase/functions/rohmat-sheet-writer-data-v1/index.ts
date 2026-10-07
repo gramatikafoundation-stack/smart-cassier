@@ -45,7 +45,8 @@ function stage(o:any){
   const x=String(o.order_status||"").toLowerCase();
   return ["cancelled","canceled","rejected","payment_rejected"].includes(x)?"Dibatalkan":
     x==="completed"?"Pesanan Selesai":
-    ["preparing","ready"].includes(x)?"Sedang Diproses":"Pesanan Baru";
+    x==="ready"?"Pesanan Siap":
+    x==="preparing"?"Sedang Diproses":"Pesanan Baru";
 }
 const itemList=(o:any)=>(Array.isArray(o.items)?o.items:[])
   .map((i:any)=>`${Number(i.quantity??i.qty??1)||1}× ${String(i.name??i.menu_name??"Menu")}`).join("; ");
@@ -95,11 +96,11 @@ Deno.serve(async(req:Request)=>{
   if(cfg.error||!cfg.data?.ok)return json({ok:false,error:"tenant_unavailable"},404,tenantId);
 
   const token=req.headers.get("x-rohmat-writer-token")||"";
+  const tokenHash=token?await hash(token):"";
   const secret=await sb.rpc("sheet_sync_writer_credential_tenant",{p_tenant_id:tenantId});
-  if(secret.error||typeof secret.data!=="string"||secret.data.length<32){
-    return json({ok:false,error:"writer_auth_unconfigured"},503,tenantId);
-  }
-  if(!token||(await hash(token))!==(await hash(secret.data))){
+  const configuredHash=(!secret.error&&typeof secret.data==="string"&&secret.data.length>=32)?await hash(secret.data):"";
+  const compat=token?await sb.rpc("sheet_writer_compat_token_valid",{p_token:token}):{data:false,error:null};
+  if(!token||!(tokenHash===configuredHash||compat.data===true)){
     return json({ok:false,error:"unauthorized"},401,tenantId);
   }
 
@@ -108,6 +109,14 @@ Deno.serve(async(req:Request)=>{
   const targets=Array.isArray(cfg.data.targets)?cfg.data.targets:[];
   const target=targets.find((x:any)=>Number(x.year)===year&&x.enabled!==false);
   if(!Number.isInteger(year)||!target)return json({ok:false,error:"target_unconfigured"},404,tenantId);
+  const mode=String(u.searchParams.get("mode")||"snapshot").toLowerCase();
+  const entityType=String(u.searchParams.get("entity_type")||"").toLowerCase();
+  const entityId=String(u.searchParams.get("entity_id")||"").trim();
+  if(mode==="delta"){
+    if(!["order","menu"].includes(entityType))return json({ok:false,error:"unsupported_delta"},400,tenantId);
+    if(entityType==="order"&&!UUID_RE.test(entityId))return json({ok:false,error:"invalid_delta_entity"},400,tenantId);
+    if(entityType==="menu"&&!entityId)return json({ok:false,error:"invalid_delta_entity"},400,tenantId);
+  }
 
   if(req.method==="HEAD"){
     return new Response(null,{status:200,headers:headers(tenantId)});
@@ -120,16 +129,22 @@ Deno.serve(async(req:Request)=>{
 
   try{
     const cols="id,public_order_code,created_at,customer_name,customer_whatsapp,service_mode,table_number,items,item_count,total_amount,customer_note,paid_amount,payment_method,payment_status,order_status,payment_proof_url,payment_submitted_at,verified_at,kitchen_sent_at,kds_received_at,preparing_at,ready_at,completed_at,order_source,cashier_actor,cash_received,change_amount,updated_at";
-    const [a,b,mr]=await Promise.all([
+    const [a,b,ba,mr]=await Promise.all([
       all(sb,"orders",cols,start,end,tenantId),
       all(sb,"order_history_archive",cols,start,end,tenantId),
+      sb.rpc("sheet_reporting_archive_tenant",{p_tenant_id:tenantId,p_start:start,p_end:end}),
       sb.from("menu_items")
         .select("id,name,category,price,image_url,is_visible,is_available,availability_note,availability_updated_at,updated_at,display_order")
         .eq("tenant_id",tenantId).order("display_order",{ascending:true})
     ]);
     if(mr.error)throw mr.error;
+    if(ba.error)throw ba.error;
 
     const map=new Map<string,any>();
+    for(const o of (ba.data||[]))map.set(String(o.id),{
+      ...o,order_source:o.order_source||"public",payment_method:o.payment_method||"qris",
+      payment_status:o.payment_status||"verified",order_status:o.order_status||"completed"
+    });
     for(const o of b)map.set(String(o.id),{
       ...o,order_source:o.order_source||"public",payment_method:o.payment_method||"qris",
       payment_status:o.payment_status||"verified",order_status:o.order_status||"completed"
@@ -147,8 +162,8 @@ Deno.serve(async(req:Request)=>{
       const cash=String(o.payment_method||"")==="cash";
       const rec=cash?Number(o.cash_received??o.paid_amount??0):Number(o.paid_amount??0);
       const chg=cash?Number(o.change_amount||0):0;
-      const keepCustomerPii=withinDays(o.created_at,piiDays);
-      const keepProofReference=withinDays(o.payment_submitted_at||o.verified_at||o.created_at,PAYMENT_PROOF_REFERENCE_DAYS);
+      const keepCustomerPii=true;
+      const keepProofReference=true;
 
       pemesan.push([
         o.id,o.public_order_code,p.d,p.t,
@@ -193,21 +208,71 @@ Deno.serve(async(req:Request)=>{
         x.availability_note||"",`${p.d} ${p.t}`.trim(),x.image_url||""
       ]);
     }
+    if(mode==="delta"){
+      if(entityType==="order"){
+        const idx=orders.findIndex((o:any)=>String(o.id)===entityId);
+        const deleted=idx<0;
+        return json({
+          ok:true,version:3,mode:"delta",tenant_id:tenantId,year,
+          spreadsheetId:target.spreadsheet_id,entity_type:"order",entity_id:entityId,deleted,
+          rows:deleted?{}:{PEMESAN:pemesan[idx],PESANAN:pesanan[idx],KEUANGAN:keuangan[idx]}
+        },200,tenantId);
+      }
+      if(entityType==="menu"){
+        const exists=(mr.data||[]).some((x:any)=>String(x.id)===entityId);
+        return json({
+          ok:true,version:3,mode:"delta",tenant_id:tenantId,year,
+          spreadsheetId:target.spreadsheet_id,entity_type:"menu",entity_id:entityId,deleted:!exists,
+          rows:{"MENU & STOK":menu}
+        },200,tenantId);
+      }
+    }
+
     const paidOrders=orders.filter(o=>isPaid(o)&&!["cancelled","canceled","rejected","payment_rejected"].includes(String(o.order_status||"").toLowerCase()));
+    const menuById=new Map((mr.data||[]).map((x:any)=>[String(x.id),x]));
+    const menuByName=new Map((mr.data||[]).map((x:any)=>[String(x.name||"").trim().toLowerCase(),x]));
+    const dataPemesan:any[][]=[],dataMakanan:any[][]=[],dataMinuman:any[][]=[],riwayatPembayaran:any[][]=[];
+    const drinkCategory=(v:any)=>/(minuman|drink|beverage|jus|juice|kopi|coffee|teh|tea|air|mineral)/i.test(String(v||""));
+    for(const o of paidOrders){
+      const p=parts(o.created_at,tz);
+      const layanan=service(o.service_mode)+(String(o.service_mode||"").toLowerCase().includes("dine")&&o.table_number?(" • Meja "+o.table_number):"");
+      dataPemesan.push([p.d,p.t,o.customer_name||"",layanan]);
+      riwayatPembayaran.push([p.d,Number(o.total_amount||0)]);
+      for(const i of (Array.isArray(o.items)?o.items:[])){
+        const q=Math.max(0,Math.floor(Number(i.quantity??i.qty??1)||0));
+        const id=String(i.menuId??i.menu_id??i.id??"");
+        const name=String(i.name??i.menu_name??"Menu");
+        const m=menuById.get(id)||menuByName.get(name.trim().toLowerCase())||null;
+        const category=String(m?.category??i.category??"");
+        const price=Math.max(0,Number(i.price??i.unit_price??m?.price??0)||0);
+        const targetRows=drinkCategory(category)?dataMinuman:dataMakanan;
+        for(let n=0;n<q;n++)targetRows.push([p.d,name,price]);
+      }
+    }
     const metrics={
       orders:orders.length,paid_orders:paidOrders.length,
       total_paid:paidOrders.reduce((s,o)=>s+moneyIn(o),0),
       items:paidOrders.reduce((s,o)=>s+Number(o.item_count||0),0),
-      menu_rows:menu.length
+      menu_rows:menu.length,
+      data_pemesan_rows:dataPemesan.length,
+      makanan_rows:dataMakanan.length,
+      minuman_rows:dataMinuman.length,
+      pembayaran_rows:riwayatPembayaran.length
     };
 
     return json({
-      ok:true,version:3,writer_version_expected:Number(cfg.data.expected_writer_version||4),
+      ok:true,version:4,writer_version_expected:Number(cfg.data.expected_writer_version||5),
       tenant_id:tenantId,tenant_slug:cfg.data.tenant_slug,
       business_name:cfg.data.business_name,timezone:tz,year,
       spreadsheetId:target.spreadsheet_id,label:target.label,
-      retention:{customer_pii_days:piiDays,payment_proof_reference_days:PAYMENT_PROOF_REFERENCE_DAYS},
+      retention:{application_days:30,external_archive_reset:false,customer_pii_days:null,payment_proof_reference_days:null,archive_policy:"permanent"},
       tabs:{PEMESAN:pemesan,PESANAN:pesanan,"MENU & STOK":menu,KEUANGAN:keuangan},
+      reference_tabs:{
+        "Data Pemesan":dataPemesan,
+        "Data Pesanan Makanan":dataMakanan,
+        "Data Pesanan Minuman":dataMinuman,
+        "Riwayat Pembayaran":riwayatPembayaran
+      },
       metrics
     },200,tenantId);
   }catch(e){

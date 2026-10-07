@@ -1,4 +1,6 @@
 const CACHE_MS = 30000;
+const STALE_MS = 300000;
+const UPSTREAM_TIMEOUT_MS = 5000;
 const RUNTIME_PATH = '/functions/v1/rohmat-public-element-runtime-v64';
 const memo = new Map();
 
@@ -98,7 +100,7 @@ async function getRuntime(upstream) {
   const cached = memo.get(upstream);
   if (cached && now - cached.at < CACHE_MS) return cached.body;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 2500);
+  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
   try {
     const response = await fetch(upstream, { cache: 'no-store', signal: controller.signal });
     if (!response.ok) throw new Error(`upstream_${response.status}`);
@@ -115,6 +117,12 @@ async function getRuntime(upstream) {
     memo.set(upstream, { body: optimized.body, at: now });
     if (memo.size > 8) memo.delete(memo.keys().next().value);
     return optimized.body;
+  } catch (error) {
+    if (cached && now - cached.at < STALE_MS) {
+      console.warn('[runtime-lifecycle-stale]', JSON.stringify({age_ms:now-cached.at,error:String(error?.message || error).slice(0,120)}));
+      return cached.body;
+    }
+    throw error;
   } finally {
     clearTimeout(timer);
   }

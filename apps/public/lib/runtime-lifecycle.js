@@ -88,6 +88,12 @@ function optimizeLifecycle(raw) {
     "window.addEventListener('pageshow',e=>{if(e.persisted)refresh(false);resumePoll()});window.addEventListener('focus',()=>{refresh(false);resumePoll()});document.addEventListener('visibilitychange',()=>{if(document.hidden)stopPoll();else{refresh(false);resumePoll()}});window.addEventListener('pagehide',stopPoll);armPoll();",
     'design-poll-pause-resume', flags
   );
+  out = replaceRequired(
+    out,
+    "connect-src 'self' https:;",
+    "connect-src 'self' https: wss:;",
+    'public-csp-wss', flags
+  );
 
   if (out.includes("setTimeout(async()=>{if(!document.hidden)await refresh(false);armPoll()")) throw new Error('hidden_poll_loop_remains');
   if (!out.includes('clearDialogObserver') || !out.includes('stopPoll') || !out.includes('resumePoll')) throw new Error('lifecycle_validation_failed');

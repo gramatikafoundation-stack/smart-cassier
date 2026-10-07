@@ -106,15 +106,35 @@ function realtimeSend(topic,event,payload,joinRef=null){
 function rtVersion(v){const n=Date.parse(String(v||''));return Number.isFinite(n)?n:0}
 function rtUpsert(list,row){const a=Array.isArray(list)?list.slice():[],i=a.findIndex(x=>x.id===row.id);if(i>=0)a[i]=row;else a.unshift(row);return a}
 async function applyRealtimeDelta(change={}){
-  const kind=String(change.kind||''),id=String(change.entity_id||''),tenantId=String(change.tenant_id||'');
+  const kind=String(change.kind||''),id=String(change.entity_id||''),tenantId=String(change.tenant_id||''),key=(kind&&id)?kind+':'+id:'__full__';
   if(tenantId&&tenantId!==String(tenant().tenantId||''))return;
-  // Realtime broadcasts are invalidation signals. The canonical snapshot is the
-  // authoritative read model for KDS, avoiding unsupported delta RPCs.
-  await refresh(false,true);
-  if(kind==='orders'&&id){
-    const row=(snap.orders||[]).find(x=>String(x.id)===id)||null;
+  if(!kind||!id){await refresh(false,true);return}
+  const incomingVersion=rtVersion(change.version),knownVersion=rtVersions.get(key)||0;
+  if(incomingVersion&&knownVersion&&incomingVersion<=knownVersion)return;
+  if(kind==='orders'){
+    const d=await rpc('kds_delta',{p_order_id:id,p_menu_id:null}),row=d?.order||null,resolvedVersion=rtVersion(d?.version||change.version)||Date.now();
+    if(resolvedVersion<knownVersion)return;
+    rtVersions.set(key,resolvedVersion);
+    const list=Array.isArray(snap.orders)?snap.orders.slice():[];
+    snap.orders=row?rtUpsert(list,row):list.filter(x=>String(x.id)!==id);
+    renderOrders();
+    markFresh('realtime-order-delta');
+    if(row)rpc('kds_ack_visible',{p_order_id:id}).catch(()=>{});
     document.dispatchEvent(new CustomEvent('rohmat:kds-order-delta',{detail:{order:row,orderId:id,operation:change.operation||'update'}}));
+    return;
   }
+  if(kind==='menu'){
+    const d=await rpc('kds_delta',{p_order_id:null,p_menu_id:id}),row=d?.menu||null,resolvedVersion=rtVersion(d?.version||change.version)||Date.now();
+    if(resolvedVersion<knownVersion)return;
+    rtVersions.set(key,resolvedVersion);
+    const list=Array.isArray(snap.menu)?snap.menu.slice():[];
+    snap.menu=row?rtUpsert(list,row):list.filter(x=>String(x.id)!==id);
+    renderStock();
+    if(current==='cashier')cashLoad(false,true).catch(()=>{});
+    markFresh('realtime-menu-delta');
+    return;
+  }
+  await refresh(false,true);
 }
 function queueRealtimeSync(change={}){
   const kind=String(change.kind||''),id=String(change.entity_id||''),key=(kind&&id)?kind+':'+id:'__full__';

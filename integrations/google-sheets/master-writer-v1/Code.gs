@@ -14,7 +14,7 @@ const SDB_WRITER = (function() {
     BUSINESS_NAME: String(props.getProperty('SDB_BUSINESS_NAME') || 'Business').trim() || 'Business',
     DATA_ENDPOINT: dataEndpoint,
     TARGETS: Object.freeze(targets),
-    PII_RETENTION_DAYS: Math.max(1, Number(props.getProperty('SDB_PII_RETENTION_DAYS') || 365)),
+    PII_RETENTION_DAYS: null, // External Google Sheets are permanent archives: no automatic PII/data reset.
     HEADERS: Object.freeze({
       'PEMESAN': ['ID Pesanan','Kode Pesanan','Tanggal Pesan','Waktu Pesan','Nama Pemesan','No. WhatsApp','Sumber Pesanan','Layanan','Nomor Meja','Pesanan','Jumlah Item','Total Belanja'],
       'PESANAN': ['ID Pesanan','Kode Pesanan','Tanggal','Waktu','Sumber','Layanan','Nomor Meja','Daftar Menu','Jumlah Item','Total','Metode Bayar','Status Bayar','Status Pesanan','Waktu Pesanan Baru','Waktu Diproses','Waktu Selesai','Catatan Konsumen','Petugas Kasir'],
@@ -216,7 +216,6 @@ function syncYear_(year, snapshot) {
   updateDashboardStatus_(ss);
   SpreadsheetApp.flush();
   validateYear_(ss, snapshot, counts);
-  enforcePiiRetentionForSpreadsheet_(ss, new Date(Date.now() - SDB_WRITER.PII_RETENTION_DAYS * 86400000));
   return counts;
 }
 function writeTab_(ss, name, sourceRows) {
@@ -467,6 +466,5 @@ function installPiiRetentionTrigger() {
   ScriptApp.getProjectTriggers()
     .filter(function(t){ return t.getHandlerFunction() === 'enforcePiiRetention'; })
     .forEach(function(t){ ScriptApp.deleteTrigger(t); });
-  ScriptApp.newTrigger('enforcePiiRetention').timeBased().everyDays(1).atHour(3).create();
-  return {ok:true,handler:'enforcePiiRetention',cadence:'daily',retention_days:SDB_WRITER.PII_RETENTION_DAYS};
+  return {ok:true,disabled:true,handler:'enforcePiiRetention',cadence:'none',reason:'external_google_sheet_archive_is_permanent'};
 }

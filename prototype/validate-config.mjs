@@ -7,13 +7,9 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const file=path.resolve(root,process.argv[2]||'prototype/tenant.example.json');
 const c=JSON.parse(fs.readFileSync(file,'utf8'));
 const REF=Object.freeze({
-  tenant_id:'ad126431-b148-471d-ba62-a7b3a5d0a8c1',
-  slug:'rohmat-nasi-uduk',
-  urls:new Set([
-    'https://rohmat-pesan-bayar-publik.vercel.app',
-    'https://studio-pengelola-rohmat.vercel.app',
-    'https://rohmat-kds-printer.vercel.app'
-  ]),
+  tenant_id:'d8bb901c-7399-485b-8743-b319fde148ac',
+  slug:'warung-nasi',
+  urls:new Set(['https://smart-order-sdb.vercel.app']),
   spreadsheet_id:'1rj3kXuBGjQC_bkJXJ_n6Jao7hkco7rpFF7avozcj-Ok'
 });
 const TABS=['DASHBOARD','PEMESAN','PESANAN','MENU & STOK','KEUANGAN'];
@@ -29,7 +25,7 @@ if(c.business_name!==c.merchant_name&&c.merchant_name_acknowledged!==true)fail('
 if(!/^[A-Z]{3}$/.test(c.currency||''))fail('currency');
 try{new Intl.DateTimeFormat('en-US',{timeZone:c.timezone}).format(new Date())}catch{fail('timezone')}
 const origins=['public_url','admin_url','kds_url'].map(k=>origin(c[k],k));
-if(new Set(origins).size!==3)fail('public/admin/kds origins must be distinct');
+// Unified SMART ORDER uses one origin with route-separated Public/Admin/KDS surfaces.
 if(!Number.isInteger(c.table_count)||c.table_count<1||c.table_count>200)fail('table_count');
 if(c.require_table_qr_signature!==true)fail('signed table QR is required');
 if(!/^prototype\/.+\.json$/.test(c.menu_seed||''))fail('menu_seed must live under prototype/');
@@ -46,8 +42,8 @@ if(c.tenant_slug!==REF.slug){
 }
 console.log(JSON.stringify({
   ok:true,
-  contract:'smart-digital-for-business-master-prototype-v1',
-  platform_supabase_project_ref:'yybhpmjuywjxqurrrrxl',
+  contract:'smart-order-sdb-master-prototype-v2',
+  platform_supabase_project_ref:'xrepmvbccalzhlcznrff',
   tenant_id:c.tenant_id,
   tenant_slug:c.tenant_slug,
   source_edits_required:false,

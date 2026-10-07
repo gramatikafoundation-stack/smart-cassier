@@ -21,6 +21,7 @@ let snap={orders:[],menu:[]}, current='orders', syncBusy=false, syncPromise=null
 const FALLBACK_POLL_MS=8000,DEFAULT_SAFETY_POLL_MS=45000,DEFAULT_STALE_AFTER_MS=75000;
 let safetyPollMs=DEFAULT_SAFETY_POLL_MS,staleAfterMs=DEFAULT_STALE_AFTER_MS,lastFreshAt=0;
 let realtimeConnected=false,realtimeState='booting',rtSocket=null,rtHeartbeatTimer=null,rtReconnectTimer=null,rtJoinTimer=null,rtStaleTimer=null,rtStarting=null,rtTopic='',rtEvent='kds_change',rtRef=0,rtAttempt=0,rtIntentionalClose=false,rtSyncTimer=null;
+const rtVersions=new Map(),rtDeltaTimers=new Map();
 let cashSnap=null,cashBusy=false,cashPromise=null,cashSig='',cashCat='Semua',cashMode='dine-in',cashPay='cash',cart={};
 const cashDraft={name:'',table:'',note:'',cash:'',qrisOk:false};
 
@@ -102,10 +103,45 @@ function realtimeSend(topic,event,payload,joinRef=null){
   rtSocket.send(JSON.stringify({topic,event,payload,ref:String(rtRef),join_ref:joinRef}));
   return String(rtRef);
 }
-function queueRealtimeSync(){
-  if(rtSyncTimer)clearTimeout(rtSyncTimer);
+function rtVersion(v){const n=Date.parse(String(v||''));return Number.isFinite(n)?n:0}
+function rtUpsert(list,row){const a=Array.isArray(list)?list.slice():[],i=a.findIndex(x=>x.id===row.id);if(i>=0)a[i]=row;else a.unshift(row);return a}
+async function applyRealtimeDelta(change={}){
+  const kind=String(change.kind||''),id=String(change.entity_id||''),tenantId=String(change.tenant_id||''),key=(kind&&id)?kind+':'+id:'__full__';
+  if(tenantId&&tenantId!==String(tenant().tenantId||''))return;
+  if(!kind||!id){await refresh(false,true);return}
+  const incomingVersion=rtVersion(change.version),knownVersion=rtVersions.get(key)||0;
+  if(incomingVersion&&knownVersion&&incomingVersion<=knownVersion)return;
+  if(kind==='orders'){
+    const d=await rpc('kds_delta',{p_order_id:id,p_menu_id:null}),row=d?.order||null,resolvedVersion=rtVersion(d?.version||change.version)||Date.now();
+    if(resolvedVersion<knownVersion)return;
+    rtVersions.set(key,resolvedVersion);
+    const list=Array.isArray(snap.orders)?snap.orders.slice():[];
+    snap.orders=row?rtUpsert(list,row):list.filter(x=>String(x.id)!==id);
+    renderOrders();
+    markFresh('realtime-order-delta');
+    if(row)rpc('kds_ack_visible',{p_order_id:id}).catch(()=>{});
+    document.dispatchEvent(new CustomEvent('rohmat:kds-order-delta',{detail:{order:row,orderId:id,operation:change.operation||'update'}}));
+    return;
+  }
+  if(kind==='menu'){
+    const d=await rpc('kds_delta',{p_order_id:null,p_menu_id:id}),row=d?.menu||null,resolvedVersion=rtVersion(d?.version||change.version)||Date.now();
+    if(resolvedVersion<knownVersion)return;
+    rtVersions.set(key,resolvedVersion);
+    const list=Array.isArray(snap.menu)?snap.menu.slice():[];
+    snap.menu=row?rtUpsert(list,row):list.filter(x=>String(x.id)!==id);
+    renderStock();
+    if(current==='cashier')cashLoad(false,true).catch(()=>{});
+    markFresh('realtime-menu-delta');
+    return;
+  }
+  await refresh(false,true);
+}
+function queueRealtimeSync(change={}){
+  const kind=String(change.kind||''),id=String(change.entity_id||''),key=(kind&&id)?kind+':'+id:'__full__';
+  const old=rtDeltaTimers.get(key);if(old)clearTimeout(old);
   setSyncState('syncing','Menyinkronkan');
-  rtSyncTimer=setTimeout(()=>{rtSyncTimer=null;syncCurrent(false).catch(()=>setSyncState('stale','Data mungkin terlambat'))},120);
+  const t=setTimeout(()=>{rtDeltaTimers.delete(key);applyRealtimeDelta(change).catch(()=>refresh(false,true).catch(()=>setSyncState('stale','Data mungkin terlambat')))},80);
+  rtDeltaTimers.set(key,t);
 }
 function stopRealtime({reconnect=false,state='paused'}={}){
   rtIntentionalClose=!reconnect;
@@ -163,7 +199,7 @@ async function startRealtimeHybrid(){
             resolve();
             return;
           }
-          if(m.event==='broadcast'&&m.payload?.event===rtEvent)queueRealtimeSync();
+          if(m.event==='broadcast'&&m.payload?.event===rtEvent)queueRealtimeSync(m.payload?.payload||{});
         };
         ws.onerror=()=>{if(!settled)fail('realtime_socket_error')};
         ws.onclose=()=>{const intentional=rtIntentionalClose;realtimeConnected=false;if(!intentional&&!document.hidden&&navigator.onLine)scheduleRealtimeReconnect()};

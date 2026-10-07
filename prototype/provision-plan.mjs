@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const file=path.resolve(root,process.argv[2]||'prototype/tenant.example.json');
 const c=JSON.parse(fs.readFileSync(file,'utf8'));
-const sharedRef='yybhpmjuywjxqurrrrxl';
+const sharedRef='xrepmvbccalzhlcznrff';
 const supabaseUrl='https://'+sharedRef+'.supabase.co';
 
 const plan={
@@ -16,9 +16,9 @@ const plan={
   source_clone_required:false,
   database_project_clone_required:false,
   source:{
-    repository:'gramatikafoundation-stack/Rohmat-Master',
-    candidate_branch:'release/master-clone-v1-freeze-20260919',
-    final_release_tag:'rohmat-master-prototype-v1.0.0'
+    repository:'gramatikafoundation-stack/smart-cassier',
+    candidate_branch:'release/smart-order-master-v1.1.0-20261007',
+    final_release_tag:'smart-order-sdb-master-v1.1.0'
   },
   tenant:{
     id:c.tenant_id,slug:c.tenant_slug,business_name:c.business_name,

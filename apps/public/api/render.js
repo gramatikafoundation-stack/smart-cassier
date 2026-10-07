@@ -28,6 +28,24 @@ const MENU_IMG_LAZY = `<img src="'+esc(pic(m))+'" alt="'+esc(m.name)+'" loading=
 const DIALOG_TIMER_OLD = `let intentionalOpen=false;\nfunction hardenMenu(){\n  const dlg=document.getElementById('dlg');\n  if(dlg&&!dlg.classList.contains('user-open')&&dlg.hasAttribute('open')){try{dlg.close()}catch{dlg.removeAttribute('open')}}\n  const confirm=document.getElementById('confirm');\n  if(confirm&&!confirm.dataset.safeBound){confirm.dataset.safeBound='1';confirm.addEventListener('click',()=>{intentionalOpen=true;setTimeout(()=>{intentionalOpen=false},1200)},{capture:true})}\n}`;
 const DIALOG_TIMER_NEW = `function hardenMenu(){\n  const dlg=document.getElementById('dlg');\n  if(dlg&&!dlg.classList.contains('user-open')&&dlg.hasAttribute('open')){try{dlg.close()}catch{dlg.removeAttribute('open')}}\n}`;
 const DEAD_PROOF_GATE = 'let pending=false,criticalBad=false,amountDiff=0;';
+export const MOBILE_CHECKOUT_SCROLL_PATCH = String.raw`<style id="smart-order-mobile-checkout-scroll-v2">
+html.soCheckoutScrollFix,body.soCheckoutScrollFix{
+ height:auto!important;min-height:100%!important;max-height:none!important;
+ overflow-x:hidden!important;overflow-y:auto!important;
+ position:static!important;inset:auto!important;
+ touch-action:pan-y!important;overscroll-behavior-y:auto!important;
+ -webkit-overflow-scrolling:touch!important
+}
+html.soCheckoutScrollFix #app,body.soCheckoutScrollFix #app{
+ height:auto!important;min-height:100dvh!important;max-height:none!important;
+ overflow:visible!important;touch-action:pan-y!important
+}
+body.soCheckoutScrollFix .checkout{
+ height:auto!important;min-height:100dvh!important;max-height:none!important;
+ overflow:visible!important;touch-action:pan-y!important
+}
+</style><script id="smart-order-mobile-checkout-scroll-runtime-v2">(()=>{'use strict';if(window.__smartOrderMobileCheckoutScrollV2)return;window.__smartOrderMobileCheckoutScrollV2=1;let queued=false;function patch(){queued=false;const on=!!document.querySelector('.checkout');document.documentElement.classList.toggle('soCheckoutScrollFix',on);document.body?.classList.toggle('soCheckoutScrollFix',on)}function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>setTimeout(patch,0))}const app=document.getElementById('app');if(app)new MutationObserver(schedule).observe(app,{childList:true,subtree:true});document.addEventListener('rohmat:dom-updated',schedule);document.addEventListener('click',e=>{if(e.target.closest('#pay,#backm,#back,#next,#send')){schedule();setTimeout(schedule,80);setTimeout(schedule,300)}},true);window.addEventListener('pageshow',schedule);schedule()})();</script><!-- smart-order-mobile-checkout-scroll-v2 -->`;
+
 export const FUTURE_PUBLIC_UI_PATCH = String.raw`<style id="smart-order-public-foodcode-v1">
 :root{
  --so-bg:#f5f7f6;--so-surface:#fff;--so-soft:#eef3f1;--so-dark:#091317;--so-dark2:#10201d;

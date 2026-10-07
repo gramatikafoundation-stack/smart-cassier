@@ -1,7 +1,7 @@
 import baseHandler from '../lib/render-lifecycle.js';
 import runtimeHandler from '../lib/runtime-lifecycle.js';
 import { resolvePublicTenantConfig, failTenantConfig, escapeHtml } from '../lib/tenant-config.js';
-import { FUTURE_PUBLIC_UI_PATCH } from './render.js';
+import { FUTURE_PUBLIC_UI_PATCH, MOBILE_CHECKOUT_SCROLL_PATCH } from './render.js';
 
 const MARKER = 'rohmat-seo-brand-v2';
 
@@ -53,6 +53,16 @@ function injectSeoBrand(input, cfg) {
     const uiPatch = FUTURE_PUBLIC_UI_PATCH.replace('<style ', '<style' + (nonce ? ' nonce="' + nonce + '"' : '') + ' ');
     const bodyAt = html.lastIndexOf('</body>');
     html = bodyAt >= 0 ? html.slice(0, bodyAt) + uiPatch + html.slice(bodyAt) : html + uiPatch;
+  }
+  if (!html.includes('smart-order-mobile-checkout-scroll-v2')) {
+    let scrollPatch = MOBILE_CHECKOUT_SCROLL_PATCH;
+    if (nonce) {
+      scrollPatch = scrollPatch
+        .replace('<style ', '<style nonce="' + nonce + '" ')
+        .replace('<script ', '<script nonce="' + nonce + '" ');
+    }
+    const bodyAt = html.lastIndexOf('</body>');
+    html = bodyAt >= 0 ? html.slice(0, bodyAt) + scrollPatch + html.slice(bodyAt) : html + scrollPatch;
   }
   if (html.includes(MARKER)) return html;
   const graph = {

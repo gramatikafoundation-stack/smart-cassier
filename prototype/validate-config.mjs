@@ -7,13 +7,9 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const file=path.resolve(root,process.argv[2]||'prototype/tenant.example.json');
 const c=JSON.parse(fs.readFileSync(file,'utf8'));
 const REF=Object.freeze({
-  tenant_id:'ad126431-b148-471d-ba62-a7b3a5d0a8c1',
-  slug:'rohmat-nasi-uduk',
-  urls:new Set([
-    'https://rohmat-pesan-bayar-publik.vercel.app',
-    'https://studio-pengelola-rohmat.vercel.app',
-    'https://rohmat-kds-printer.vercel.app'
-  ]),
+  tenant_id:'d8bb901c-7399-485b-8743-b319fde148ac',
+  slug:'warung-nasi',
+  urls:new Set(['https://smart-order-sdb.vercel.app']),
   spreadsheet_id:'1rj3kXuBGjQC_bkJXJ_n6Jao7hkco7rpFF7avozcj-Ok'
 });
 const TABS=['DASHBOARD','PEMESAN','PESANAN','MENU & STOK','KEUANGAN'];

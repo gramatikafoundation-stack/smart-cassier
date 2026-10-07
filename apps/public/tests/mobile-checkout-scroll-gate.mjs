@@ -15,4 +15,6 @@ for(const marker of [
 ]) assert.ok(src.includes(marker),'missing mobile checkout scroll contract: '+marker);
 assert.ok(seo.includes('MOBILE_CHECKOUT_SCROLL_PATCH'),'production public renderer must import checkout scroll patch');
 assert.ok(seo.includes("!html.includes('smart-order-mobile-checkout-scroll-v2')"),'production public renderer must inject checkout scroll patch independently of legacy UI marker');
+assert.ok(seo.includes('Buffer.isBuffer(body)'),'production public renderer must process HTML returned as Buffer/LKG');
+assert.ok(seo.includes("body.toString('utf8')"),'Buffer HTML must be decoded before injection');
 console.log('PUBLIC_MOBILE_CHECKOUT_SCROLL_GATE_PASS=1');

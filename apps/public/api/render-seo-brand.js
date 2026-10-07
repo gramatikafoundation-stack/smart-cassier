@@ -176,8 +176,14 @@ export default async function handler(req, res) {
 
   const end = res.end.bind(res);
   res.end = (body, ...args) => {
-    if (res.statusCode === 200 && typeof body === 'string' && body.includes('</head>') && body.includes('</body>')) {
-      body = injectSeoBrand(body, cfg);
+    const wasBuffer = Buffer.isBuffer(body);
+    let htmlBody = typeof body === 'string' ? body : (wasBuffer ? body.toString('utf8') : null);
+    if (res.statusCode === 200 && htmlBody && htmlBody.includes('</head>') && htmlBody.includes('</body>')) {
+      const next = injectSeoBrand(htmlBody, cfg);
+      if (next !== htmlBody) {
+        try { res.removeHeader('Content-Length'); } catch {}
+        body = wasBuffer ? Buffer.from(next, 'utf8') : next;
+      }
       res.setHeader('X-Rohmat-SEO-Brand', 'metadata-v2');
       res.setHeader('X-Rohmat-SEO-Brand-Scope', 'og-twitter-hreflang-jsonld-restaurant-icons-manifest');
     }

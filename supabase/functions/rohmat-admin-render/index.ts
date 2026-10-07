@@ -162,7 +162,7 @@ function payloadFor(req:Request,ctx:TenantCtx){
     packed:false
   });
 }
-const H={'content-type':'application/json; charset=utf-8','cache-control':'no-store, max-age=0, must-revalidate','access-control-allow-origin':'*','access-control-allow-headers':'x-sdb-tenant-id','x-content-type-options':'nosniff','referrer-policy':'no-referrer','vary':'X-SDB-Tenant-ID','x-rohmat-admin-renderer':'master-prototype-v1'};
+const H={'content-type':'application/json; charset=utf-8','cache-control':'no-store, max-age=0, must-revalidate','access-control-allow-origin':'*','access-control-allow-headers':'x-sdb-tenant-id, cache-control, pragma','x-content-type-options':'nosniff','referrer-policy':'no-referrer','vary':'X-SDB-Tenant-ID','x-rohmat-admin-renderer':'master-prototype-v1'};
 Deno.serve(async(req:Request)=>{
   if(req.method==='OPTIONS')return new Response(null,{status:204,headers:{...H,'access-control-allow-methods':'GET,OPTIONS'}});
   if(req.method!=='GET'&&req.method!=='HEAD')return new Response(JSON.stringify({ok:false,error:'method_not_allowed'}),{status:405,headers:H});

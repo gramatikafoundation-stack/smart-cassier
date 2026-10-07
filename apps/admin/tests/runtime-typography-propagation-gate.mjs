@@ -16,4 +16,6 @@ for(const key of ['--ds-font','--ds-base-size','--ds-login-brand-font','--ds-log
   assert.ok(src.includes(key),'missing typography token '+key);
 }
 assert.ok(src.includes("'important'"),'Admin typography tokens must be able to win stale CSS cascade');
+assert.ok(src.includes("'access-control-allow-headers':'x-sdb-tenant-id, cache-control, pragma'"),'Admin bootstrap CORS must permit browser no-store request headers');
+assert.ok(src.includes("'access-control-allow-methods':'GET,OPTIONS'"),'Admin bootstrap preflight must permit GET');
 console.log('ADMIN_RUNTIME_TYPOGRAPHY_PROPAGATION_GATE_PASS=1');

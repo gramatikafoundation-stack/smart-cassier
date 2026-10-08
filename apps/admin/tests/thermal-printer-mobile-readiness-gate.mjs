@@ -4,10 +4,10 @@ import assert from 'node:assert/strict';
 const printer=fs.readFileSync(new URL('../printer-runtime.js',import.meta.url),'utf8');
 const render=fs.readFileSync(new URL('../api/render.js',import.meta.url),'utf8');
 const runtime=fs.readFileSync(new URL('../api/runtime.js',import.meta.url),'utf8');
-const root=fs.readFileSync(new URL('../../../vercel.json',import.meta.url),'utf8');
-const adminVercel=fs.readFileSync(new URL('../vercel.json',import.meta.url),'utf8');
-const publicVercel=fs.readFileSync(new URL('../../public/vercel.json',import.meta.url),'utf8');
-const kdsVercel=fs.readFileSync(new URL('../../kds/vercel.json',import.meta.url),'utf8');
+const root=JSON.parse(fs.readFileSync(new URL('../../../vercel.json',import.meta.url),'utf8'));
+const adminVercel=JSON.parse(fs.readFileSync(new URL('../vercel.json',import.meta.url),'utf8'));
+const publicVercel=JSON.parse(fs.readFileSync(new URL('../../public/vercel.json',import.meta.url),'utf8'));
+const kdsVercel=JSON.parse(fs.readFileSync(new URL('../../kds/vercel.json',import.meta.url),'utf8'));
 
 for(const token of [
   'Printer Thermal',

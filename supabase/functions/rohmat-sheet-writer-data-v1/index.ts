@@ -123,7 +123,7 @@ Deno.serve(async(req:Request)=>{
   }
 
   const tz=String(cfg.data.timezone||"Asia/Jakarta");
-  const piiDays=Math.max(1,Math.min(3650,Number(cfg.data.pii_retention_days||365)));
+  const piiDays=cfg.data.pii_retention_days==null?null:Math.max(1,Math.min(3650,Number(cfg.data.pii_retention_days)));
   const start=`${year}-01-01T00:00:00+07:00`;
   const end=`${year+1}-01-01T00:00:00+07:00`;
 
@@ -162,8 +162,8 @@ Deno.serve(async(req:Request)=>{
       const cash=String(o.payment_method||"")==="cash";
       const rec=cash?Number(o.cash_received??o.paid_amount??0):Number(o.paid_amount??0);
       const chg=cash?Number(o.change_amount||0):0;
-      const keepCustomerPii=withinDays(o.created_at,piiDays);
-      const keepProofReference=withinDays(o.payment_submitted_at||o.verified_at||o.created_at,PAYMENT_PROOF_REFERENCE_DAYS);
+      const keepCustomerPii=piiDays==null?true:withinDays(o.created_at,piiDays);
+      const keepProofReference=true;
 
       pemesan.push([
         o.id,o.public_order_code,p.d,p.t,

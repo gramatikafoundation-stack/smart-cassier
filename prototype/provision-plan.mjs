@@ -17,8 +17,8 @@ const plan={
   database_project_clone_required:false,
   source:{
     repository:'gramatikafoundation-stack/smart-cassier',
-    candidate_branch:'optimize-smart-order-ui-perf-20261004',
-    final_release_tag:'smart-order-sdb-master-v2.0.0'
+    candidate_branch:'master-v6-runtime-freeze-20261008',
+    final_release_tag:'smart-order-sdb-master-v6.0.0'
   },
   tenant:{
     id:c.tenant_id,slug:c.tenant_slug,business_name:c.business_name,

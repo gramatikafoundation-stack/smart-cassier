@@ -72,7 +72,7 @@ for (const requiredExclude of [
   '20260919053901_secure_rdc_recovery_rest_policies.sql'
 ]) if (!migrationPolicy.exclude_exact.includes(requiredExclude)) fail(`migration policy must exclude ${requiredExclude}`);
 const expectedFunctions = edgeInventory.functions.filter(x => x.deploy_on_clone === true).map(x => x.slug).sort();
-if (!expectedFunctions.length) fail('canonical Edge Function inventory is empty');
+if (edgeInventory.policy?.deployment_scope === 'platform_once' && edgeInventory.functions.some(x => x.tenant_provisioning !== 'no_redeploy')) fail('platform-once Edge Function inventory contains tenant redeploy entries');
 
 const bootstrapSql = fs.readFileSync(path.join(repoRoot,'clone/pre-bootstrap.sql'),'utf8');
 if (!/create\s+extension\s+if\s+not\s+exists\s+pg_net\s+with\s+schema\s+extensions/i.test(bootstrapSql)) fail('pg_net pre-bootstrap must install into extensions');
@@ -81,9 +81,10 @@ if (!bootstrapSql.includes("expected extensions")) fail('pg_net pre-bootstrap sc
 const writerSource = fs.readFileSync(path.join(repoRoot,'integrations/google-sheets/master-writer-v1/Code.gs'),'utf8');
 if (!writerSource.includes("function enforcePiiRetention()")
     || !writerSource.includes("function installPiiRetentionTrigger()")
-    || !writerSource.includes("SDB_PII_RETENTION_DAYS")
+    || !writerSource.includes("PII_RETENTION_DAYS: null")
+    || !writerSource.includes("external_google_sheet_archive_is_permanent")
     || !writerSource.includes("enforcePiiRetentionForSpreadsheet_")) {
-  fail('writer retention source contract missing');
+  fail('writer permanent-archive retention guard contract missing');
 }
 for (const forbidden of ['yybhpmjuywjxqurrrrxl','rohmat-pesan-bayar-publik.vercel.app','Rohmat Nasi Uduk']) {
   if (writerSource.includes(forbidden)) fail('writer tenant leak: '+forbidden);
@@ -107,13 +108,14 @@ const results = fixtures.map(config => {
   if (plan.supabase?.security?.leaked_password_protection_required_for_production !== true) fail(`${config}: leaked-password production gate missing`);
   if (plan.sheets?.writer?.source !== 'integrations/google-sheets/master-writer-v1/Code.gs'
       || plan.sheets?.writer?.version !== 4
-      || plan.sheets?.writer?.pii_retention_days !== 365
-      || plan.sheets?.writer?.required_post_deploy_action !== 'installPiiRetentionTrigger') {
-    fail(`${config}: writer v4 contract missing`);
+      || plan.sheets?.writer?.external_archive_permanent !== true
+      || plan.sheets?.writer?.automatic_retention_enabled !== false
+      || plan.sheets?.writer?.required_post_deploy_action !== null) {
+    fail(`${config}: writer v4 permanent-archive contract missing`);
   }
   if (plan.sheets?.writer?.script_properties?.SDB_BUSINESS_NAME !== configJson.business_name
       || plan.sheets?.writer?.script_properties?.SDB_TZ !== configJson.timezone
-      || plan.sheets?.writer?.script_properties?.SDB_PII_RETENTION_DAYS !== '365') {
+      || Object.prototype.hasOwnProperty.call(plan.sheets?.writer?.script_properties||{},'SDB_PII_RETENTION_DAYS')) {
     fail(`${config}: writer tenant Script Properties drift`);
   }
   if (plan.supabase?.migrations?.finalization_generator !== 'clone/generate-finalization-sql.mjs') fail(`${config}: tenant finalization generator missing`);

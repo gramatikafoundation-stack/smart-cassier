@@ -145,16 +145,11 @@ const plan = {
         SDB_DATA_ENDPOINT: `${supabaseUrl}/functions/v1/rohmat-sheet-writer-data-v1`,
         SDB_TARGETS_JSON: '<generated-year-to-spreadsheet-id-json>',
         SDB_TZ: c.timezone,
-        SDB_BUSINESS_NAME: c.business_name,
-        SDB_PII_RETENTION_DAYS: '365'
+        SDB_BUSINESS_NAME: c.business_name
       },
-      required_post_deploy_action: 'installPiiRetentionTrigger',
-      pii_retention_days: 365,
-      pii_retention_scope: {
-        PEMESAN: ['Nama Pemesan','No. WhatsApp'],
-        PESANAN: ['Catatan Konsumen','Petugas Kasir'],
-        KEUANGAN: ['Petugas','Bukti Pembayaran']
-      }
+      required_post_deploy_action: null,
+      external_archive_permanent: true,
+      automatic_retention_enabled: false
     }
   },
   bootstrap: {
@@ -179,7 +174,7 @@ const plan = {
     'KDS smoke test PASS',
     'payment flow PASS',
     '5-sheet consistency PASS',
-    'Google Sheets writer v4 deployed with tenant Script Properties and daily 365-day PII retention trigger',
+    'Google Sheets writer v4 deployed with tenant Script Properties and permanent external archive (no automatic destructive retention)',
     'table QR validation PASS',
     'monitoring health PASS',
     'pg_net extension installed outside public schema',

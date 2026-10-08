@@ -15,8 +15,13 @@ for(const token of [
   'transferOut',
   'getWriter',
   'Hubungkan Printer',
+  'PENGATURAN',
+  'Printer Thermal',
+  'USB Langsung — ESC/POS',
+  'USB/Serial — ESC/POS',
   'Printer Sistem / Driver Windows',
-  'Tidak ada cetak uji otomatis',
+  'data-settings-printer',
+  'Tidak ada pairing, test print, atau pencetakan otomatis',
   'sdb-smart-cashier-printer-v1',
   '@page{size:80mm auto;margin:0}'
 ]) assert.ok(printer.includes(token), 'printer runtime missing '+token);

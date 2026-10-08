@@ -10,10 +10,10 @@ const publicRender=fs.readFileSync(new URL('../../public/api/render.js',import.m
 
 for(const token of [
   'Printer Thermal',
-  'Bluetooth Classic / SPP',
   'Bluetooth Low Energy (BLE)',
   'USB OTG / WebUSB',
-  'Android System Print',
+  'Android System Print · Wi-Fi / Print Service',
+  'Web Serial (desktop)',
   'USB ESC/POS',
   'Serial / COM ESC/POS',
   'Printer Sistem / Driver Windows',

@@ -8,6 +8,8 @@ const BLE_SERVICES=[
   '0000ffe0-0000-1000-8000-00805f9b34fb',
   '0000ff00-0000-1000-8000-00805f9b34fb',
   '0000ae30-0000-1000-8000-00805f9b34fb',
+  '000018f0-0000-1000-8000-00805f9b34fb',
+  'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
   '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
   '49535343-fe7d-4ae5-8fa9-9fafd205e455'
 ];
@@ -117,16 +119,15 @@ function settingsHtml(){
   const card=(meta,title,desc,mode,available,button='Hubungkan')=>'<article class="sdbPrinterCard"><div class="meta">'+esc(meta)+'</div><h3>'+esc(title)+'</h3><p>'+esc(desc)+'</p><div class="sdbPrinterActions"><button type="button" class="btn '+(available?'primary':'soft')+'" data-sdb-printer-mode="'+esc(mode)+'" '+(available?'':'disabled')+'>'+esc(button)+'</button></div></article>';
   return '<div class="sectionHead"><div><div class="ey">PENGATURAN</div><h1>Printer Thermal</h1><p>Hubungkan printer pembayaran SMART CASHIER. Tidak ada pairing atau cetak uji otomatis; akses perangkat hanya berjalan setelah tindakan pengguna.</p></div><span class="sdbPrinterStatus" data-sdb-printer-status>'+esc(statusText())+'</span></div>'+
     '<section class="card"><div class="sdbPrinterHero"><div><h3 style="margin:0">Perangkat ini</h3><p style="margin:4px 0 0;color:var(--muted)">SMART CASHIER mendeteksi kemampuan browser secara lokal.</p></div><div class="sdbPrinterActions"><button type="button" class="btn soft" data-sdb-printer-disconnect '+(s.mode?'':'disabled')+'>Putuskan / Lupakan</button></div></div><div class="sdbPrinterSupport">'+
-    supportBadge('Android',c.android)+supportBadge('Web Bluetooth BLE',c.bluetooth)+supportBadge('Web Serial / Bluetooth SPP',c.serial)+supportBadge('WebUSB / OTG',c.usb)+supportBadge('System Print',true)+'</div></section>'+
+    supportBadge('Android',c.android)+supportBadge('Web Bluetooth BLE',c.bluetooth)+supportBadge('WebUSB / OTG',c.usb)+supportBadge('Android/System Print',true)+supportBadge('Web Serial (desktop)',c.serial&&!c.android)+'</div></section>'+
     '<div class="sdbPrinterGrid">'+
-    card('ANDROID · DIREK','Bluetooth Classic / SPP','Untuk printer thermal Bluetooth Classic yang memakai Serial Port Profile (SPP/RFCOMM). Cocok untuk banyak printer POS Android modern pada Chrome yang mendukung Web Serial over Bluetooth.','bt-classic',c.serial)+
-    card('ANDROID · DIREK','Bluetooth Low Energy (BLE)','Untuk printer BLE/GATT yang menyediakan karakteristik tulis ESC/POS. Runtime mencoba service BLE printer/UART yang umum dan akan menolak secara aman bila model tidak kompatibel.','ble',c.bluetooth)+
-    card('ANDROID · KABEL','USB OTG / WebUSB','Untuk printer USB yang dikenali browser melalui adaptor OTG dan mengekspos endpoint OUT yang dapat ditulis.','usb',c.usb)+
-    card('ANDROID · UNIVERSAL','Android System Print','Menggunakan dialog cetak Android dan PrintService/vendor plugin yang terpasang. Ini adalah fallback paling kompatibel bila printer sudah muncul sebagai printer Android.','system',true,'Gunakan Jalur Ini')+
-    card('DESKTOP · DIREK','USB ESC/POS','Koneksi langsung ke endpoint USB printer ESC/POS pada Chrome desktop yang mendukung WebUSB.','usb',c.usb)+
-    card('DESKTOP · DIREK','Serial / COM ESC/POS','Untuk printer serial/virtual COM. Browser meminta pengguna memilih port sebelum SMART CASHIER dapat mengirim data.','serial',c.serial)+
+    card('ANDROID / TABLET · DIREK','Bluetooth Low Energy (BLE)','Untuk printer BLE/GATT yang menyediakan karakteristik tulis ESC/POS. Runtime mencoba beberapa service BLE/UART thermal-printer yang umum; pairing hanya dimulai setelah pengguna memilih perangkat.','ble',c.bluetooth)+
+    card('ANDROID / TABLET · KABEL','USB OTG / WebUSB','Untuk printer USB yang dihubungkan lewat adaptor OTG dan dapat diakses Chrome Android melalui WebUSB. Android tetap menampilkan izin perangkat sebelum koneksi dibuka.','usb',c.usb)+
+    card('ANDROID / TABLET · UNIVERSAL','Android System Print · Wi-Fi / Print Service','Untuk printer yang sudah ditambahkan ke Android melalui Wi-Fi, network printing, atau PrintService/vendor plugin. SMART CASHIER menyiapkan struk 80 mm lalu menyerahkannya ke dialog cetak Android.','system',true,'Gunakan Jalur Ini')+
+    card('DESKTOP / CHROMEBOOK · DIREK','USB ESC/POS','Koneksi langsung ke endpoint USB printer ESC/POS pada browser Chromium yang mendukung WebUSB.','usb',c.usb)+
+    card('DESKTOP / CHROMEBOOK · DIREK','Serial / COM ESC/POS','Untuk printer serial/virtual COM. Jalur ini tidak diklaim sebagai jalur native Android; browser harus benar-benar mengekspos Web Serial.','serial',c.serial&&!c.android)+
     card('DESKTOP · UNIVERSAL','Printer Sistem / Driver Windows','Menghasilkan struk 80 mm dan menyerahkan job ke dialog printer Windows/browser.','system',true,'Gunakan Jalur Ini')+
-    '</div><div class="sdbPrinterWarn"><b>Catatan kompatibilitas.</b> Bluetooth/USB printer tidak memiliki satu protokol browser universal. SMART CASHIER memakai ESC/POS untuk direct-print dan otomatis kembali ke System Print bila koneksi direct gagal. Printer vendor yang memakai protokol privat tetap dapat digunakan melalui PrintService/driver vendor pada jalur System Print.</div>';
+    '</div><div class="sdbPrinterWarn"><b>Catatan kompatibilitas.</b> Pada Android, jalur browser-native yang diprioritaskan adalah BLE, USB OTG/WebUSB, dan Android System Print. Bluetooth Classic/SPP tidak dianggap jalur Android browser universal. SMART CASHIER memakai ESC/POS untuk direct-print yang kompatibel dan otomatis kembali ke System Print bila koneksi direct gagal. Printer dengan protokol vendor privat tetap menggunakan PrintService/driver/aplikasi vendor melalui jalur System Print.</div>';
 }
 function updateSettingsStatus(){
   const st=document.querySelector('[data-sdb-printer-status]');if(st)st.textContent=statusText();
@@ -213,7 +214,7 @@ async function writableBleCharacteristic(device){
     }
   }catch{}
   try{server.disconnect()}catch{}
-  throw Error('Karakteristik BLE tulis yang kompatibel tidak ditemukan. Gunakan Bluetooth Classic/SPP atau Android System Print.');
+  throw Error('Karakteristik BLE tulis yang kompatibel tidak ditemukan. Gunakan USB OTG atau Android System Print/PrintService.');
 }
 async function connectBle(){
   if(!navigator.bluetooth)throw Error('Web Bluetooth tidak tersedia di browser ini.');

@@ -207,7 +207,7 @@
     },
     {
       "source": "/admin/runtime/printer.js",
-      "destination": "/apps/admin/printer-runtime.js"
+      "destination": "/api/admin-runtime?kind=printer"
     },
     {
       "source": "/admin/runtime/database-ui.js",

@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 
 const DEFAULT_RENDERER = 'https://yybhpmjuywjxqurrrrxl.supabase.co/functions/v1/rohmat-admin-render?mode=optimized';
 const RENDERER = process.env.ADMIN_RENDERER_URL || DEFAULT_RENDERER;
@@ -7,6 +8,7 @@ const TENANT_ID = String(process.env.SDB_TENANT_ID || '').trim();
 const API_KEY = String(process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || '').trim();
 const CLIENT_KEY = String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
 const TTL_MS = 60_000;
+const PRINTER_RUNTIME = readFileSync(new URL('../printer-runtime.js', import.meta.url), 'utf8');
 const cache = new Map();
 const inflight = new Map();
 
@@ -107,6 +109,7 @@ async function coreBody() {
 }
 async function moduleBody(kind) {
   if (kind === 'core') return coreBody();
+  if (kind === 'printer') return PRINTER_RUNTIME;
   const map = {
     'visual-editor': 'rohmat-admin-visual-editor-v1?tenant=' + encodeURIComponent(TENANT_ID) + '&v=29',
     cashier: 'rohmat-admin-cashier-loader-v1?tenant=' + encodeURIComponent(TENANT_ID) + '&v=36',
@@ -150,6 +153,7 @@ function kindOf(req) {
   if (path.endsWith('/core.js')) return 'core';
   if (path.endsWith('/visual-editor.js')) return 'visual-editor';
   if (path.endsWith('/cashier.js')) return 'cashier';
+  if (path.endsWith('/printer.js')) return 'printer';
   if (path.endsWith('/database-ui.js')) return 'database-ui';
   return '';
 }
@@ -166,7 +170,7 @@ export default async function handler(req, res) {
     return res.end('/* admin runtime configuration unavailable */');
   }
   const kind = kindOf(req);
-  if (!['core', 'visual-editor', 'cashier', 'database-ui'].includes(kind)) {
+  if (!['core', 'visual-editor', 'cashier', 'printer', 'database-ui'].includes(kind)) {
     res.statusCode = 404;
     return res.end('not_found');
   }

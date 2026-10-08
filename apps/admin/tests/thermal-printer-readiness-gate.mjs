@@ -39,8 +39,10 @@ assert.ok(printer.includes("document.addEventListener('click',interceptReceiptPr
 assert.ok(render.includes('sdb-smart-cashier-thermal-printer-v1'), 'printer loader missing from admin shell');
 assert.ok(render.includes("usb=(self), serial=(self), bluetooth=(self), web-share=(self)"), 'admin device/share permissions policy missing');
 assert.ok(runtime.includes('window.__SDB_LAST_CASHIER_RECEIPT__=r'), 'cashier receipt handoff missing');
+assert.ok(runtime.includes("const PRINTER_RUNTIME = readFileSync(new URL('../printer-runtime.js', import.meta.url), 'utf8')"), 'printer runtime server bundle source missing');
+assert.ok(runtime.includes("if (kind === 'printer') return PRINTER_RUNTIME"), 'printer runtime proxy kind missing');
 assert.ok(root.includes('"/admin/runtime/printer.js"'), 'root printer runtime route missing');
-assert.ok(root.includes('"destination": "/apps/admin/printer-runtime.js"'), 'root printer asset destination missing');
+assert.ok(root.includes('"destination": "/api/admin-runtime?kind=printer"'), 'root printer runtime proxy destination missing');
 assert.ok(root.includes('usb=(), serial=(), bluetooth=()'), 'non-admin device-deny policy missing');
 assert.ok(adminVercel.includes('usb=(self), serial=(self), bluetooth=(self), web-share=(self)'), 'standalone admin device/share permission policy missing');
 assert.ok(publicRender.includes('usb=(), serial=(), bluetooth=()'), 'public device deny policy missing');

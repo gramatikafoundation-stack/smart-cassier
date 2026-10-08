@@ -7,6 +7,7 @@ const RENDERER = process.env.ADMIN_RENDERER_URL || DEFAULT_RENDERER;
 const SUPABASE_ORIGIN = process.env.SUPABASE_ORIGIN || new URL(RENDERER).origin;
 const BUSINESS_NAME = process.env.BUSINESS_NAME || DEFAULT_BUSINESS_NAME;
 const CASHIER_LOADER = '<script id="rohmat-admin-cashier-canonical-v60" src="/admin/runtime/cashier.js" defer></script><!-- rohmat-admin-smart-cashier-subnav-v30 -->';
+const PRINTER_LOADER = '<script id="sdb-smart-cashier-thermal-printer-v2" src="/admin/runtime/printer.js" defer></script>';
 const CORE_LOADER = '<script id="rohmat-admin-canonical-runtime-v60" src="/admin/runtime/core.js" defer></script>';
 const VISUAL_LOADER = '<script id="rohmat-admin-visual-editor-canonical-v60" src="/admin/runtime/visual-editor.js" defer></script>';
 const NAV_OLD = "admin:['Login','Dashboard','Pesanan','QRIS','Tim Admin','Keamanan']";
@@ -347,8 +348,10 @@ function injectSdbParentBrand(html) {
 function ensureCashierIntegration(html) {
   let out = html.includes(NAV_NEW) ? html : html.replace(NAV_OLD, NAV_NEW);
   out = out.replace(/<script\b[^>]*\bid=["']rohmat-admin-cashier-(?:loader|current)-v\d+["'][^>]*>[\s\S]*?<\/script>(?:<!-- rohmat-admin-smart-cashier-subnav-v\d+ -->)?/gi, '');
+  out = out.replace(/<script\b[^>]*\bid=["']sdb-smart-cashier-thermal-printer-v\d+["'][^>]*>[\s\S]*?<\/script>/gi, '');
   const at = out.lastIndexOf('</body>');
-  return at >= 0 ? out.slice(0, at) + CASHIER_LOADER + out.slice(at) : out + CASHIER_LOADER;
+  const loaders = CASHIER_LOADER + PRINTER_LOADER;
+  return at >= 0 ? out.slice(0, at) + loaders + out.slice(at) : out + loaders;
 }
 
 function escRe(value) {
@@ -533,6 +536,7 @@ export default async function handler(req, res) {
     res.setHeader('X-Rohmat-Admin-Cashier', 'canonical-same-origin-v60');
     res.setHeader('X-Rohmat-Admin-Runtime', 'canonical-core-v60');
     res.setHeader('X-Rohmat-Admin-Security', 'secure-api-v5-retained');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(self), serial=(self), bluetooth=(self)');
     res.setHeader('Content-Security-Policy', contentSecurityPolicy(shell.body));
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');

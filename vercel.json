@@ -477,5 +477,6 @@
       "destination": "https://smart-order-sdb.vercel.app/:path*",
       "permanent": true
     }
-  ]
+  ],
+  "buildCommand": "npm test && npm run build"
 }

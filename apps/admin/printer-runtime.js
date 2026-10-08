@@ -38,7 +38,7 @@ function splitWords(text,width=WIDTH){
 }
 function lr(left,right,width=WIDTH){
   left=ascii(left);right=ascii(right);
-  if(left.length+right.length+1<=width)return left+' '.repeat(width-left.length-right.length)+right;
+  if(left.length+right.length+1<=width)return [left+' '.repeat(width-left.length-right.length)+right];
   const lines=splitWords(left,Math.max(16,width-right.length-1));
   const last=lines.pop()||'';
   return [...lines,last+' '.repeat(Math.max(1,width-last.length-right.length))+right];
@@ -88,6 +88,7 @@ function modeLabel(mode){
     'ble':'Bluetooth Low Energy (BLE)',
     'usb':'USB / USB OTG',
     'serial':'Serial / COM',
+    'share':'Aplikasi Printer Android',
     'system':'Printer Sistem'
   })[mode]||'Belum dipilih';
 }
@@ -104,6 +105,7 @@ function capability(){
     usb:!!navigator.usb,
     serial:!!navigator.serial,
     bluetooth:!!navigator.bluetooth,
+    share:typeof navigator.share==='function',
     system:true
   };
 }
@@ -119,15 +121,16 @@ function settingsHtml(){
   const card=(meta,title,desc,mode,available,button='Hubungkan')=>'<article class="sdbPrinterCard"><div class="meta">'+esc(meta)+'</div><h3>'+esc(title)+'</h3><p>'+esc(desc)+'</p><div class="sdbPrinterActions"><button type="button" class="btn '+(available?'primary':'soft')+'" data-sdb-printer-mode="'+esc(mode)+'" '+(available?'':'disabled')+'>'+esc(button)+'</button></div></article>';
   return '<div class="sectionHead"><div><div class="ey">PENGATURAN</div><h1>Printer Thermal</h1><p>Hubungkan printer pembayaran SMART CASHIER. Tidak ada pairing atau cetak uji otomatis; akses perangkat hanya berjalan setelah tindakan pengguna.</p></div><span class="sdbPrinterStatus" data-sdb-printer-status>'+esc(statusText())+'</span></div>'+
     '<section class="card"><div class="sdbPrinterHero"><div><h3 style="margin:0">Perangkat ini</h3><p style="margin:4px 0 0;color:var(--muted)">SMART CASHIER mendeteksi kemampuan browser secara lokal.</p></div><div class="sdbPrinterActions"><button type="button" class="btn soft" data-sdb-printer-disconnect '+(s.mode?'':'disabled')+'>Putuskan / Lupakan</button></div></div><div class="sdbPrinterSupport">'+
-    supportBadge('Android',c.android)+supportBadge('Web Bluetooth BLE',c.bluetooth)+supportBadge('WebUSB / OTG',c.usb)+supportBadge('Android/System Print',true)+supportBadge('Web Serial (desktop)',c.serial&&!c.android)+'</div></section>'+
+    supportBadge('Android',c.android)+supportBadge('Web Bluetooth BLE',c.bluetooth)+supportBadge('WebUSB / OTG',c.usb)+supportBadge('Bagikan ke aplikasi printer',c.share)+supportBadge('Android/System Print',true)+supportBadge('Web Serial (desktop)',c.serial&&!c.android)+'</div></section>'+
     '<div class="sdbPrinterGrid">'+
-    card('ANDROID / TABLET · DIREK','Bluetooth Low Energy (BLE)','Untuk printer BLE/GATT yang menyediakan karakteristik tulis ESC/POS. Runtime mencoba beberapa service BLE/UART thermal-printer yang umum; pairing hanya dimulai setelah pengguna memilih perangkat.','ble',c.bluetooth)+
-    card('ANDROID / TABLET · KABEL','USB OTG / WebUSB','Untuk printer USB yang dihubungkan lewat adaptor OTG dan dapat diakses Chrome Android melalui WebUSB. Android tetap menampilkan izin perangkat sebelum koneksi dibuka.','usb',c.usb)+
-    card('ANDROID / TABLET · UNIVERSAL','Android System Print · Wi-Fi / Print Service','Untuk printer yang sudah ditambahkan ke Android melalui Wi-Fi, network printing, atau PrintService/vendor plugin. SMART CASHIER menyiapkan struk 80 mm lalu menyerahkannya ke dialog cetak Android.','system',true,'Gunakan Jalur Ini')+
-    card('DESKTOP / CHROMEBOOK · DIREK','USB ESC/POS','Koneksi langsung ke endpoint USB printer ESC/POS pada browser Chromium yang mendukung WebUSB.','usb',c.usb)+
-    card('DESKTOP / CHROMEBOOK · DIREK','Serial / COM ESC/POS','Untuk printer serial/virtual COM. Jalur ini tidak diklaim sebagai jalur native Android; browser harus benar-benar mengekspos Web Serial.','serial',c.serial&&!c.android)+
+    card('ANDROID / TABLET · DIREK','Bluetooth Low Energy (BLE)','Untuk printer BLE/GATT yang menyediakan karakteristik tulis ESC/POS. Runtime mencoba service BLE/UART printer thermal yang umum; pairing hanya dimulai setelah pengguna memilih perangkat.','ble',c.android&&c.bluetooth)+
+    card('ANDROID / TABLET · KABEL','USB OTG / WebUSB','Untuk printer USB yang dihubungkan lewat adaptor OTG dan dapat diakses Chrome Android melalui WebUSB. Android tetap menampilkan izin perangkat sebelum koneksi dibuka.','usb',c.android&&c.usb)+
+    card('ANDROID / TABLET · APLIKASI','Bagikan ke Aplikasi Printer Android','Untuk printer Bluetooth Classic/SPP atau model vendor yang memakai aplikasi pendamping. Saat mencetak, SMART CASHIER membuka lembar Bagikan Android agar pengguna memilih aplikasi printer yang sudah terpasang.','share',c.android&&c.share,'Gunakan Jalur Ini')+
+    card('ANDROID / TABLET · UNIVERSAL','Android System Print · Wi-Fi / Print Service','Untuk printer yang sudah ditambahkan ke Android melalui Wi-Fi, layanan cetak sistem, atau PrintService/vendor plugin. SMART CASHIER menyiapkan struk 80 mm lalu menyerahkannya ke dialog cetak Android.','system',true,'Gunakan Jalur Ini')+
+    card('DESKTOP / CHROMEBOOK · DIREK','USB ESC/POS','Koneksi langsung ke endpoint USB printer ESC/POS pada browser Chromium yang mendukung WebUSB.','usb',!c.android&&c.usb)+
+    card('DESKTOP / CHROMEBOOK · DIREK','Bluetooth Classic / SPP atau Serial / COM','Untuk Chrome desktop yang mengekspos Bluetooth Classic RFCOMM/SPP atau port serial melalui Web Serial.','serial',!c.android&&c.serial)+
     card('DESKTOP · UNIVERSAL','Printer Sistem / Driver Windows','Menghasilkan struk 80 mm dan menyerahkan job ke dialog printer Windows/browser.','system',true,'Gunakan Jalur Ini')+
-    '</div><div class="sdbPrinterWarn"><b>Catatan kompatibilitas.</b> Pada Android, jalur browser-native yang diprioritaskan adalah BLE, USB OTG/WebUSB, dan Android System Print. Bluetooth Classic/SPP tidak dianggap jalur Android browser universal. SMART CASHIER memakai ESC/POS untuk direct-print yang kompatibel dan otomatis kembali ke System Print bila koneksi direct gagal. Printer dengan protokol vendor privat tetap menggunakan PrintService/driver/aplikasi vendor melalui jalur System Print.</div>';
+    '</div><div class="sdbPrinterWarn"><b>Catatan kompatibilitas.</b> Pada Android, SMART CASHIER memprioritaskan BLE, USB OTG/WebUSB, Bagikan ke Aplikasi Printer, lalu Android System Print sebagai fallback universal. Bluetooth Classic/SPP tidak diklaim sebagai koneksi langsung browser Android; untuk printer Classic gunakan aplikasi printer/PrintService vendor. Semua direct-print memakai ESC/POS hanya pada perangkat yang kompatibel dan otomatis kembali ke System Print bila koneksi direct gagal.</div>';
 }
 function updateSettingsStatus(){
   const st=document.querySelector('[data-sdb-printer-status]');if(st)st.textContent=statusText();
@@ -159,6 +162,7 @@ async function choose(mode,button){
     else if(mode==='ble')await connectBle();
     else if(mode==='usb')await connectUsb();
     else if(mode==='serial')await connectSerial('serial');
+    else if(mode==='share'){await closeActive();active=null;save({mode:'share',paper:'80mm'});}
     else {await closeActive();active=null;save({mode:'system',paper:'80mm'});}
     updateSettingsStatus();
   }catch(err){
@@ -280,6 +284,11 @@ async function directPrint(r){
   if(active?.mode==='ble'){await bleWrite(active.characteristic,bytes);return}
   throw Error('Printer direct belum terhubung.');
 }
+async function sharePrint(r){
+  if(typeof navigator.share!=='function')throw Error('Fitur Bagikan Android tidak tersedia di browser ini.');
+  const payload={title:'Struk SMART CASHIER',text:receiptText(r)};
+  return navigator.share(payload);
+}
 function systemPrint(r){
   const w=open('','_blank','width=480,height=760');if(!w)return;
   const lines=receiptText(r).split('\n').map(x=>esc(x)).join('<br>');
@@ -289,6 +298,13 @@ function systemPrint(r){
 async function print(r){
   if(!r)return;
   const s=cfg();
+  if(s.mode==='share'){
+    try{await sharePrint(r);return 'shared'}catch(err){
+      if(String(err?.name||'')==='AbortError')return 'cancelled';
+      alert('Aplikasi printer tidak dapat dibuka. SMART CASHIER akan membuka Printer Sistem.');
+      systemPrint(r);return 'system-fallback';
+    }
+  }
   if(['usb','serial','bt-classic','ble'].includes(s.mode)&&!active)await restore();
   if(active){
     try{await directPrint(r);return}catch(err){

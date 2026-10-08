@@ -44,11 +44,11 @@ assert.ok(printer.includes("document.addEventListener('click'"),'receipt print i
 assert.ok(render.includes('sdb-smart-cashier-thermal-printer-v2'),'printer loader missing from admin shell');
 assert.ok(render.includes('usb=(self), serial=(self), bluetooth=(self)'),'admin device permissions missing');
 assert.ok(runtime.includes('window.__SDB_LAST_CASHIER_RECEIPT__=r'),'cashier receipt handoff missing');
-assert.ok(root.includes('"/admin/runtime/printer.js"'),'root printer runtime route missing');
-assert.ok(root.includes('"destination": "/apps/admin/printer-runtime.js"'),'printer asset destination missing');
-assert.ok(adminVercel.includes('usb=(self), serial=(self), bluetooth=(self)'),'standalone admin permissions missing');
-assert.ok(publicVercel.includes('usb=(), serial=(), bluetooth=()'),'public device deny missing');
-assert.ok(kdsVercel.includes('usb=(), serial=(), bluetooth=()'),'kds device deny missing');
+assert.ok(root.rewrites.some(x=>x.source==='/admin/runtime/printer.js'&&x.destination==='/apps/admin/printer-runtime.js'),'printer runtime route missing');
+const policy=v=>(v.headers||[]).flatMap(x=>x.headers||[]).filter(x=>x.key==='Permissions-Policy').map(x=>x.value).join(' | ');
+assert.ok(policy(adminVercel).includes('usb=(self), serial=(self), bluetooth=(self)'),'standalone admin permissions missing');
+assert.ok(policy(publicVercel).includes('usb=(), serial=(), bluetooth=()'),'public device deny missing');
+assert.ok(policy(kdsVercel).includes('usb=(), serial=(), bluetooth=()'),'kds device deny missing');
 assert.doesNotMatch(printer,/requestDevice\(\{filters:\[\]\}\)/,'WebUSB must not use empty filters');
 assert.doesNotMatch(printer,/setInterval\([^)]*print|onload\s*=\s*\(\)\s*=>\s*directPrint/i,'direct printer must not auto-print');
 console.log('SMART_CASHIER_THERMAL_MOBILE_READINESS_GATE_PASS=1');

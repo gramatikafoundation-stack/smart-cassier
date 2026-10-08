@@ -48,7 +48,7 @@ if(c.tenant_slug!==REF.slug){
 }
 console.log(JSON.stringify({
   ok:true,
-  contract:'smart-order-sdb-master-prototype-v6',
+  contract:'smart-order-sdb-master-prototype-v9',
   master_tenant_reference:c.tenant_id===REF.tenant_id&&c.tenant_slug===REF.slug,
   platform_supabase_project_ref:'xrepmvbccalzhlcznrff',
   tenant_id:c.tenant_id,

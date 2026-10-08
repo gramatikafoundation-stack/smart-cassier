@@ -17,8 +17,8 @@ const plan={
   database_project_clone_required:false,
   source:{
     repository:'gramatikafoundation-stack/smart-cassier',
-    candidate_branch:'master-v6-runtime-freeze-20261008',
-    final_release_tag:'smart-order-sdb-master-v6.0.0'
+    candidate_branch:'smart-cashier-printer-settings-20261008',
+    final_release_tag:'smart-order-sdb-master-v9.0.0'
   },
   tenant:{
     id:c.tenant_id,slug:c.tenant_slug,business_name:c.business_name,
@@ -58,7 +58,7 @@ const plan={
     visible_tabs:c.sheets.visible_tabs,
     expected_tabs:c.sheets.expected_tabs,
     writer_source:'integrations/google-sheets/master-writer-v1/Code.gs',
-    writer_version:4,
+    writer_version:5,
     deployment_mode:'one-webapp-per-tenant-same-canonical-source',
     script_properties:{
       SDB_TENANT_ID:c.tenant_id,
@@ -85,7 +85,7 @@ const plan={
     '5 visible SMART CASHIER-template sheets parity PASS',
     '5 hidden technical writer sheets consistency PASS',
     'application database >30 day purge with permanent sheet archive PASS',
-    'Writer v4 event-driven delta tenant sync PASS'
+    'Writer v5 automatic event-driven tenant sync PASS'
   ]
 };
 console.log(JSON.stringify(plan,null,2));

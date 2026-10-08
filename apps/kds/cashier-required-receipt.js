@@ -15,11 +15,19 @@ function receiptData(r){
   const itemSubtotal=items.reduce((sum,i)=>sum+(Number(i?.quantity)||0)*(Number(i?.price)||0),0);
   const subtotal=Math.max(0,Number(r?.subtotal_amount??r?.subtotal??itemSubtotal)||itemSubtotal);
   const total=Math.max(0,Number(r?.total_amount??r?.grand_total??subtotal)||0);
-  const explicitTax=Math.max(0,Number(r?.tax_amount??r?.tax??0)||0);
-  const tax=explicitTax||Math.max(0,total-itemSubtotal);
+  const hasCharge=r?.charge_amount!=null||r?.charge!=null;
+  const hasTax=r?.tax_amount!=null||r?.tax!=null;
+  const charge=Math.max(0,Number(r?.charge_amount??r?.charge??0)||0);
+  let tax=Math.max(0,Number(r?.tax_amount??r?.tax??0)||0);
+  if(!hasTax)tax=Math.max(0,total-subtotal-(hasCharge?charge:0));
+  const pricing=r?.transaction_pricing&&typeof r.transaction_pricing==='object'?r.transaction_pricing:{};
+  const chargeCfg=pricing.charge&&typeof pricing.charge==='object'?pricing.charge:{};
+  const taxCfg=pricing.tax&&typeof pricing.tax==='object'?pricing.tax:{};
+  const chargeLabel=chargeCfg.mode==='percent'&&Number(chargeCfg.value)>0?String(chargeCfg.label||'Charge')+' '+Number(chargeCfg.value)+'%':String(chargeCfg.label||'Charge');
+  const taxLabel=taxCfg.mode==='percent'&&Number(taxCfg.value)>0?String(taxCfg.label||'Pajak')+' '+Number(taxCfg.value)+'%':String(taxCfg.label||'Pajak');
   const service=r?.service_mode==='dine-in'?'Makan di Tempat':'Bawa Pulang';
   const payment=String(r?.payment_method||r?.payment?.method||'').trim();
-  return {items,subtotal,tax,total,service,payment};
+  return {items,subtotal,charge,tax,total,service,payment,chargeLabel,taxLabel};
 }
 
 function receiptRows(r){
@@ -39,7 +47,8 @@ function receiptRows(r){
     '</div>'+
     '<div class="receiptTotalsV4">'+
       '<div><span>Subtotal</span><b>'+rp(d.subtotal)+'</b></div>'+
-      '<div><span>Pajak</span><b>'+rp(d.tax)+'</b></div>'+
+      (d.charge>0?'<div><span>'+esc(d.chargeLabel)+'</span><b>'+rp(d.charge)+'</b></div>':'')+
+      (d.tax>0?'<div><span>'+esc(d.taxLabel)+'</span><b>'+rp(d.tax)+'</b></div>':'')+
       '<div class="receiptGrandV4"><span>Total Pembayaran</span><strong>'+rp(d.total)+'</strong></div>'+
     '</div>'+
   '</section>';
@@ -51,7 +60,7 @@ function printReceipt(r){
   const d=receiptData(r);
   const rows=receiptRows(r);
   w.document.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>Struk '+esc(r?.payment_code||r?.public_order_code||'')+'</title><style>'+
-  '*{box-sizing:border-box}body{margin:0;padding:28px;background:#f5f7f6;color:#17211d;font:14px/1.45 Arial,sans-serif}.sheet{max-width:720px;margin:auto;background:#fff;border:1px solid #e1e7e3;border-radius:20px;padding:26px}.head{display:flex;justify-content:space-between;gap:18px;padding-bottom:18px;border-bottom:1px solid #e4e9e6}.head h2{margin:0;font-size:24px}.head p{margin:5px 0 0;color:#748079}.receiptCodeV4{text-align:right;background:#f3f6f4;border:1px solid #e0e6e2;border-radius:12px;padding:10px 12px}.receiptCodeV4 span,.receiptCodeV4 strong{display:block}.receiptCodeV4 span{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#75817c}.receiptMetaV4{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;padding:14px 0}.receiptMetaV4>div{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-bottom:1px solid #eef1ef}.receiptMetaV4 span{color:#68756f}.receiptItemsV4{margin-top:14px;border:1px solid #e2e8e4;border-radius:13px;overflow:hidden}.receiptSectionV4{background:#f4f7f5;padding:9px 12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.receiptItemV4{display:flex;justify-content:space-between;gap:16px;padding:10px 12px;border-top:1px solid #edf1ee}.receiptItemV4 strong,.receiptItemV4 span{display:block}.receiptItemV4 span{color:#7b8782;font-size:12px}.receiptTotalsV4{width:min(100%,340px);margin:14px 0 0 auto}.receiptTotalsV4>div{display:flex;justify-content:space-between;padding:7px 0}.receiptGrandV4{border-top:1px solid #dfe6e2;margin-top:3px;padding-top:12px!important;font-size:16px}.receiptGrandV4 strong{font-size:19px;color:#173f33}@media print{body{padding:0}.sheet{border:0;border-radius:0;box-shadow:none;max-width:80mm;padding:6mm}.head{display:block}.receiptCodeV4{text-align:left;margin-top:8px}.receiptMetaV4{grid-template-columns:1fr}}</style></head><body><main class="sheet"><div class="head"><div><h2>Struk Pembayaran &amp; Pemesanan</h2><p>Dokumen transaksi</p></div><div class="receiptCodeV4"><span>Kode Transaksi</span><strong>'+esc(r?.payment_code||r?.public_order_code||'—')+'</strong></div></div>'+rows.replace(/^<section class="receiptUnifiedV4"><div class="receiptCodeV4">[\s\S]*?<\/div>/,'<section class="receiptUnifiedV4">')+'</main><script>onload=()=>print()<\/script></body></html>');
+  '*{box-sizing:border-box}body{margin:0;padding:28px;background:#f5f7f6;color:#17211d;font:14px/1.45 Arial,sans-serif}.sheet{max-width:720px;margin:auto;background:#fff;border:1px solid #e1e7e3;border-radius:20px;padding:26px}.head{display:flex;justify-content:space-between;gap:18px;padding-bottom:18px;border-bottom:1px solid #e4e9e6}.head h2{margin:0;font-size:24px}.head p{margin:5px 0 0;color:#748079}.receiptCodeV4{text-align:right;background:#f3f6f4;border:1px solid #e0e6e2;border-radius:12px;padding:10px 12px}.receiptCodeV4 span,.receiptCodeV4 strong{display:block}.receiptCodeV4 span{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#75817c}.receiptMetaV4{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;padding:14px 0}.receiptMetaV4>div{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-bottom:1px solid #eef1ef}.receiptMetaV4 span{color:#68756f}.receiptItemsV4{margin-top:14px;border:1px solid #e2e8e4;border-radius:13px;overflow:hidden}.receiptSectionV4{background:#f4f7f5;padding:9px 12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.receiptItemV4{display:flex;justify-content:space-between;gap:16px;padding:10px 12px;border-top:1px solid #edf1ee}.receiptItemV4 strong,.receiptItemV4 span{display:block}.receiptItemV4 span{color:#7b8782;font-size:12px}.receiptTotalsV4{width:min(100%,340px);margin:14px 0 0 auto}.receiptTotalsV4>div{display:flex;justify-content:space-between;padding:7px 0}.receiptGrandV4{border-top:1px solid #dfe6e2;margin-top:3px;padding-top:12px!important;font-size:16px}.receiptGrandV4 strong{font-size:19px;color:#173f33}.receiptCodeV4 strong,.receiptMetaV4 strong,.receiptItemV4 strong{overflow-wrap:anywhere;word-break:break-word;min-width:0}.receiptItemV4>div{min-width:0;flex:1}.receiptItemV4>b{white-space:nowrap;flex:none}@page{size:80mm auto;margin:0}@media print{html,body{width:80mm;max-width:80mm;margin:0;padding:0}.sheet{width:80mm;max-width:80mm;margin:0;border:0;border-radius:0;box-shadow:none;padding:5mm}.head{display:block}.receiptCodeV4{text-align:left;margin-top:8px}.receiptMetaV4{grid-template-columns:1fr}.receiptMetaV4>div{align-items:flex-start}.receiptItemsV4,.receiptTotalsV4{max-width:100%;overflow:hidden}}</style></head><body><main class="sheet"><div class="head"><div><h2>Struk Pembayaran &amp; Pemesanan</h2><p>Dokumen transaksi</p></div><div class="receiptCodeV4"><span>Kode Transaksi</span><strong>'+esc(r?.payment_code||r?.public_order_code||'—')+'</strong></div></div>'+rows.replace(/^<section class="receiptUnifiedV4"><div class="receiptCodeV4">[\s\S]*?<\/div>/,'<section class="receiptUnifiedV4">')+'</main><script>onload=()=>print()<\/script></body></html>');
   w.document.close();
 }
 

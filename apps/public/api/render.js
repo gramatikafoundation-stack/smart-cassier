@@ -281,6 +281,20 @@ body{background:linear-gradient(180deg,#fbf8f6 0%,#f3e8e2 100%)!important}
 @media(max-width:560px){.headin{min-height:62px!important}.cats{top:62px!important}.grid{gap:10px!important}.grid .body h3{font-size:13px!important}.grid .foot .btn{min-height:38px!important}}
 </style><script id="rohmat-menu-single-media-v6">(()=>{'use strict';if(window.__rohmatMenuSingleMediaV6)return;window.__rohmatMenuSingleMediaV6=1;const NAME_KEY='rohmat-customer-name-v2';function readName(){try{return String(localStorage.getItem(NAME_KEY)||'').trim().slice(0,60)}catch{return''}}function saveName(v){v=String(v||'').trim().slice(0,60);if(!v)return;try{localStorage.setItem(NAME_KEY,v)}catch{}}function bindName(){const n=document.getElementById('name');if(!n)return;const saved=readName();if(!String(n.value||'').trim()&&saved){n.value=saved;n.dispatchEvent(new Event('input',{bubbles:true}));n.dispatchEvent(new Event('change',{bubbles:true}))}if(n.dataset.rohmatRememberName==='1')return;n.dataset.rohmatRememberName='1';const persist=()=>saveName(n.value);n.addEventListener('input',persist);n.addEventListener('change',persist);n.addEventListener('blur',persist)}function cleanMedia(){document.querySelectorAll('.grid .food').forEach(food=>{food.style.setProperty('aspect-ratio','70 / 41','important');food.style.setProperty('padding','0','important');food.style.setProperty('overflow','hidden','important');food.style.setProperty('background','#c79666','important');food.style.removeProperty('--rohmat-menu-bg')});document.querySelectorAll('.grid .food img').forEach(img=>{img.style.setProperty('background-image','none','important');img.style.setProperty('background','#c79666','important');img.style.setProperty('object-fit','cover','important');img.style.setProperty('object-position','center','important');img.style.setProperty('width','100%','important');img.style.setProperty('height','100%','important');img.style.setProperty('padding','0','important');img.style.setProperty('margin','0','important')})}function patch(){bindName();cleanMedia();const checkout=!!document.querySelector('.checkout');document.documentElement.classList.toggle('soCheckoutScrollFix',checkout);document.body?.classList.toggle('soCheckoutScrollFix',checkout);document.documentElement.dataset.rohmatMenuReference='v6-reference-70x41'}let queued=false;function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;setTimeout(patch,0)})}document.addEventListener('rohmat:dom-updated',schedule);window.addEventListener('pageshow',schedule);const app=document.getElementById('app');if(app)new MutationObserver(schedule).observe(app,{childList:true,subtree:true});document.addEventListener('click',e=>{if(e.target.closest('#confirm,#pay,#close,.cat,[data-id]')){schedule();setTimeout(schedule,80);setTimeout(schedule,300)};if(e.target.closest('#pay')){const n=document.getElementById('name');if(n)saveName(n.value)}},true);if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(patch,0),{once:true});else setTimeout(patch,0)})();</script><!-- rohmat-menu-single-media-v6 -->`;
 
+function injectCoreRealtimeHook(html) {
+  const anchor = "S=(await settingsP)?.[0]||{};menuReady.catch(()=>{})}";
+  const hook = `window.__rohmatPublicCoreRealtimeSync=async function(kind='all'){await sync();if(route==='home')home();else if(route==='menu'&&!document.getElementById('dlg')?.open)menu();else if(route==='checkout'&&kind==='settings'){const pay=document.querySelector('.checkout .payroom'),merchant=pay?.querySelector('h3'),box=pay?.querySelector('.qrisbox'),qris=!!(S.qris_enabled&&S.qris_image_url);if(merchant)merchant.textContent=S.merchant_name||S.business_name||'Business';if(box)box.innerHTML=qris?'<img src="'+esc(S.qris_image_url)+'" alt="QRIS">':'<div><b>QRIS belum diaktifkan</b><p>Pengelola akan menambahkan QRIS kemudian.</p></div>';const proof=document.getElementById('proof'),send=document.getElementById('send');if(proof)proof.disabled=!qris;if(!qris&&send)send.disabled=true}document.dispatchEvent(new CustomEvent('rohmat:public-core-synced',{detail:{kind,route}}));document.dispatchEvent(new Event('rohmat:dom-updated'));return true};`;
+  if (countOccurrences(html, anchor) !== 1) throw new Error('public_core_sync_anchor_invalid');
+  return html.replace(anchor, anchor + hook);
+}
+
+function buildPublicRealtimePatch(supabaseOrigin, publishableKey, tenantId) {
+  const U = JSON.stringify(String(supabaseOrigin || '').replace(/\/$/, ''));
+  const K = JSON.stringify(String(publishableKey || ''));
+  const TENANT = JSON.stringify(String(tenantId || ''));
+  return `<script id="rohmat-public-realtime-sync-v1">(()=>{'use strict';if(window.__rohmatPublicRealtimeSyncV1)return;window.__rohmatPublicRealtimeSyncV1=1;const U=${U},K=${K},TENANT=${TENANT},TOPIC='public:'+TENANT,EVENT='public_change';let ws=null,connected=false,reconnectTimer=0,heartbeatTimer=0,safetyTimer=0,ref=0,attempt=0,syncTimer=0;const root=document.documentElement;function state(v){root.dataset.sdbPublicRealtime=v}function send(topic,event,payload,joinRef=null){if(!ws||ws.readyState!==1)return'';const r=String(++ref);ws.send(JSON.stringify({topic,event,payload,ref:r,join_ref:joinRef}));return r}async function sync(kind='all',source='realtime'){clearTimeout(syncTimer);return new Promise(resolve=>{syncTimer=setTimeout(async()=>{try{await window.__rohmatPublicCoreRealtimeSync?.(kind);if(kind==='settings')document.dispatchEvent(new Event('rohmat:settings-updated'));root.dataset.sdbPublicRealtimeLastKind=kind;root.dataset.sdbPublicRealtimeLastSource=source;root.dataset.sdbPublicRealtimeLastAt=String(Date.now())}catch{}resolve()},70)})}function armSafety(){clearTimeout(safetyTimer);if(document.hidden)return;const ms=connected?60000:8000;safetyTimer=setTimeout(async()=>{if(!document.hidden)await sync('all',connected?'safety-live':'fallback-poll');armSafety()},ms)}function stopSocket(){clearInterval(heartbeatTimer);heartbeatTimer=0;if(ws){try{ws.onopen=ws.onmessage=ws.onerror=ws.onclose=null;ws.close()}catch{}ws=null}connected=false}function reconnect(){if(document.hidden||!navigator.onLine)return;clearTimeout(reconnectTimer);const delays=[800,1600,3000,5000,10000,20000],ms=delays[Math.min(attempt++,delays.length-1)];state('reconnecting');reconnectTimer=setTimeout(start,ms)}function start(){if(document.hidden||!navigator.onLine||!U||!K||!TENANT)return;stopSocket();try{const u=new URL(U);u.protocol=u.protocol==='https:'?'wss:':'ws:';u.pathname='/realtime/v1/websocket';u.search='?apikey='+encodeURIComponent(K)+'&vsn=1.0.0';state('connecting');const socket=new WebSocket(u.toString());ws=socket;let joinRef='';socket.onopen=()=>{joinRef=send('realtime:'+TOPIC,'phx_join',{config:{broadcast:{ack:false,self:false},presence:{key:''},postgres_changes:[],private:false},access_token:K},'1')};socket.onmessage=e=>{let m;try{m=JSON.parse(String(e.data))}catch{return}if(m.event==='phx_reply'&&String(m.ref||'')===String(joinRef)){if(m.payload?.status!=='ok'){state('fallback');reconnect();return}connected=true;attempt=0;state('live');clearInterval(heartbeatTimer);heartbeatTimer=setInterval(()=>send('phoenix','heartbeat',{},null),25000);armSafety();sync('all','realtime-connect');return}if(m.event==='broadcast'&&m.payload?.event===EVENT){const p=m.payload?.payload||{},kind=String(p.kind||'all');sync(kind,'realtime')}};socket.onerror=()=>{state('fallback')};socket.onclose=()=>{connected=false;state('fallback');armSafety();reconnect()}}catch{state('fallback');armSafety();reconnect()}}window.addEventListener('online',()=>{sync('all','online');start()});window.addEventListener('offline',()=>{stopSocket();state('offline');armSafety()});document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(safetyTimer);clearTimeout(reconnectTimer);stopSocket();state('paused')}else{sync('all','visible');start();armSafety()}});window.addEventListener('pagehide',()=>{clearTimeout(safetyTimer);clearTimeout(reconnectTimer);stopSocket()});if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{sync('all','boot');start();armSafety()},{once:true});else{sync('all','boot');start();armSafety()}})();</script><!-- rohmat-public-realtime-sync-v1 -->`;
+}
+
 const SDB_PARENT_SIGNATURE = String.raw`<style id="sdb-parent-brand-public-v1">
 .sdbParentSignaturePublic{display:flex;justify-content:center;align-items:center;padding:18px 16px 24px;border-top:1px solid rgba(20,35,30,.08);background:transparent}
 .sdbParentSignaturePublic a{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:5px 10px;border-radius:12px;color:color-mix(in srgb,var(--ds-muted,var(--so-muted,#70807a)) 80%,var(--ds-text,#24362F) 20%);font-size:11px;font-weight:760;letter-spacing:.01em;opacity:1;transition:transform .18s ease,background-color .18s ease}
@@ -339,6 +353,7 @@ function tenantizeRuntimeHtml(html, tenantId, businessName, heroImageUrl = '') {
   const safeBusiness = String(businessName || 'Business').trim() || 'Business';
   const tenantBusinessMarker = '<span data-tenant-business hidden>' + escapeHtml(safeBusiness) + '</span>';
   let out = html;
+  out = out.replace(/<meta\s+http-equiv=["']Content-Security-Policy["'][^>]*>/i, '');
   if (/<span\s+data-tenant-business\s+hidden>[^<]*<\/span>/i.test(out)) {
     out = out.replace(/<span\s+data-tenant-business\s+hidden>[^<]*<\/span>/i, tenantBusinessMarker);
   } else {
@@ -370,6 +385,7 @@ function tenantizeRuntimeHtml(html, tenantId, businessName, heroImageUrl = '') {
 }
 
 function securityHeaders(nonce, supabaseOrigin) {
+  const supabaseWsOrigin = String(supabaseOrigin || '').replace(/^https:/i, 'wss:');
   return {
     'Content-Security-Policy': [
       "default-src 'self'",
@@ -378,7 +394,7 @@ function securityHeaders(nonce, supabaseOrigin) {
       `style-src 'self' 'nonce-${nonce}'`,
       "style-src-attr 'unsafe-inline'",
       `img-src 'self' data: blob: ${supabaseOrigin}`,
-      `connect-src 'self' ${supabaseOrigin} https://cdn.jsdelivr.net https://tessdata.projectnaptha.com`,
+      `connect-src 'self' ${supabaseOrigin} ${supabaseWsOrigin} https://cdn.jsdelivr.net https://tessdata.projectnaptha.com`,
       "worker-src 'self' blob:",
       "child-src blob:",
       "font-src 'self' data:",
@@ -413,6 +429,7 @@ export default async function handler(req, res) {
   }
   const tenantId = String(tenant.tenantId);
   const base = String(process.env.SUPABASE_URL).trim().replace(/\/$/, '');
+  const publishableKey = String(process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
   const lkgPath = String(process.env.PUBLIC_LKG_PATH).trim();
   const businessName = String(tenant.businessName || 'Business').trim();
   const heroImageUrl = String(tenant.heroImageUrl || '').trim();
@@ -425,10 +442,14 @@ export default async function handler(req, res) {
     const html = await upstream.text();
     const valid = upstream.ok && html.length >= MIN_LKG_BYTES && REQUIRED_MARKERS.every(marker => html.includes(marker));
     if (!valid) throw new Error('invalid_lkg');
-    const tenantized = tenantizeRuntimeHtml(html, tenantId, businessName, heroImageUrl);
+    const tenantized = injectCoreRealtimeHook(tenantizeRuntimeHtml(html, tenantId, businessName, heroImageUrl));
     const optimized = optimizeHtml(tenantized);
     const patched = injectPublicPatch(optimized.html);
-    const body = secureHtml(patched, nonce);
+    const realtimePatch = buildPublicRealtimePatch(supabaseOrigin, publishableKey, tenantId);
+    const realtimeHtml = patched.includes('rohmat-public-realtime-sync-v1')
+      ? patched
+      : (patched.includes('</body>') ? patched.replace('</body>', realtimePatch + '</body>') : patched + realtimePatch);
+    const body = secureHtml(realtimeHtml, nonce);
     res.statusCode = 200;
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');

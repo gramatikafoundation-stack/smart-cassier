@@ -1,7 +1,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
-const CRON_TOKEN_SHA256="36c91cef174eaec3619b67dd16032273842af6e5fa49e4120186a13b51dea747";
+const CRON_TOKEN_SHA256="19c2c128ec9a9e5686019b44279e70d1266ed5b650c94b82488a464a444041fb";
+const DELEGATED_WRITER_URL="https://script.google.com/macros/s/AKfycbwJgyD676R8PcLnETjhPKGHwm56e0k5EkqMz23OPNWhxMf-MOrUwEDR0waxKbYcjizz/exec";
 const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function headers(requestId:string,tenantId=""){
@@ -32,8 +33,10 @@ function backoffSeconds(attempt:number){
 function validWriterUrl(value:string){
   try{
     const u=new URL(value);
-    return u.protocol==="https:"&&u.hostname==="script.google.com"&&!u.port&&!u.username&&!u.password&&!u.search&&!u.hash
+    const appsScript=u.protocol==="https:"&&u.hostname==="script.google.com"&&!u.port&&!u.username&&!u.password&&!u.search&&!u.hash
       &&/^\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(u.pathname);
+    const delegated=u.href==="https://yybhpmjuywjxqurrrrxl.supabase.co/functions/v1/rohmat-sheet-sync-worker-v1";
+    return appsScript||delegated;
   }catch{return false}
 }
 function activeTargets(cfg:any){
@@ -115,6 +118,9 @@ Deno.serve(async(req:Request)=>{
   if(!validWriterUrl(cfg.writer_url))return json({ok:false,error:"invalid_writer_url"},503,runId,tenantId);
   const targets=activeTargets(cfg);
   if(!targets.length)return json({ok:false,error:"target_read_failed"},500,runId,tenantId);
+  if(cfg.writer_url===DELEGATED_WRITER_URL){
+    return json({ok:true,state:"delegated_external",tenant_id:tenantId,processed:0,requestId:runId},200,runId,tenantId);
+  }
 
   const {data:writerToken,error:secretErr}=await sb.rpc("sheet_sync_writer_credential_tenant",{p_tenant_id:tenantId});
   if(secretErr||typeof writerToken!=="string"||writerToken.length<32){

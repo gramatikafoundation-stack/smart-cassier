@@ -19,5 +19,5 @@ const checks={
   source_edits_required:false
 };
 const ok=Object.entries(checks).every(([key,value])=>key==='source_edits_required'?value===false:value===true);
-console.log(JSON.stringify({ok,contract:'master-prototype-two-tenant-static-rehearsal-v1',platform_supabase_project_ref:'yybhpmjuywjxqurrrrxl',checks},null,2));
+console.log(JSON.stringify({ok,contract:'master-prototype-two-tenant-static-rehearsal-v1',platform_supabase_project_ref:'xrepmvbccalzhlcznrff',checks},null,2));
 if(!ok)process.exit(1);

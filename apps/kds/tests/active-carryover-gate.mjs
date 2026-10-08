@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const sql=fs.readFileSync(new URL('../../../supabase/migrations/20261007172500_kds_active_carryover_v1.sql',import.meta.url),'utf8');
-assert.ok(!sql.includes("(o.created_at at time zone v_tz)::date=v_today"),'KDS active tickets must not be hidden after midnight');
+assert.ok(!sql.includes("(o.created_at at time zone v_tz)::date=v_today"),'KDS active tickets must not be hidden by calendar-day filtering');
 assert.ok(sql.includes("o.payment_status='verified' and o.order_status in ('confirmed','preparing','ready')"),'KDS active workflow statuses must carry over until resolved');
 assert.ok(sql.includes("o.payment_status='submitted' and o.order_status='payment_review'"),'KDS payment-review workflow must carry over until resolved');
 assert.ok(sql.includes("o.completed_at>=now()-interval '24 hours'"),'Completed tickets must remain operationally bounded');
-assert.ok(sql.includes("coalesce(o.kitchen_print_count,0)=0")&&sql.includes("o.kds_dismissed_at is null"),'Printed or dismissed completed tickets must not reappear');
-assert.ok(sql.includes("'snapshot_policy','active-carryover-v1'"),'Live KDS snapshot contract must identify active carryover policy');
-console.log('KDS_OPERATIONAL_CONTINUITY_GATE_PASS=1');
+assert.ok(sql.includes("coalesce(o.kitchen_print_count,0)=0"),'Completed printed tickets must not reappear');
+assert.ok(sql.includes("o.kds_dismissed_at is null"),'Dismissed tickets must not reappear');
+assert.ok(sql.includes("'snapshot_policy','active-carryover-v1'"),'KDS snapshot must expose the active carryover contract');
+console.log('KDS_ACTIVE_CARRYOVER_GATE_PASS=1');

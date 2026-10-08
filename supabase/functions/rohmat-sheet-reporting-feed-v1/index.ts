@@ -4,6 +4,8 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 const PAGE=1000;
 const PAYMENT_PROOF_REFERENCE_DAYS=90;
 const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const CANONICAL_TENANT='d8bb901c-7399-485b-8743-b319fde148ac';
+const FEED_TOKEN_SHA256='d3616fa4d6ca975d1b23f0b3195c26165d66d1a8ee7b51f53509a9b2ba2c855d';
 const enc=new TextEncoder();
 
 function headers(tenantId?:string){
@@ -79,44 +81,19 @@ Deno.serve(async(req:Request)=>{
   if(!U||!K)return json({ok:false,error:"service_unavailable"},503);
   const sb=createClient(U,K,{auth:{persistSession:false,autoRefreshToken:false}});
   const requestedTenant=String(req.headers.get("x-sdb-tenant-id")||"").trim();
-  if(requestedTenant&&!UUID_RE.test(requestedTenant))return json({ok:false,error:"tenant_required_or_invalid"},400);
-
-  let tenantId=requestedTenant;
-  if(!tenantId){
-    const runtime=await sb.rpc("master_prototype_runtime_context",{
-      p_tenant_id:null,p_origin:null,p_app_kind:null
-    });
-    tenantId=String(runtime.data?.tenant_id||"");
-    if(runtime.error||!runtime.data?.ok||!UUID_RE.test(tenantId)){
-      return json({ok:false,error:"tenant_required_or_invalid"},400);
-    }
-  }
+  if(!UUID_RE.test(requestedTenant)||requestedTenant!==CANONICAL_TENANT)return json({ok:false,error:"tenant_required_or_invalid"},400);
+  const tenantId=CANONICAL_TENANT;
+  const token=req.headers.get("x-sdb-bridge-token")||"";
+  if(!token||(await hash(token))!==FEED_TOKEN_SHA256)return json({ok:false,error:"unauthorized"},401,tenantId);
 
   const cfg=await sb.rpc("tenant_sheet_sync_config",{p_tenant_id:tenantId});
   if(cfg.error||!cfg.data?.ok)return json({ok:false,error:"tenant_unavailable"},404,tenantId);
-
-  const token=req.headers.get("x-rohmat-writer-token")||"";
-  const tokenHash=token?await hash(token):"";
-  const secret=await sb.rpc("sheet_sync_writer_credential_tenant",{p_tenant_id:tenantId});
-  const configuredHash=(!secret.error&&typeof secret.data==="string"&&secret.data.length>=32)?await hash(secret.data):"";
-  const legacyWriterHash="d3616fa4d6ca975d1b23f0b3195c26165d66d1a8ee7b51f53509a9b2ba2c855d";
-  if(!token||!(tokenHash===configuredHash||tokenHash===legacyWriterHash)){
-    return json({ok:false,error:"unauthorized"},401,tenantId);
-  }
 
   const u=new URL(req.url);
   const year=Number(u.searchParams.get("year"));
   const targets=Array.isArray(cfg.data.targets)?cfg.data.targets:[];
   const target=targets.find((x:any)=>Number(x.year)===year&&x.enabled!==false);
   if(!Number.isInteger(year)||!target)return json({ok:false,error:"target_unconfigured"},404,tenantId);
-  const mode=String(u.searchParams.get("mode")||"snapshot").toLowerCase();
-  const entityType=String(u.searchParams.get("entity_type")||"").toLowerCase();
-  const entityId=String(u.searchParams.get("entity_id")||"").trim();
-  if(mode==="delta"){
-    if(!["order","menu"].includes(entityType))return json({ok:false,error:"unsupported_delta"},400,tenantId);
-    if(entityType==="order"&&!UUID_RE.test(entityId))return json({ok:false,error:"invalid_delta_entity"},400,tenantId);
-    if(entityType==="menu"&&!entityId)return json({ok:false,error:"invalid_delta_entity"},400,tenantId);
-  }
 
   if(req.method==="HEAD"){
     return new Response(null,{status:200,headers:headers(tenantId)});
@@ -129,22 +106,16 @@ Deno.serve(async(req:Request)=>{
 
   try{
     const cols="id,public_order_code,created_at,customer_name,customer_whatsapp,service_mode,table_number,items,item_count,total_amount,customer_note,paid_amount,payment_method,payment_status,order_status,payment_proof_url,payment_submitted_at,verified_at,kitchen_sent_at,kds_received_at,preparing_at,ready_at,completed_at,order_source,cashier_actor,cash_received,change_amount,updated_at";
-    const [a,b,ba,mr]=await Promise.all([
+    const [a,b,mr]=await Promise.all([
       all(sb,"orders",cols,start,end,tenantId),
       all(sb,"order_history_archive",cols,start,end,tenantId),
-      sb.rpc("sheet_reporting_archive_tenant",{p_tenant_id:tenantId,p_start:start,p_end:end}),
       sb.from("menu_items")
         .select("id,name,category,price,image_url,is_visible,is_available,availability_note,availability_updated_at,updated_at,display_order")
         .eq("tenant_id",tenantId).order("display_order",{ascending:true})
     ]);
     if(mr.error)throw mr.error;
-    if(ba.error)throw ba.error;
 
     const map=new Map<string,any>();
-    for(const o of (ba.data||[]))map.set(String(o.id),{
-      ...o,order_source:o.order_source||"public",payment_method:o.payment_method||"qris",
-      payment_status:o.payment_status||"verified",order_status:o.order_status||"completed"
-    });
     for(const o of b)map.set(String(o.id),{
       ...o,order_source:o.order_source||"public",payment_method:o.payment_method||"qris",
       payment_status:o.payment_status||"verified",order_status:o.order_status||"completed"
@@ -208,71 +179,21 @@ Deno.serve(async(req:Request)=>{
         x.availability_note||"",`${p.d} ${p.t}`.trim(),x.image_url||""
       ]);
     }
-    if(mode==="delta"){
-      if(entityType==="order"){
-        const idx=orders.findIndex((o:any)=>String(o.id)===entityId);
-        const deleted=idx<0;
-        return json({
-          ok:true,version:3,mode:"delta",tenant_id:tenantId,year,
-          spreadsheetId:target.spreadsheet_id,entity_type:"order",entity_id:entityId,deleted,
-          rows:deleted?{}:{PEMESAN:pemesan[idx],PESANAN:pesanan[idx],KEUANGAN:keuangan[idx]}
-        },200,tenantId);
-      }
-      if(entityType==="menu"){
-        const exists=(mr.data||[]).some((x:any)=>String(x.id)===entityId);
-        return json({
-          ok:true,version:3,mode:"delta",tenant_id:tenantId,year,
-          spreadsheetId:target.spreadsheet_id,entity_type:"menu",entity_id:entityId,deleted:!exists,
-          rows:{"MENU & STOK":menu}
-        },200,tenantId);
-      }
-    }
-
     const paidOrders=orders.filter(o=>isPaid(o)&&!["cancelled","canceled","rejected","payment_rejected"].includes(String(o.order_status||"").toLowerCase()));
-    const menuById=new Map((mr.data||[]).map((x:any)=>[String(x.id),x]));
-    const menuByName=new Map((mr.data||[]).map((x:any)=>[String(x.name||"").trim().toLowerCase(),x]));
-    const dataPemesan:any[][]=[],dataMakanan:any[][]=[],dataMinuman:any[][]=[],riwayatPembayaran:any[][]=[];
-    const drinkCategory=(v:any)=>/(minuman|drink|beverage|jus|juice|kopi|coffee|teh|tea|air|mineral)/i.test(String(v||""));
-    for(const o of paidOrders){
-      const p=parts(o.created_at,tz);
-      const layanan=service(o.service_mode)+(String(o.service_mode||"").toLowerCase().includes("dine")&&o.table_number?(" • Meja "+o.table_number):"");
-      dataPemesan.push([p.d,p.t,o.customer_name||"",layanan]);
-      riwayatPembayaran.push([p.d,Number(o.total_amount||0)]);
-      for(const i of (Array.isArray(o.items)?o.items:[])){
-        const q=Math.max(0,Math.floor(Number(i.quantity??i.qty??1)||0));
-        const id=String(i.menuId??i.menu_id??i.id??"");
-        const name=String(i.name??i.menu_name??"Menu");
-        const m=menuById.get(id)||menuByName.get(name.trim().toLowerCase())||null;
-        const category=String(m?.category??i.category??"");
-        const price=Math.max(0,Number(i.price??i.unit_price??m?.price??0)||0);
-        const targetRows=drinkCategory(category)?dataMinuman:dataMakanan;
-        for(let n=0;n<q;n++)targetRows.push([p.d,name,price]);
-      }
-    }
     const metrics={
       orders:orders.length,paid_orders:paidOrders.length,
       total_paid:paidOrders.reduce((s,o)=>s+moneyIn(o),0),
       items:paidOrders.reduce((s,o)=>s+Number(o.item_count||0),0),
-      menu_rows:menu.length,
-      data_pemesan_rows:dataPemesan.length,
-      makanan_rows:dataMakanan.length,
-      minuman_rows:dataMinuman.length,
-      pembayaran_rows:riwayatPembayaran.length
+      menu_rows:menu.length
     };
 
     return json({
-      ok:true,version:4,writer_version_expected:Number(cfg.data.expected_writer_version||5),
+      ok:true,version:3,writer_version_expected:Number(cfg.data.expected_writer_version||4),
       tenant_id:tenantId,tenant_slug:cfg.data.tenant_slug,
       business_name:cfg.data.business_name,timezone:tz,year,
       spreadsheetId:target.spreadsheet_id,label:target.label,
-      retention:{application_days:30,external_archive_reset:false,customer_pii_days:piiDays,payment_proof_reference_days:PAYMENT_PROOF_REFERENCE_DAYS},
+      retention:{customer_pii_days:piiDays,payment_proof_reference_days:PAYMENT_PROOF_REFERENCE_DAYS},
       tabs:{PEMESAN:pemesan,PESANAN:pesanan,"MENU & STOK":menu,KEUANGAN:keuangan},
-      reference_tabs:{
-        "Data Pemesan":dataPemesan,
-        "Data Pesanan Makanan":dataMakanan,
-        "Data Pesanan Minuman":dataMinuman,
-        "Riwayat Pembayaran":riwayatPembayaran
-      },
       metrics
     },200,tenantId);
   }catch(e){

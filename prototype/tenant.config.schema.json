@@ -133,6 +133,8 @@
       "required": [
         "start_year",
         "years",
+        "visual_template_source_spreadsheet_id",
+        "visible_tabs",
         "expected_tabs"
       ],
       "properties": {
@@ -145,6 +147,25 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 10
+        },
+        "visual_template_source_spreadsheet_id": {
+          "type": "string",
+          "const": "1OnUxxqbwRjjQY18J3A2ypkIlPBKqOMMeB11G_OsHzFM"
+        },
+        "visible_tabs": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "Dashboard",
+              "Data Pemesan",
+              "Data Pesanan Makanan",
+              "Data Pesanan Minuman",
+              "Riwayat Pembayaran"
+            ]
+          }
         },
         "expected_tabs": {
           "type": "array",

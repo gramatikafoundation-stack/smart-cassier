@@ -64,6 +64,7 @@ function normalizeModuleRuntime(kind, body) {
     out = out.replace(/https:\/\/[A-Za-z0-9.-]+\.supabase\.co\/functions\/v1\/rohmat-admin-order-history-v1/g, '/admin/api/order-history');
   } else if (kind === 'cashier') {
     out = out.replace(/https:\/\/[A-Za-z0-9.-]+\.supabase\.co\/functions\/v1\/rohmat-smart-cashier-v1/g, '/admin/api/smart-cashier');
+    out = out.replace("function showReceipt(r){if(!r)return;", "function showReceipt(r){window.__SDB_LAST_CASHIER_RECEIPT__=r;if(!r)return;");
   }
   return out;
 }

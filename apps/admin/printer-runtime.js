@@ -1,12 +1,18 @@
 (()=>{'use strict';
-if(window.__SDB_THERMAL_PRINTER_RUNTIME_V1)return;
-window.__SDB_THERMAL_PRINTER_RUNTIME_V1=1;
+if(window.__SDB_THERMAL_PRINTER_RUNTIME_V2)return;
+window.__SDB_THERMAL_PRINTER_RUNTIME_V2=1;
 
-const STORE='sdb-smart-cashier-printer-v1';
+const STORE='sdb-smart-cashier-printer-v2';
 const WIDTH=42;
+const BLE_SERVICES=[
+  '0000ffe0-0000-1000-8000-00805f9b34fb',
+  '0000ff00-0000-1000-8000-00805f9b34fb',
+  '0000ae30-0000-1000-8000-00805f9b34fb',
+  '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+  '49535343-fe7d-4ae5-8fa9-9fafd205e455'
+];
 let active=null;
 let restoring=false;
-
 const enc=new TextEncoder();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ascii=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7E]/g,'?');
@@ -14,6 +20,8 @@ const rp=n=>'Rp '+Math.max(0,Number(n)||0).toLocaleString('id-ID');
 const cfg=()=>{try{return JSON.parse(localStorage.getItem(STORE)||'{}')}catch{return {}}};
 const save=v=>localStorage.setItem(STORE,JSON.stringify(v||{}));
 const clear=()=>localStorage.removeItem(STORE);
+const isAndroid=()=>/Android/i.test(navigator.userAgent||'');
+const isMobile=()=>/Android|Mobile|Tablet/i.test(navigator.userAgent||'');
 
 function splitWords(text,width=WIDTH){
   const words=ascii(text).trim().split(/\s+/).filter(Boolean),out=[];let line='';
@@ -33,7 +41,7 @@ function lr(left,right,width=WIDTH){
   const last=lines.pop()||'';
   return [...lines,last+' '.repeat(Math.max(1,width-last.length-right.length))+right];
 }
-function line(ch='-'){return ch.repeat(WIDTH)}
+function rule(ch='-'){return ch.repeat(WIDTH)}
 function receiptText(r){
   const items=Array.isArray(r?.items)?r.items:[];
   const subtotal=Math.max(0,Number(r?.subtotal_amount??r?.subtotal)||items.reduce((s,i)=>s+(Number(i.quantity)||0)*(Number(i.price)||0),0));
@@ -47,23 +55,21 @@ function receiptText(r){
   const when=new Date(r?.created_at||Date.now());
   const date=new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',day:'2-digit',month:'2-digit',year:'numeric'}).format(when);
   const time=new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',hour12:false}).format(when).replace('.',':')+' WIB';
-  const out=[];
-  out.push('STRUK PEMBAYARAN & PEMESANAN',line('='));
+  const out=['STRUK PEMBAYARAN & PEMESANAN',rule('=')];
   out.push(...lr('Kode',r?.payment_code||r?.public_order_code||'-'));
   out.push(...lr('Pemesan',r?.customer_name||'-'));
   out.push(...lr('Layanan',r?.service_mode==='dine-in'?'Makan di Tempat':'Bawa Pulang'));
   if(r?.service_mode==='dine-in')out.push(...lr('Meja',String(r?.table_number||'-')));
   if(r?.payment_method)out.push(...lr('Pembayaran',String(r.payment_method).toUpperCase()));
-  out.push(...lr('Tanggal',date),...lr('Waktu',time),line());
-  out.push('RINCIAN PESANAN');
+  out.push(...lr('Tanggal',date),...lr('Waktu',time),rule(),'RINCIAN PESANAN');
   for(const i of items){
     out.push(...splitWords(i?.name||'-'));
     out.push(...lr((Number(i?.quantity)||0)+' x '+rp(i?.price),rp((Number(i?.quantity)||0)*(Number(i?.price)||0))));
   }
-  out.push(line(),...lr('Subtotal',rp(subtotal)));
+  out.push(rule(),...lr('Subtotal',rp(subtotal)));
   if(charge>0)out.push(...lr(chargeLabel,rp(charge)));
   if(tax>0)out.push(...lr(taxLabel,rp(tax)));
-  out.push(line('='),...lr('TOTAL',rp(total)),line('='),'Terima kasih','','');
+  out.push(rule('='),...lr('TOTAL',rp(total)),rule('='),'Terima kasih','','');
   return out.flat().join('\n');
 }
 function escpos(r){
@@ -74,138 +80,93 @@ function escpos(r){
   out.set(init,0);out.set(body,init.length);out.set(feedcut,init.length+body.length);
   return out;
 }
+function modeLabel(mode){
+  return ({
+    'bt-classic':'Bluetooth Classic / SPP',
+    'ble':'Bluetooth Low Energy (BLE)',
+    'usb':'USB / USB OTG',
+    'serial':'Serial / COM',
+    'system':'Printer Sistem'
+  })[mode]||'Belum dipilih';
+}
 function statusText(){
   const s=cfg();
-  if(active?.mode==='usb')return 'Terhubung · USB '+(active.name||'Thermal');
-  if(active?.mode==='serial')return 'Terhubung · Serial';
-  if(s.mode==='system')return 'Siap · Printer Sistem';
-  if(s.mode==='usb'||s.mode==='serial')return 'Tersimpan · sambungkan perangkat';
+  if(active)return 'Terhubung · '+modeLabel(active.route||active.mode)+(active.name?' · '+active.name:'');
+  if(s.mode)return 'Tersimpan · '+modeLabel(s.mode);
   return 'Belum terhubung';
 }
+function capability(){
+  return {
+    android:isAndroid(),
+    mobile:isMobile(),
+    usb:!!navigator.usb,
+    serial:!!navigator.serial,
+    bluetooth:!!navigator.bluetooth,
+    system:true
+  };
+}
 function style(){
-  if(document.getElementById('sdbThermalPrinterCssV1'))return;
-  const s=document.createElement('style');s.id='sdbThermalPrinterCssV1';
-  s.textContent='#sdbThermalPrinterPanel{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px;padding:11px 12px;border:1px solid #dce5e1;border-radius:12px;background:#f8fbf9;color:#1d2924}#sdbThermalPrinterPanel .sdbPrinterInfo{display:grid;gap:2px}#sdbThermalPrinterPanel small{color:#728079}#sdbThermalPrinterPanel .sdbPrinterActions{display:flex;gap:7px;flex-wrap:wrap}#sdbPrinterModal{position:fixed;inset:0;z-index:100000;background:rgba(6,14,16,.66);display:grid;place-items:center;padding:18px}#sdbPrinterModal .box{width:min(560px,100%);background:#fff;border-radius:18px;padding:20px;color:#17211d;box-shadow:0 30px 90px rgba(0,0,0,.28)}#sdbPrinterModal .grid{display:grid;gap:9px;margin-top:15px}#sdbPrinterModal button{min-height:43px;border:1px solid #dbe4df;border-radius:11px;background:#fff;color:#1d2924;font-weight:800;padding:10px 12px;text-align:left}#sdbPrinterModal button.primary{background:#173f33;color:#fff;border-color:#173f33}#sdbPrinterModal p{color:#68756f;line-height:1.5}.sdbPrinterStatusCard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px}.sdbPrinterStatusCard p{margin:5px 0 0;color:var(--muted,#718078)}.sdbPrinterPathGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px}.sdbPrinterPath{display:flex;flex-direction:column;gap:12px;min-height:310px}.sdbPrinterPath.active{border-color:var(--accent,#00bfae)!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--accent,#00bfae) 18%,transparent)!important}.sdbPrinterPathTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.sdbPrinterPathTop h3{margin:6px 0 0}.sdbPrinterPathNo{font-size:10px;font-weight:900;letter-spacing:.12em;color:var(--accent,#00bfae)}.sdbPrinterPath>p{margin:0;color:var(--muted,#718078);line-height:1.55}.sdbPrinterPath>.notice{margin-top:auto}.sdbPrinterPath>.btn{width:100%}.sdbPrinterSafety p{color:var(--muted,#718078);line-height:1.55}@media(max-width:980px){.sdbPrinterPathGrid{grid-template-columns:1fr}.sdbPrinterStatusCard{grid-template-columns:1fr}}';
+  if(document.getElementById('sdbThermalPrinterCssV2'))return;
+  const s=document.createElement('style');s.id='sdbThermalPrinterCssV2';
+  s.textContent='.sdbPrinterHero{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}.sdbPrinterStatus{padding:8px 11px;border-radius:999px;background:#eef5f2;border:1px solid #d8e4de;font-size:12px;font-weight:800}.sdbPrinterGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}.sdbPrinterCard{border:1px solid var(--line,#dfe5e1);border-radius:14px;background:var(--panel,#fff);padding:15px;display:grid;gap:9px}.sdbPrinterCard h3{margin:0;font-size:15px}.sdbPrinterCard p{margin:0;color:var(--muted,#6d7b75);font-size:12px;line-height:1.5}.sdbPrinterCard .meta{font-size:10px;font-weight:850;letter-spacing:.06em;text-transform:uppercase;color:#688078}.sdbPrinterActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}.sdbPrinterActions button{min-height:39px}.sdbPrinterWarn{margin-top:14px;padding:11px 12px;border-radius:12px;background:#fff8e9;border:1px solid #efe0b9;color:#6d5826;font-size:12px;line-height:1.5}.sdbPrinterSupport{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.sdbPrinterSupport span{padding:5px 8px;border-radius:999px;background:#f1f4f3;font-size:10px;font-weight:800}.sdbPrinterSupport .yes{background:#e8f7f0;color:#176548}.sdbPrinterSupport .no{background:#f8eeee;color:#8b3d3d}@media(max-width:760px){.sdbPrinterGrid{grid-template-columns:1fr}}';
   document.head.appendChild(s);
 }
-function updatePanel(){
-  const p=document.getElementById('sdbThermalPrinterPanel');
-  if(p){
-    const st=p.querySelector('[data-printer-status]');if(st)st.textContent=statusText();
-    const d=p.querySelector('[data-printer-disconnect]');if(d)d.hidden=!(active||cfg().mode);
-  }
-  updateSettingsUi();
+function supportBadge(name,ok){return '<span class="'+(ok?'yes':'no')+'">'+esc(name)+' · '+(ok?'tersedia':'tidak tersedia')+'</span>'}
+function settingsHtml(){
+  const c=capability(),s=cfg();
+  const card=(meta,title,desc,mode,available,button='Hubungkan')=>'<article class="sdbPrinterCard"><div class="meta">'+esc(meta)+'</div><h3>'+esc(title)+'</h3><p>'+esc(desc)+'</p><div class="sdbPrinterActions"><button type="button" class="btn '+(available?'primary':'soft')+'" data-sdb-printer-mode="'+esc(mode)+'" '+(available?'':'disabled')+'>'+esc(button)+'</button></div></article>';
+  return '<div class="sectionHead"><div><div class="ey">PENGATURAN</div><h1>Printer Thermal</h1><p>Hubungkan printer pembayaran SMART CASHIER. Tidak ada pairing atau cetak uji otomatis; akses perangkat hanya berjalan setelah tindakan pengguna.</p></div><span class="sdbPrinterStatus" data-sdb-printer-status>'+esc(statusText())+'</span></div>'+
+    '<section class="card"><div class="sdbPrinterHero"><div><h3 style="margin:0">Perangkat ini</h3><p style="margin:4px 0 0;color:var(--muted)">SMART CASHIER mendeteksi kemampuan browser secara lokal.</p></div><div class="sdbPrinterActions"><button type="button" class="btn soft" data-sdb-printer-disconnect '+(s.mode?'':'disabled')+'>Putuskan / Lupakan</button></div></div><div class="sdbPrinterSupport">'+
+    supportBadge('Android',c.android)+supportBadge('Web Bluetooth BLE',c.bluetooth)+supportBadge('Web Serial / Bluetooth SPP',c.serial)+supportBadge('WebUSB / OTG',c.usb)+supportBadge('System Print',true)+'</div></section>'+
+    '<div class="sdbPrinterGrid">'+
+    card('ANDROID · DIREK','Bluetooth Classic / SPP','Untuk printer thermal Bluetooth Classic yang memakai Serial Port Profile (SPP/RFCOMM). Cocok untuk banyak printer POS Android modern pada Chrome yang mendukung Web Serial over Bluetooth.','bt-classic',c.serial)+
+    card('ANDROID · DIREK','Bluetooth Low Energy (BLE)','Untuk printer BLE/GATT yang menyediakan karakteristik tulis ESC/POS. Runtime mencoba service BLE printer/UART yang umum dan akan menolak secara aman bila model tidak kompatibel.','ble',c.bluetooth)+
+    card('ANDROID · KABEL','USB OTG / WebUSB','Untuk printer USB yang dikenali browser melalui adaptor OTG dan mengekspos endpoint OUT yang dapat ditulis.','usb',c.usb)+
+    card('ANDROID · UNIVERSAL','Android System Print','Menggunakan dialog cetak Android dan PrintService/vendor plugin yang terpasang. Ini adalah fallback paling kompatibel bila printer sudah muncul sebagai printer Android.','system',true,'Gunakan Jalur Ini')+
+    card('DESKTOP · DIREK','USB ESC/POS','Koneksi langsung ke endpoint USB printer ESC/POS pada Chrome desktop yang mendukung WebUSB.','usb',c.usb)+
+    card('DESKTOP · DIREK','Serial / COM ESC/POS','Untuk printer serial/virtual COM. Browser meminta pengguna memilih port sebelum SMART CASHIER dapat mengirim data.','serial',c.serial)+
+    card('DESKTOP · UNIVERSAL','Printer Sistem / Driver Windows','Menghasilkan struk 80 mm dan menyerahkan job ke dialog printer Windows/browser.','system',true,'Gunakan Jalur Ini')+
+    '</div><div class="sdbPrinterWarn"><b>Catatan kompatibilitas.</b> Bluetooth/USB printer tidak memiliki satu protokol browser universal. SMART CASHIER memakai ESC/POS untuk direct-print dan otomatis kembali ke System Print bila koneksi direct gagal. Printer vendor yang memakai protokol privat tetap dapat digunakan melalui PrintService/driver vendor pada jalur System Print.</div>';
 }
-function panel(){
+function updateSettingsStatus(){
+  const st=document.querySelector('[data-sdb-printer-status]');if(st)st.textContent=statusText();
+  const d=document.querySelector('[data-sdb-printer-disconnect]');if(d)d.disabled=!cfg().mode;
+}
+function renderSettings(){
   style();
-  const root=document.getElementById('rohmatCashierSafe');if(!root||document.getElementById('sdbThermalPrinterPanel'))return;
-  const p=document.createElement('div');p.id='sdbThermalPrinterPanel';
-  p.innerHTML='<div class="sdbPrinterInfo"><b>Printer Thermal</b><small data-printer-status>'+esc(statusText())+'</small></div><div class="sdbPrinterActions"><button type="button" class="rc6Btn" data-printer-connect>Buka Pengaturan Printer</button><button type="button" class="rc6Btn" data-printer-disconnect hidden>Putuskan</button></div>';
-  root.prepend(p);
-  p.querySelector('[data-printer-connect]').addEventListener('click',openPrinterSettings);
-  p.querySelector('[data-printer-disconnect]').addEventListener('click',disconnect);
-  updatePanel();
+  const view=document.getElementById('view');if(!view)return;
+  const sub=document.querySelector('.subnav');
+  if(sub)sub.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.sdbPrinterSettings==='1'));
+  view.innerHTML=settingsHtml();
+  view.querySelectorAll('[data-sdb-printer-mode]').forEach(b=>b.addEventListener('click',()=>choose(b.dataset.sdbPrinterMode,b)));
+  view.querySelector('[data-sdb-printer-disconnect]')?.addEventListener('click',async()=>{await disconnect();renderSettings()});
 }
-
-function modeName(mode){
-  return mode==='usb'?'USB Langsung (ESC/POS)':mode==='serial'?'USB/Serial (ESC/POS)':mode==='system'?'Printer Sistem / Driver Windows':'Belum dipilih';
-}
-function updateSettingsUi(){
-  const root=document.getElementById('sdbPrinterSettingsV1');if(!root)return;
-  const s=cfg(),mode=active?.mode||s.mode||'';
-  const status=root.querySelector('[data-settings-printer-status]');
-  if(status)status.textContent=statusText();
-  const modeEl=root.querySelector('[data-settings-printer-mode]');if(modeEl)modeEl.textContent=modeName(mode);
-  root.querySelectorAll('[data-printer-path]').forEach(card=>{
-    const m=card.dataset.printerPath;
-    card.classList.toggle('active',m===mode);
-    const badge=card.querySelector('[data-path-state]');
-    if(badge)badge.textContent=m===mode?(active?.mode===m?'Terhubung':'Dipilih'):'Siap dipilih';
-  });
-  const d=root.querySelector('[data-settings-printer-disconnect]');
-  if(d)d.hidden=!(active||s.mode);
-}
-async function choosePath(mode,button){
-  const label=button?.textContent||'Hubungkan';
-  if(button){button.disabled=true;button.textContent='Menghubungkan…'}
-  try{
-    if(mode==='usb')await connectUsb();
-    else if(mode==='serial')await connectSerial();
-    else if(mode==='system'){await closeActive();save({mode:'system',paper:'80mm'});active=null}
-    updatePanel();updateSettingsUi();
-  }catch(err){
-    alert('Printer belum terhubung: '+String(err?.message||err));
-  }finally{
-    if(button){button.disabled=false;button.textContent=label}
-  }
-}
-function renderPrinterSettings(){
-  style();
-  const nav=document.querySelector('.subnav'),view=document.getElementById('view'),title=document.querySelector('.topbar h2');
-  if(!nav||!view)return;
-  if(title)title.textContent='PENGATURAN';
-  nav.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.settingsPrinter==='1'));
-  const usb=!!navigator.usb,serial=!!navigator.serial,s=cfg();
-  view.innerHTML='<div id="sdbPrinterSettingsV1">'+
-    '<div class="sectionHead"><div><div class="ey">PENGATURAN</div><h1>Printer Thermal</h1><p>Hubungkan printer thermal untuk SMART CASHIER. Pilih satu jalur sesuai tipe perangkat; pengaturan tersimpan hanya pada browser/perangkat kasir ini.</p></div></div>'+
-    '<section class="card sdbPrinterStatusCard"><div><span class="statusDot"></span><b>Status Printer</b><p data-settings-printer-status>'+esc(statusText())+'</p></div><div><b>Mode Aktif</b><p data-settings-printer-mode>'+esc(modeName(active?.mode||s.mode))+'</p></div></section>'+
-    '<div class="sdbPrinterPathGrid">'+
-      '<section class="card sdbPrinterPath" data-printer-path="usb"><div class="sdbPrinterPathTop"><div><span class="sdbPrinterPathNo">01</span><h3>USB Langsung — ESC/POS</h3></div><span class="pill" data-path-state>Siap dipilih</span></div><p>Untuk printer thermal USB yang dapat diakses langsung oleh Chrome/Edge melalui WebUSB. SMART CASHIER mengirim data ESC/POS langsung ke endpoint printer.</p><div class="notice">'+(usb?'WebUSB tersedia pada browser ini.':'WebUSB tidak tersedia pada browser ini; gunakan Chrome/Edge desktop atau Printer Sistem.')+'</div><button type="button" class="btn primary" data-settings-connect="usb" '+(usb?'':'disabled')+'>Hubungkan USB Langsung</button></section>'+
-      '<section class="card sdbPrinterPath" data-printer-path="serial"><div class="sdbPrinterPathTop"><div><span class="sdbPrinterPathNo">02</span><h3>USB/Serial — ESC/POS</h3></div><span class="pill" data-path-state>Siap dipilih</span></div><p>Untuk printer yang muncul sebagai port serial/virtual COM. Browser meminta Anda memilih port, lalu SMART CASHIER mengirim ESC/POS melalui Web Serial.</p><div class="notice">'+(serial?'Web Serial tersedia pada browser ini.':'Web Serial tidak tersedia pada browser ini; gunakan Chrome/Edge desktop atau Printer Sistem.')+'</div><button type="button" class="btn primary" data-settings-connect="serial" '+(serial?'':'disabled')+'>Hubungkan USB/Serial</button></section>'+
-      '<section class="card sdbPrinterPath" data-printer-path="system"><div class="sdbPrinterPathTop"><div><span class="sdbPrinterPathNo">03</span><h3>Printer Sistem / Driver Windows</h3></div><span class="pill" data-path-state>Siap dipilih</span></div><p>Fallback universal. SMART CASHIER membuat struk 80 mm dan menyerahkan pencetakan ke dialog printer Chrome/Windows. Cocok untuk printer yang memakai driver pabrikan.</p><div class="notice">Tidak memerlukan akses USB/Serial dari browser. Printer harus sudah terinstal di Windows.</div><button type="button" class="btn primary" data-settings-connect="system">Gunakan Printer Sistem</button></section>'+
-    '</div>'+
-    '<section class="card sdbPrinterSafety"><h3>Keamanan & Perilaku</h3><p>Tidak ada pairing, test print, atau pencetakan otomatis tanpa tindakan pengguna. Izin perangkat disimpan oleh browser; transaksi tetap berjalan walaupun printer tidak tersedia.</p><button type="button" class="btn soft" data-settings-printer-disconnect '+((active||s.mode)?'':'hidden')+'>Putuskan / Lupakan Printer</button></section>'+
-  '</div>';
-  view.querySelectorAll('[data-settings-connect]').forEach(b=>b.addEventListener('click',()=>choosePath(b.dataset.settingsConnect,b)));
-  view.querySelector('[data-settings-printer-disconnect]')?.addEventListener('click',async()=>{await disconnect();renderPrinterSettings()});
-  updateSettingsUi();
-}
-function openPrinterSettings(){
-  const settings=document.querySelector('.mainNav [data-settings-main="1"]');
-  if(settings&&!settings.classList.contains('on'))settings.click();
-  setTimeout(()=>{patchSettingsNav();renderPrinterSettings()},40);
-}
-function patchSettingsNav(){
+function ensureSettingsNav(){
   const nav=document.querySelector('.mainNav'),sub=document.querySelector('.subnav');
   if(!nav||!sub)return;
-  const settings=nav.querySelector('[data-settings-main="1"]');
-  const activeSettings=!!settings?.classList.contains('on')||String(document.querySelector('.topbar h2')?.textContent||'').trim().toUpperCase()==='PENGATURAN';
-  if(!activeSettings)return;
-  let b=sub.querySelector('[data-settings-printer="1"]');
-  if(!b){
-    b=document.createElement('button');b.type='button';b.dataset.settingsPrinter='1';b.textContent='Printer Thermal';
-    b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();renderPrinterSettings()});
-    sub.appendChild(b);
-  }
+  const settings=[...nav.querySelectorAll('button')].find(b=>b.dataset.settingsMain==='1'||(b.textContent||'').trim().toUpperCase()==='PENGATURAN');
+  if(!settings?.classList.contains('on'))return;
+  if(sub.querySelector('[data-sdb-printer-settings="1"]'))return;
+  const b=document.createElement('button');b.type='button';b.dataset.sdbPrinterSettings='1';b.textContent='Printer Thermal';
+  b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();renderSettings()});
+  sub.appendChild(b);
 }
-function openConnect(){
-  document.getElementById('sdbPrinterModal')?.remove();
-  const m=document.createElement('div');m.id='sdbPrinterModal';
-  const usb=!!navigator.usb,serial=!!navigator.serial;
-  m.innerHTML='<div class="box"><h2 style="margin:0">Hubungkan Printer Thermal</h2><p>Pilih jalur sesuai printer. Pairing hanya dilakukan setelah Anda memilih perangkat dari dialog browser.</p><div class="grid">'+
-    (usb?'<button type="button" class="primary" data-mode="usb">USB Langsung (ESC/POS)</button>':'')+
-    (serial?'<button type="button" class="primary" data-mode="serial">USB/Serial (ESC/POS)</button>':'')+
-    '<button type="button" data-mode="system">Printer Sistem / Driver Windows</button><button type="button" data-mode="cancel">Batal</button></div><p style="font-size:12px;margin-bottom:0">Jika direct USB/Serial tidak didukung model printer, pilih Printer Sistem. Tidak ada cetak uji otomatis.</p></div>';
-  document.body.appendChild(m);
-  m.addEventListener('click',async e=>{
-    const b=e.target.closest('[data-mode]');if(!b)return;
-    const mode=b.dataset.mode;
-    if(mode==='cancel'){m.remove();return}
-    b.disabled=true;
-    try{
-      if(mode==='usb')await connectUsb();
-      else if(mode==='serial')await connectSerial();
-      else {await closeActive();save({mode:'system',paper:'80mm'});active=null}
-      m.remove();updatePanel();
-    }catch(err){
-      b.disabled=false;
-      alert('Printer belum terhubung: '+String(err?.message||err));
-    }
-  });
+async function choose(mode,button){
+  if(button)button.disabled=true;
+  try{
+    if(mode==='bt-classic')await connectSerial('bt-classic');
+    else if(mode==='ble')await connectBle();
+    else if(mode==='usb')await connectUsb();
+    else if(mode==='serial')await connectSerial('serial');
+    else {await closeActive();active=null;save({mode:'system',paper:'80mm'});}
+    updateSettingsStatus();
+  }catch(err){
+    alert('Printer belum terhubung: '+String(err?.message||err));
+  }finally{if(button&&button.isConnected)button.disabled=false}
 }
 async function connectUsb(){
   if(!navigator.usb)throw Error('WebUSB tidak tersedia di browser ini.');
-  const device=await navigator.usb.requestDevice({filters:[{classCode:0x07},{classCode:0xff}]});
+  const device=await navigator.usb.requestDevice({filters:[]});
   await device.open();
   if(!device.configuration)await device.selectConfiguration(device.configurations?.[0]?.configurationValue||1);
   let choice=null;
@@ -216,36 +177,62 @@ async function connectUsb(){
     }
     if(choice)break;
   }
-  if(!choice){await device.close();throw Error('Endpoint cetak USB tidak ditemukan. Gunakan Printer Sistem.')}
+  if(!choice){await device.close();throw Error('Endpoint OUT USB tidak ditemukan. Gunakan Printer Sistem/PrintService.')}
   await device.claimInterface(choice.interfaceNumber);
   if(choice.alternateSetting)await device.selectAlternateInterface(choice.interfaceNumber,choice.alternateSetting);
   await closeActive();
-  active={mode:'usb',device,...choice,name:device.productName||'Thermal'};
+  active={mode:'usb',route:'usb',device,...choice,name:device.productName||'Thermal USB'};
   save({mode:'usb',paper:'80mm',vendorId:device.vendorId,productId:device.productId,name:device.productName||''});
 }
-async function connectSerial(){
+async function connectSerial(route='serial'){
   if(!navigator.serial)throw Error('Web Serial tidak tersedia di browser ini.');
-  const port=await navigator.serial.requestPort();
-  const baudRate=9600;
-  await port.open({baudRate});
+  const options=route==='bt-classic'?{}:{};
+  const port=await navigator.serial.requestPort(options);
+  await port.open({baudRate:9600});
   const info=port.getInfo?.()||{};
   await closeActive();
-  active={mode:'serial',port,baudRate};
-  save({mode:'serial',paper:'80mm',baudRate,usbVendorId:info.usbVendorId||null,usbProductId:info.usbProductId||null});
+  active={mode:'serial',route,port,baudRate:9600,name:route==='bt-classic'?'Bluetooth SPP':'Serial'};
+  save({mode:route,paper:'80mm',baudRate:9600,usbVendorId:info.usbVendorId||null,usbProductId:info.usbProductId||null});
 }
-async function closeActive(){
-  const a=active;active=null;
-  if(!a)return;
+async function writableBleCharacteristic(device){
+  const server=await device.gatt.connect();
+  for(const uuid of BLE_SERVICES){
+    try{
+      const service=await server.getPrimaryService(uuid);
+      const chars=await service.getCharacteristics();
+      const ch=chars.find(x=>x.properties?.writeWithoutResponse)||chars.find(x=>x.properties?.write);
+      if(ch)return {server,serviceUuid:uuid,characteristic:ch};
+    }catch{}
+  }
   try{
-    if(a.mode==='usb'){
-      try{await a.device.releaseInterface(a.interfaceNumber)}catch{}
-      try{await a.device.close()}catch{}
-    }else if(a.mode==='serial'){
-      try{await a.port.close()}catch{}
+    const services=await server.getPrimaryServices();
+    for(const service of services){
+      const chars=await service.getCharacteristics();
+      const ch=chars.find(x=>x.properties?.writeWithoutResponse)||chars.find(x=>x.properties?.write);
+      if(ch)return {server,serviceUuid:service.uuid,characteristic:ch};
     }
   }catch{}
+  try{server.disconnect()}catch{}
+  throw Error('Karakteristik BLE tulis yang kompatibel tidak ditemukan. Gunakan Bluetooth Classic/SPP atau Android System Print.');
 }
-async function disconnect(){await closeActive();clear();updatePanel()}
+async function connectBle(){
+  if(!navigator.bluetooth)throw Error('Web Bluetooth tidak tersedia di browser ini.');
+  const device=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:BLE_SERVICES});
+  const found=await writableBleCharacteristic(device);
+  await closeActive();
+  active={mode:'ble',route:'ble',device,...found,name:device.name||'Thermal BLE'};
+  device.addEventListener('gattserverdisconnected',()=>{if(active?.device===device){active=null;updateSettingsStatus()}});
+  save({mode:'ble',paper:'80mm',deviceId:device.id,name:device.name||'',serviceUuid:found.serviceUuid,characteristicUuid:found.characteristic.uuid});
+}
+async function closeActive(){
+  const a=active;active=null;if(!a)return;
+  try{
+    if(a.mode==='usb'){try{await a.device.releaseInterface(a.interfaceNumber)}catch{}try{await a.device.close()}catch{}}
+    else if(a.mode==='serial'){try{await a.port.close()}catch{}}
+    else if(a.mode==='ble'){try{a.device.gatt?.disconnect()}catch{}}
+  }catch{}
+}
+async function disconnect(){await closeActive();clear();updateSettingsStatus()}
 async function restore(){
   if(restoring||active)return;restoring=true;
   try{
@@ -256,22 +243,40 @@ async function restore(){
       if(d){
         await d.open();if(!d.configuration)await d.selectConfiguration(d.configurations?.[0]?.configurationValue||1);
         let choice=null;for(const intf of d.configuration?.interfaces||[]){for(const alt of intf.alternates||[]){const out=alt.endpoints?.find(e=>e.direction==='out');if(out){choice={interfaceNumber:intf.interfaceNumber,alternateSetting:alt.alternateSetting,endpointNumber:out.endpointNumber};break}}if(choice)break}
-        if(choice){await d.claimInterface(choice.interfaceNumber);if(choice.alternateSetting)await d.selectAlternateInterface(choice.interfaceNumber,choice.alternateSetting);active={mode:'usb',device:d,...choice,name:d.productName||s.name||'Thermal'}}
+        if(choice){await d.claimInterface(choice.interfaceNumber);if(choice.alternateSetting)await d.selectAlternateInterface(choice.interfaceNumber,choice.alternateSetting);active={mode:'usb',route:'usb',device:d,...choice,name:d.productName||s.name||'Thermal USB'}}
       }
-    }else if(s.mode==='serial'&&navigator.serial){
+    }else if((s.mode==='serial'||s.mode==='bt-classic')&&navigator.serial){
       const ports=await navigator.serial.getPorts(),p=ports.find(x=>{const i=x.getInfo?.()||{};return (!s.usbVendorId||i.usbVendorId===s.usbVendorId)&&(!s.usbProductId||i.usbProductId===s.usbProductId)})||ports[0];
-      if(p){await p.open({baudRate:Number(s.baudRate)||9600});active={mode:'serial',port:p,baudRate:Number(s.baudRate)||9600}}
+      if(p){await p.open({baudRate:Number(s.baudRate)||9600});active={mode:'serial',route:s.mode,port:p,baudRate:Number(s.baudRate)||9600,name:s.mode==='bt-classic'?'Bluetooth SPP':'Serial'}}
+    }else if(s.mode==='ble'&&navigator.bluetooth){
+      const devices=await navigator.bluetooth.getDevices();
+      const d=devices.find(x=>x.id===s.deviceId)||devices[0];
+      if(d){
+        const server=await d.gatt.connect();
+        const service=await server.getPrimaryService(s.serviceUuid);
+        const characteristic=await service.getCharacteristic(s.characteristicUuid);
+        active={mode:'ble',route:'ble',device:d,server,serviceUuid:s.serviceUuid,characteristic,name:d.name||s.name||'Thermal BLE'};
+      }
     }
-  }catch{}finally{restoring=false;updatePanel()}
+  }catch{}finally{restoring=false;updateSettingsStatus()}
+}
+async function bleWrite(ch,bytes){
+  const size=120;
+  for(let i=0;i<bytes.length;i+=size){
+    const chunk=bytes.slice(i,i+size);
+    if(ch.properties?.writeWithoutResponse&&ch.writeValueWithoutResponse)await ch.writeValueWithoutResponse(chunk);
+    else if(ch.writeValueWithResponse)await ch.writeValueWithResponse(chunk);
+    else await ch.writeValue(chunk);
+  }
 }
 async function directPrint(r){
   const bytes=escpos(r);
   if(active?.mode==='usb'){const x=await active.device.transferOut(active.endpointNumber,bytes);if(x.status!=='ok')throw Error('Transfer USB gagal.');return}
   if(active?.mode==='serial'){
     const w=active.port.writable?.getWriter();if(!w)throw Error('Port serial tidak siap.');
-    try{await w.write(bytes)}finally{w.releaseLock()}
-    return;
+    try{await w.write(bytes)}finally{w.releaseLock()}return;
   }
+  if(active?.mode==='ble'){await bleWrite(active.characteristic,bytes);return}
   throw Error('Printer direct belum terhubung.');
 }
 function systemPrint(r){
@@ -283,26 +288,31 @@ function systemPrint(r){
 async function print(r){
   if(!r)return;
   const s=cfg();
-  if((s.mode==='usb'||s.mode==='serial')&&!active)await restore();
+  if(['usb','serial','bt-classic','ble'].includes(s.mode)&&!active)await restore();
   if(active){
     try{await directPrint(r);return}catch(err){
-      alert('Koneksi printer direct terputus. SMART CASHIER akan membuka Printer Sistem.');
-      await closeActive();updatePanel();systemPrint(r);return;
+      alert('Koneksi printer direct tidak siap. SMART CASHIER akan membuka Printer Sistem.');
+      await closeActive();updateSettingsStatus();systemPrint(r);return;
     }
   }
   systemPrint(r);
 }
-document.addEventListener('click',e=>{
+function interceptReceiptPrint(e){
   const b=e.target.closest?.('[data-rc6-receipt-print]');if(!b)return;
   const r=window.__SDB_LAST_CASHIER_RECEIPT__;if(!r)return;
   e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
   print(r).catch(err=>alert('Gagal mencetak: '+String(err?.message||err)));
-},true);
+}
+function boot(){
+  style();ensureSettingsNav();restore();
+  document.addEventListener('click',interceptReceiptPrint,true);
+  new MutationObserver(()=>ensureSettingsNav()).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+  document.addEventListener('rohmat:navigation',()=>setTimeout(ensureSettingsNav,0));
+}
 if(navigator.usb){
-  navigator.usb.addEventListener('disconnect',e=>{if(active?.mode==='usb'&&active.device===e.device){active=null;updatePanel()}});
+  navigator.usb.addEventListener('disconnect',e=>{if(active?.mode==='usb'&&active.device===e.device){active=null;updateSettingsStatus()}});
   navigator.usb.addEventListener('connect',()=>restore());
 }
-const boot=()=>{panel();patchSettingsNav();restore();new MutationObserver(()=>{panel();patchSettingsNav()}).observe(document.documentElement,{childList:true,subtree:true})};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.__SDB_THERMAL_PRINTER__={connect:openConnect,settings:openPrinterSettings,disconnect,status:statusText,print,restore,version:'v1'};
+window.__SDB_THERMAL_PRINTER__={connectMode:choose,disconnect,status:statusText,capability,print,restore,renderSettings,version:'v2-android-ready'};
 })();

@@ -536,7 +536,7 @@ export default async function handler(req, res) {
     res.setHeader('X-Rohmat-Admin-Cashier', 'canonical-same-origin-v60');
     res.setHeader('X-Rohmat-Admin-Runtime', 'canonical-core-v60');
     res.setHeader('X-Rohmat-Admin-Security', 'secure-api-v5-retained');
-    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(self), serial=(self)');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(self), serial=(self), bluetooth=(self)');
     res.setHeader('Content-Security-Policy', contentSecurityPolicy(shell.body));
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');

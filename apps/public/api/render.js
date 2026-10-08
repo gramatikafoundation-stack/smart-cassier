@@ -459,7 +459,7 @@ export default async function handler(req, res) {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Referrer-Policy', 'no-referrer');
-    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=()');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=()');
     for (const [key, value] of Object.entries(securityHeaders(nonce, supabaseOrigin))) res.setHeader(key, value);
     res.setHeader('X-Rohmat-Public', 'master-prototype-lkg-v1');
     res.setHeader('X-SDB-Tenant-ID', tenantId);

@@ -30,6 +30,8 @@ const origins=['public_url','admin_url','kds_url'].map(k=>origin(c[k],k));
 // Unified SMART ORDER uses one origin with route-separated Public/Admin/KDS surfaces.
 if(!Number.isInteger(c.table_count)||c.table_count<1||c.table_count>200)fail('table_count');
 if(c.require_table_qr_signature!==true)fail('signed table QR is required');
+if(Number(c.retention?.application_days)!==30)fail('application retention must be exactly 30 days');
+if(c.retention?.external_spreadsheet_archive!=='permanent'||c.retention?.external_archive_reset!==false)fail('external spreadsheet archive must be permanent and never auto-reset');
 if(!/^prototype\/.+\.json$/.test(c.menu_seed||''))fail('menu_seed must live under prototype/');
 const menuPath=path.resolve(root,c.menu_seed);
 if(!menuPath.startsWith(path.join(root,'prototype')+path.sep)||!fs.existsSync(menuPath))fail('menu_seed not found');
@@ -46,7 +48,8 @@ if(c.tenant_slug!==REF.slug){
 }
 console.log(JSON.stringify({
   ok:true,
-  contract:'smart-order-sdb-master-prototype-v2',
+  contract:'smart-order-sdb-master-prototype-v4',
+  master_tenant_reference:c.tenant_id===REF.tenant_id&&c.tenant_slug===REF.slug,
   platform_supabase_project_ref:'xrepmvbccalzhlcznrff',
   tenant_id:c.tenant_id,
   tenant_slug:c.tenant_slug,

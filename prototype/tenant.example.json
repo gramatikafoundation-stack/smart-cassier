@@ -1,44 +1,29 @@
 {
   "schema_version": 1,
-  "tenant_id": "11111111-1111-4111-8111-111111111111",
-  "tenant_slug": "example-merchant",
-  "business_name": "Example Merchant",
-  "merchant_name": "Example Merchant",
+  "tenant_id": "d8bb901c-7399-485b-8743-b319fde148ac",
+  "tenant_slug": "warung-nasi",
+  "business_name": "Rohmat Nasi Uduk",
+  "merchant_name": "Tahu Tek dan Gado-Gado",
   "merchant_name_acknowledged": true,
   "locale": "id-ID",
   "currency": "IDR",
   "timezone": "Asia/Jakarta",
-  "public_url": "https://example-public.vercel.app",
-  "admin_url": "https://example-admin.vercel.app",
-  "kds_url": "https://example-kds.vercel.app",
-  "qris_asset": "tenant://example-merchant/qris.png",
+  "public_url": "https://smart-order-sdb.vercel.app",
+  "admin_url": "https://smart-order-sdb.vercel.app",
+  "kds_url": "https://smart-order-sdb.vercel.app",
+  "qris_asset": "tenant://warung-nasi/qris.png",
   "table_count": 20,
   "require_table_qr_signature": true,
   "menu_seed": "prototype/menu.example.json",
-  "admin_owner_email": "owner@example.com",
-  "spreadsheet_target": "replace-at-provisioning",
-  "storage": {
-    "namespace": "example-merchant",
-    "static_bucket": "merchant-static",
-    "payment_bucket": "payment-proofs"
-  },
+  "admin_owner_email": "gramatikafoundation@gmail.com",
+  "spreadsheet_target": "1rj3kXuBGjQC_bkJXJ_n6Jao7hkco7rpFF7avozcj-Ok",
+  "retention": {"application_days":30,"external_spreadsheet_archive":"permanent","external_archive_reset":false},
+  "storage": {"namespace":"warung-nasi","static_bucket":"merchant-static","payment_bucket":"payment-proofs"},
   "sheets": {
     "start_year": 2026,
     "years": 5,
     "visual_template_source_spreadsheet_id": "1OnUxxqbwRjjQY18J3A2ypkIlPBKqOMMeB11G_OsHzFM",
-    "visible_tabs": [
-      "Dashboard",
-      "Data Pemesan",
-      "Data Pesanan Makanan",
-      "Data Pesanan Minuman",
-      "Riwayat Pembayaran"
-    ],
-    "expected_tabs": [
-      "DASHBOARD",
-      "PEMESAN",
-      "PESANAN",
-      "MENU & STOK",
-      "KEUANGAN"
-    ]
+    "visible_tabs": ["Dashboard","Data Pemesan","Data Pesanan Makanan","Data Pesanan Minuman","Riwayat Pembayaran"],
+    "expected_tabs": ["DASHBOARD","PEMESAN","PESANAN","MENU & STOK","KEUANGAN"]
   }
 }

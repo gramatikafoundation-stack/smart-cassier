@@ -20,13 +20,18 @@ assert.equal((printer.match(/meta:'JALUR [1-5]/g)||[]).length,5,'printer setting
 
 for(const token of [
   'Printer Thermal','Test Print','Jadikan Default','Putuskan','Hubungkan',
-  'Instal aplikasi ESC/POS/vendor printer','navigator.share','navigator.bluetooth.requestDevice',
+  'Instal aplikasi ESC/POS/vendor printer','navigator.share','navigator.userAgentData','androidSendIntent','android-intent','navigator.bluetooth.requestDevice',
   'navigator.serial.requestPort','navigator.usb.requestDevice',
   'navigator.bluetooth.getDevices','navigator.serial.getPorts','navigator.usb.getDevices',
   'transferOut','getWriter','writeValueWithoutResponse',
   'sdb-smart-order-printer-v3','sdb-smart-cashier-printer-v2',
   '58mm','80mm','TEST-PRINT','SMART ORDER'
 ]) assert.ok(printer.includes(token), 'printer runtime missing '+token);
+
+assert.match(printer,/function appBridgeMode\(\)[\s\S]*web-share[\s\S]*android-intent/,'Android App Bridge must provide Web Share and Android Intent capability paths');
+assert.match(printer,/function androidSendIntent\(text\)/,'Android SEND intent fallback missing');
+assert.match(printer,/async function appBridgePrint\(r\)[\s\S]*mode==='web-share'[\s\S]*androidSendIntent\(text\)/,'App Bridge must execute a real Android fallback when Web Share is unavailable');
+assert.doesNotMatch(printer,/if\(!isAndroid\(\)\|\|typeof navigator\.share!==['"]function['"]\)/,'App Bridge support must not depend exclusively on navigator.share');
 
 assert.ok(printer.includes('0x1d,0x56,0x42,0x00'),'ESC/POS cut command missing');
 assert.ok(printer.includes("b.dataset.sdbPrinterSettings='1'"),'PENGATURAN > Printer Thermal navigation injection missing');

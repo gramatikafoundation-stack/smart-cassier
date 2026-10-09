@@ -27,7 +27,9 @@ const enc=new TextEncoder();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ascii=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7E]/g,'?');
 const rp=n=>'Rp '+Math.max(0,Number(n)||0).toLocaleString('id-ID');
-const isAndroid=()=>/Android/i.test(navigator.userAgent||'');
+const isAndroid=()=>{const ua=String(navigator.userAgent||''),ud=navigator.userAgentData,p=String(ud?.platform||navigator.platform||'');return /Android/i.test(ua)||/Android/i.test(p)||(ud?.mobile===true&&/Linux/i.test(ua+' '+p))};
+function appBridgeMode(){if(!isAndroid())return'';if(typeof navigator.share==='function')return'web-share';if(/^https?:$/i.test(location.protocol))return'android-intent';return''}
+function androidSendIntent(text){const subject=encodeURIComponent('Struk SMART ORDER'),body=encodeURIComponent(String(text||''));return'intent:#Intent;action=android.intent.action.SEND;type=text/plain;S.android.intent.extra.SUBJECT='+subject+';S.android.intent.extra.TEXT='+body+';end'}
 
 function readRaw(key){try{return JSON.parse(localStorage.getItem(key)||'{}')}catch{return {}}}
 function normalizeLegacy(v){
@@ -107,14 +109,14 @@ function capability(id){
   if(id==='usb')return !!navigator.usb;
   if(id==='ble')return !!navigator.bluetooth;
   if(id==='serial')return !!navigator.serial;
-  if(id==='app-bridge')return isAndroid()&&typeof navigator.share==='function';
+  if(id==='app-bridge')return !!appBridgeMode();
   return true;
 }
 function state(id){
   if(!capability(id))return 'Tidak Didukung pada Perangkat Ini';
   if(connecting===id)return 'Menghubungkan';
   if(errors[id])return 'Error · '+errors[id];
-  if(['system','app-bridge'].includes(id))return cfg().defaultMode===id?'Siap · Default':'Tersedia';
+  if(id==='app-bridge'){const mode=appBridgeMode(),label=mode==='web-share'?'Android Share':mode==='android-intent'?'Android Intent':'';return (cfg().defaultMode===id?'Siap · Default':'Tersedia')+(label?' · '+label:'')}if(id==='system')return cfg().defaultMode===id?'Siap · Default':'Tersedia';
   if(active?.route===id)return 'Terhubung'+(active.name?' · '+active.name:'')+(cfg().defaultMode===id?' · Default':'');
   return 'Belum Terhubung'+(cfg().defaultMode===id?' · Default':'');
 }
@@ -124,7 +126,7 @@ function tutorial(id){
     usb:['Sambungkan printer ke HP/tablet menggunakan adaptor USB OTG dan nyalakan printer.','Gunakan Chrome/Chromium yang mendukung WebUSB; izinkan akses perangkat saat diminta.','Tekan “Hubungkan”, lalu pilih printer USB dari daftar perangkat.','Setelah status Terhubung, tekan “Test Print” dan kemudian “Jadikan Default”.','Jika tidak terdeteksi, cabut-pasang OTG, cek daya/kabel, dan pastikan printer mendukung USB printer class/WebUSB.'],
     ble:['Aktifkan Bluetooth dan nyalakan printer BLE/ESC-POS.','Pastikan printer menggunakan Bluetooth Low Energy, bukan hanya Bluetooth Classic/SPP.','Tekan “Hubungkan”, pilih printer, lalu izinkan pairing browser.','Setelah Terhubung, tekan “Test Print” lalu “Jadikan Default”.','Jika karakteristik tulis tidak ditemukan, gunakan USB OTG atau Android ESC/POS App Bridge.'],
     serial:['Hubungkan printer/adapter yang menyediakan port Serial/virtual COM dan nyalakan printer.','Gunakan browser desktop/Chromebook yang mendukung Web Serial dan izinkan akses port.','Tekan “Hubungkan”, pilih port printer, lalu tunggu status Terhubung.','Tekan “Test Print” dan “Jadikan Default” bila hasil cetak benar.','Jika gagal, cek port, driver, baud rate printer, lalu putuskan dan hubungkan kembali.'],
-    'app-bridge':['Instal aplikasi ESC/POS/vendor printer di Android dan hubungkan printer di aplikasi tersebut terlebih dahulu.','Pastikan aplikasi printer dapat mencetak dari perangkat Android.','Tekan “Jadikan Default” untuk memakai jalur App Bridge.','Tekan “Test Print”; pada lembar Bagikan Android pilih aplikasi ESC/POS/vendor printer.','Jika aplikasi tidak muncul, periksa instalasi/izin aplikasi dan koneksi printer di aplikasi vendor.']
+    'app-bridge':['Instal aplikasi ESC/POS/vendor printer di Android dan hubungkan printer di aplikasi tersebut terlebih dahulu.','Pastikan aplikasi printer dapat mencetak dari perangkat Android.','Tekan “Jadikan Default” untuk memakai jalur App Bridge.','Tekan “Test Print”; SMART ORDER memakai Android Share bila tersedia, atau Android SEND Intent sebagai fallback. Pilih aplikasi ESC/POS/vendor printer.','Jika aplikasi tidak muncul, periksa instalasi/izin aplikasi dan koneksi printer di aplikasi vendor.']
   };
   return t[id]||[];
 }
@@ -235,8 +237,11 @@ async function directPrint(r){
   throw Error('Printer direct belum terhubung.');
 }
 async function appBridgePrint(r){
-  if(!isAndroid()||typeof navigator.share!=='function')throw Error('Android App Bridge tidak tersedia di perangkat ini.');
-  return navigator.share({title:'Struk SMART ORDER',text:receiptText(r)});
+  const mode=appBridgeMode(),text=receiptText(r);
+  if(!mode)throw Error('Android App Bridge tidak tersedia di perangkat ini.');
+  if(mode==='web-share')return navigator.share({title:'Struk SMART ORDER',text});
+  const a=document.createElement('a');a.href=androidSendIntent(text);a.style.display='none';a.setAttribute('aria-hidden','true');document.body.appendChild(a);
+  try{a.click();return 'android-intent'}finally{setTimeout(()=>a.remove(),1200)}
 }
 function systemPrint(r){
   const old=document.getElementById('sdbPrinterFrameV3');if(old)old.remove();

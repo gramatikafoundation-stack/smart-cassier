@@ -14,7 +14,7 @@ for(const token of [
 ]) assert.ok(admin.includes(token),'SMART ORDER ADMIN visual reference missing: '+token);
 
 for(const token of [
-  'smart-order-public-menu-cashier-parity-v3',
+  'smart-order-public-menu-four-column-v4',
   'grid-template-columns:repeat(4,minmax(0,1fr))!important',
   'grid-template-rows:minmax(0,78fr) minmax(0,22fr)!important',
   'object-fit:contain!important',
@@ -36,7 +36,7 @@ for(const token of [
 
 assert.ok(pub.includes("e.target.closest('#confirm,#pay,#close,.cat,[data-id]')"),'public functional menu click contract changed');
 assert.ok(pub.includes('window.__rohmatPublicCoreRealtimeSync'),'public realtime contract missing');
-assert.doesNotMatch(pub,/smart-order-public-menu-cashier-parity-v3[\s\S]{0,7000}(cashierActor|stockTools|adminOnly)/i,'administrative control leaked into PUBLIC parity layer');
+assert.doesNotMatch(pub,/smart-order-public-menu-four-column-v4[\s\S]{0,7000}(cashierActor|stockTools|adminOnly)/i,'administrative control leaked into PUBLIC parity layer');
 
 console.log('PUBLIC_MENU_CASHIER_VISUAL_PARITY_GATE_PASS=1');
 console.log('PUBLIC_MENU_FUNCTIONAL_BOUNDARY_GATE_PASS=1');

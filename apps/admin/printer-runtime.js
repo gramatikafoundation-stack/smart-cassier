@@ -27,7 +27,8 @@ const enc=new TextEncoder();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ascii=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7E]/g,'?');
 const rp=n=>'Rp '+Math.max(0,Number(n)||0).toLocaleString('id-ID');
-const isAndroid=()=>/Android/i.test(navigator.userAgent||'');
+const isAndroid=()=>{const ua=String(navigator.userAgent||''),platform=String(navigator.platform||''),uaPlatform=String(navigator.userAgentData?.platform||'');return /Android/i.test(ua)||/Android/i.test(uaPlatform)||(/Linux/i.test(platform)&&Number(navigator.maxTouchPoints||0)>1&&/Mobile/i.test(ua))};
+const appBridgeMode=()=>!isAndroid()?'unsupported':typeof navigator.share==='function'?'web-share':'android-intent';
 
 function readRaw(key){try{return JSON.parse(localStorage.getItem(key)||'{}')}catch{return {}}}
 function normalizeLegacy(v){
@@ -107,14 +108,15 @@ function capability(id){
   if(id==='usb')return !!navigator.usb;
   if(id==='ble')return !!navigator.bluetooth;
   if(id==='serial')return !!navigator.serial;
-  if(id==='app-bridge')return isAndroid()&&typeof navigator.share==='function';
+  if(id==='app-bridge')return isAndroid();
   return true;
 }
 function state(id){
   if(!capability(id))return 'Tidak Didukung pada Perangkat Ini';
   if(connecting===id)return 'Menghubungkan';
   if(errors[id])return 'Error · '+errors[id];
-  if(['system','app-bridge'].includes(id))return cfg().defaultMode===id?'Siap · Default':'Tersedia';
+  if(id==='app-bridge'){const mode=appBridgeMode(),label=mode==='web-share'?'Web Share':mode==='android-intent'?'Android Intent':'Tidak Didukung';return cfg().defaultMode===id?'Siap · '+label+' · Default':'Tersedia · '+label}
+  if(id==='system')return cfg().defaultMode===id?'Siap · Default':'Tersedia';
   if(active?.route===id)return 'Terhubung'+(active.name?' · '+active.name:'')+(cfg().defaultMode===id?' · Default':'');
   return 'Belum Terhubung'+(cfg().defaultMode===id?' · Default':'');
 }
@@ -235,8 +237,12 @@ async function directPrint(r){
   throw Error('Printer direct belum terhubung.');
 }
 async function appBridgePrint(r){
-  if(!isAndroid()||typeof navigator.share!=='function')throw Error('Android App Bridge tidak tersedia di perangkat ini.');
-  return navigator.share({title:'Struk SMART ORDER',text:receiptText(r)});
+  if(!isAndroid())throw Error('Android App Bridge hanya tersedia pada perangkat Android.');
+  const title='Struk SMART ORDER',text=receiptText(r);
+  if(typeof navigator.share==='function')return navigator.share({title,text});
+  const intent='intent:#Intent;action=android.intent.action.SEND;type=text/plain;S.android.intent.extra.SUBJECT='+encodeURIComponent(title)+';S.android.intent.extra.TEXT='+encodeURIComponent(text)+';end';
+  location.href=intent;
+  return 'android-intent';
 }
 function systemPrint(r){
   const old=document.getElementById('sdbPrinterFrameV3');if(old)old.remove();

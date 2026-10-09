@@ -110,7 +110,7 @@ async function moduleBody(kind) {
   const map = {
     'visual-editor': 'rohmat-admin-visual-editor-v1?tenant=' + encodeURIComponent(TENANT_ID) + '&v=29',
     cashier: 'rohmat-admin-cashier-loader-v1?tenant=' + encodeURIComponent(TENANT_ID) + '&v=36',
-    'database-ui': 'rohmat-admin-database-ui-v1?tenant=' + encodeURIComponent(TENANT_ID) + '&v=19'
+    'database-ui': 'rohmat-admin-database-ui-v1?tenant=' + encodeURIComponent(TENANT_ID) + '&v=20'
   };
   const path = map[kind];
   if (!path) throw new Error('unknown_runtime_kind');

@@ -29,8 +29,8 @@ assert.ok(!lifecycle.includes("fetch(DOWNLOAD,{method:'GET',credentials:'same-or
 assert.ok(lifecycle.includes("void downloadQrisFile()"));
 assert.ok(lifecycle.includes("'qris-download-cross-device', flags"));
 assert.ok(vercel.includes('"source": "/qris-download", "destination": "/api/qris-download"'));
-assert.ok(rootVercel.includes('"source": "/qris-download"'));
-assert.ok(rootVercel.includes('"destination": "/api/public-qris-download"'));
+const rootCfg=JSON.parse(rootVercel);
+assert.ok(rootCfg.rewrites?.some(x=>x.source==='/qris-download'&&x.destination==='/api/public-qris-download'),'root QRIS rewrite missing');
 assert.ok(wrapper.includes("../apps/public/api/qris-download.js"));
 assert.ok(!lifecycle.includes("const qrisDownload = rewritten.upstream.origin + '/functions/v1/rohmat-qris-download';"));
 

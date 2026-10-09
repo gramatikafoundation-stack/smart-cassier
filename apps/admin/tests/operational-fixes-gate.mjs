@@ -16,14 +16,17 @@ for(const token of [
 assert.ok(!render.includes("['Nasi','Lauk','Minuman','Jus Buah'].map"),'hardcoded built-in menu categories must be removed');
 
 for(const token of [
+  'function normalizeLanguage',
   'function languageCopy',
-  "document.documentElement.dataset.adminLanguage=code",
+  "document.documentElement.dataset.adminLanguage=x.code",
   'renderLanguage(view)',
-  "['id','Indonesia']",
-  "['en','Inggris']",
-  "['ar','Arab']"
+  "['id-ID','Indonesia','ltr']",
+  "['en-US','Inggris','ltr']",
+  "['ar-SA','Arab','rtl']",
+  "language:{code:x.code,name:x.name,dir:x.dir}",
+  "rohmat:language-updated"
 ]) assert.ok(render.includes(token),'language runtime contract missing: '+token);
-assert.match(render,/const LANGS=\[[\s\S]*?\['tr','Turki'\]/,'19-language catalog missing');
+assert.match(render,/const LANGS=\[[\s\S]*?\['nl-NL','Belanda','ltr'\]/,'canonical locale language catalog missing');
 
 for(const token of [
   'navigator.userAgentData?.platform',

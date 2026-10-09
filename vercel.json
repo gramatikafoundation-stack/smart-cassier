@@ -47,7 +47,7 @@
     },
     {
       "source": "/api/locale",
-      "destination": "/apps/public/api/locale"
+      "destination": "/api/public-locale"
     },
     {
       "source": "/runtime/i18n.js",

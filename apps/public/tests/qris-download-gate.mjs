@@ -1,0 +1,28 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+
+const root = new URL('../../../', import.meta.url);
+const read = p => fs.readFileSync(new URL(p, root), 'utf8');
+
+const proxy = read('apps/public/api/qris-download.js');
+const lifecycle = read('apps/public/lib/render-lifecycle.js');
+const vercel = read('apps/public/vercel.json');
+const rootVercel = read('vercel.json');
+const wrapper = read('api/public-qris-download.js');
+
+assert.match(proxy, /resolvePublicTenantConfig/);
+assert.match(proxy, /SUPABASE_PUBLISHABLE_KEY/);
+assert.match(proxy, /Authorization: 'Bearer ' \+ publishableKey/);
+assert.match(proxy, /'x-sdb-tenant-id': cfg\.tenantId/);
+assert.match(proxy, /Content-Disposition/);
+assert.match(proxy, /attachment; filename=/);
+assert.ok(proxy.includes("if (!/^image\\/(png|jpe?g|webp)$/.test(type))"));
+assert.ok(lifecycle.includes("const qrisDownload = '/qris-download';"));
+assert.ok(lifecycle.includes("qrisDownloadSource = rewritten.upstream.origin + '/functions/v1/rohmat-qris-download'"));
+assert.ok(vercel.includes('"source": "/qris-download", "destination": "/api/qris-download"'));
+assert.ok(rootVercel.includes('"source": "/qris-download"'));
+assert.ok(rootVercel.includes('"destination": "/api/public-qris-download"'));
+assert.ok(wrapper.includes("../apps/public/api/qris-download.js"));
+assert.ok(!lifecycle.includes("const qrisDownload = rewritten.upstream.origin + '/functions/v1/rohmat-qris-download';"));
+
+console.log('PUBLIC_QRIS_DOWNLOAD_CROSS_DEVICE_GATE_PASS=1');

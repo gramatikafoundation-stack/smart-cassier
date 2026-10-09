@@ -11,6 +11,7 @@
     { "source": "/icon-512.png", "destination": "/api/brand-assets?kind=icon512" },
     { "source": "/og-image.png", "destination": "/api/brand-assets?kind=og" },
     { "source": "/ocr-worker.js", "destination": "/api/ocr-worker" },
+    { "source": "/qris-download", "destination": "/api/qris-download" },
     { "source": "/runtime-lifecycle.js", "destination": "/api/render-seo-brand?rohmat_runtime=lifecycle" },
     { "source": "/(.*)", "destination": "/api/render-seo-brand" }
   ],

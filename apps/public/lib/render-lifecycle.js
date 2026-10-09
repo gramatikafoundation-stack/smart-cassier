@@ -81,11 +81,12 @@ function optimizeLifecycle(html) {
   const flags = [];
   const rewritten = rewriteExternalRuntime(html, flags);
   let out = rewritten.html;
-  const qrisDownload = rewritten.upstream.origin + '/functions/v1/rohmat-qris-download';
+  const qrisDownloadSource = rewritten.upstream.origin + '/functions/v1/rohmat-qris-download';
+  const qrisDownload = '/qris-download';
 
   out = replaceRequired(
     out,
-    "const PROFILE='rohmat-customer-history-v1',DOWNLOAD='" + qrisDownload + "';let scheduled=false;",
+    "const PROFILE='rohmat-customer-history-v1',DOWNLOAD='" + qrisDownloadSource + "';let scheduled=false;",
     "const PROFILE='rohmat-customer-history-v1',DOWNLOAD='" + qrisDownload + "';let scheduled=false,sendGuardObserver=null,sendGuardTarget=null;function clearSendGuard(){try{sendGuardObserver?.disconnect()}catch{}sendGuardObserver=null;sendGuardTarget=null}",
     'send-guard-owner', flags
   );

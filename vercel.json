@@ -42,6 +42,10 @@
       "destination": "/api/public-ocr-worker"
     },
     {
+      "source": "/qris-download",
+      "destination": "/api/public-qris-download"
+    },
+    {
       "source": "/runtime-lifecycle.js",
       "destination": "/api/public-render-seo-brand?rohmat_runtime=lifecycle"
     },

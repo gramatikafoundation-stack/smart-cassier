@@ -402,6 +402,28 @@ function applyReferenceExactStructure(html) {
     '<div class="logo"><div class="logoMark">R</div><div><b>Studio Rohmat</b><small>Design System</small></div></div>',
     '<div class="logo"><div class="logoMark">R</div><div><b>SMART ORDER</b><small>Rohmat Nasi Uduk</small></div></div>'
   );
+  // dynamic-menu-categories-v1: tenant-owned categories; "Semua" remains a reserved public filter only.
+  out = out.replace(
+    "function menuDialog(i){",
+    "function menuCategories(){const cfg=Array.isArray(data.settings?.menu_categories)?data.settings.menu_categories:[],used=(data.menu||[]).map(x=>x.category),map=new Map;[...cfg,...used].forEach(v=>{v=String(v||'').trim();if(v&&v.toLowerCase()!=='semua'&&!map.has(v.toLowerCase()))map.set(v.toLowerCase(),v)});return[...map.values()].sort((a,b)=>a.localeCompare(b,'id'))}async function addMenuCategory(sel){const raw=prompt('Nama kategori baru');if(raw===null)return;const name=String(raw||'').trim().replace(/\\s+/g,' ');if(!name){toast('Nama kategori wajib diisi.',true);return}if(name.length>60){toast('Nama kategori maksimal 60 karakter.',true);return}if(name.toLowerCase()==='semua'){toast('“Semua” adalah filter bawaan dan tidak dapat dijadikan kategori.',true);return}const cats=menuCategories(),hit=cats.find(x=>x.toLowerCase()===name.toLowerCase());if(hit){sel.value=hit;return}const next=[...cats,name];const j=await rpc('admin_console_update_settings',{p_token:token(),p_patch:{menu_categories:next}});if(!j.ok)throw Error(j.error||'Gagal menambah kategori');data.settings=j.settings||Object.assign({},data.settings,{menu_categories:next});const o=document.createElement('option');o.value=name;o.textContent=name;sel.appendChild(o);sel.value=name;toast('Kategori '+name+' ditambahkan.')}function menuDialog(i){"
+  );
+  out = out.split("category:'Nasi'").join("category:''");
+  out = out.replace(
+    "['Nasi','Lauk','Minuman','Jus Buah'].map(x=>'<option '+(x===m.category?'selected':'')+'>'+x+'</option>').join('')",
+    "menuCategories().map(x=>'<option value=\\"'+esc(x)+'\\" '+(x===m.category?'selected':'')+'>'+esc(x)+'</option>').join('')"
+  );
+  out = out.replace(
+    "<div class=\\"field\\"><label>Kategori</label><select id=\\"mc\\">",
+    "<div class=\\"field\\"><label style=\\"display:flex;justify-content:space-between;align-items:center;gap:8px\\"><span>Kategori</span><button type=\\"button\\" id=\\"maddcat\\" class=\\"btn soft\\" style=\\"min-height:30px;padding:5px 8px\\">+ Tambah Kategori</button></label><select id=\\"mc\\"><option value=\\"\\">Pilih kategori</option>"
+  );
+  out = out.replace(
+    "document.body.appendChild(back);document.getElementById('mclose').onclick=()=>back.remove();let image=m.image_url||'';",
+    "document.body.appendChild(back);document.getElementById('mclose').onclick=()=>back.remove();const mc=document.getElementById('mc');document.getElementById('maddcat').onclick=()=>addMenuCategory(mc).catch(e=>toast(e.message||'Gagal menambah kategori',true));let image=m.image_url||'';"
+  );
+  out = out.replace(
+    "document.getElementById('msave').onclick=async()=>{try{const p=Object.assign({},m,{name:document.getElementById('mn').value.trim(),category:document.getElementById('mc').value,",
+    "document.getElementById('msave').onclick=async()=>{try{const category=document.getElementById('mc').value.trim();if(!category){toast('Pilih kategori atau tambahkan kategori baru terlebih dahulu.',true);return}const p=Object.assign({},m,{name:document.getElementById('mn').value.trim(),category:category,"
+  );
   const cashierNew = "if(sub==='Smart Cashier'){const q=data.orders.slice(0,3);v.innerHTML='<section class=\"refOrderQueue\"><div class=\"refQueueHead\"><h2>Order queue</h2><div class=\"refQueueActions\"><button type=\"button\" aria-label=\"Filter\">⌁</button><button type=\"button\" aria-label=\"Menu\">•••</button></div></div><div class=\"refQueueGrid\">'+q.map((o,i)=>{const raw=String(o.order_status||o.status||o.payment_status||'Pending'),lc=raw.toLowerCase(),cls=(lc.includes('prepar')||lc.includes('confirm')||lc.includes('ready'))?'preparing':(lc.includes('cook')||lc.includes('process'))?'cooking':'pending',label=cls==='preparing'?'Preparing':cls==='cooking'?'Cooking':'Pending',place=o.table_number?'Table '+o.table_number+' · Dine In':(String(o.service_mode||'').toLowerCase().includes('take')?'Takeaway · Pick Up':'Online Order'),mins=Math.max(1,Math.round((Date.now()-new Date(o.created_at||Date.now()).getTime())/60000)),cnt=Array.isArray(o.items)?o.items.reduce((a,x)=>a+Number(x.quantity||1),0):1;return '<article class=\"refQueueCard '+cls+'\"><div class=\"refQueueTop\"><span class=\"refQueueCode\">#'+esc(o.order_code||o.public_order_code||o.id||('ORD-'+String(i+1).padStart(3,'0')))+'</span><span class=\"refQueueStatus\">'+label+'</span></div><div class=\"refQueuePlace\">'+esc(place)+'</div><div class=\"refQueueMeta\"><span>'+cnt+' items · '+mins+' min</span><span>'+esc(o.payment_method||o.service_mode||'Order')+'</span></div></article>'}).join('')+'</div></section><div class=\"refProductHead\"><h2>Product List</h2><span class=\"muted\">Menu aktif · cari dan tambahkan ke pesanan</span></div><section id=\"rohmatCashierSafe\"><div class=\"empty\">Memuat menu Smart Cashier…</div></section>';";
   const cashierAt = out.indexOf("if(sub==='Smart Cashier'){v.innerHTML=");
   if (cashierAt >= 0) {

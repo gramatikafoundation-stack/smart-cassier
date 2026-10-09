@@ -389,10 +389,10 @@ function injectPublicPatch(html) {
     return at >= 0 ? source.slice(0, at) + patch + source.slice(at) : source + patch;
   };
   if (!out.includes('rohmat-menu-single-media-v6')) out = add(out, PUBLIC_UX_PATCH);
+  if (!out.includes('smart-order-public-foodcode-v1')) out = add(out, FUTURE_PUBLIC_UI_PATCH);
   if (!out.includes('smart-order-public-menu-cashier-parity-v3')) out = add(out, PUBLIC_MENU_PARITY_PATCH);
   if (!out.includes('smart-order-public-transaction-commit-v1')) out = add(out, PUBLIC_TRANSACTION_COMMIT_PATCH);
   if (!out.includes('/runtime/i18n.js')) out = add(out, '<script id="sdb-global-i18n-public-v1" src="/runtime/i18n.js?v=20261010-global-v1" defer></script>');
-  if (!out.includes('smart-order-public-foodcode-v1')) out = add(out, FUTURE_PUBLIC_UI_PATCH);
   if (!out.includes('sdb-parent-brand-public-v1')) out = add(out, SDB_PARENT_SIGNATURE);
   return out;
 }

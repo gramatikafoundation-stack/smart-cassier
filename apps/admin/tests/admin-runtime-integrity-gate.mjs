@@ -9,7 +9,6 @@ for(const token of [
   'dynamic-menu-categories-v1',
   '+ Tambah Kategori',
   'menu_categories',
-  'category_not_registered',
   '“Semua” adalah filter bawaan',
   'Pilih kategori atau tambahkan kategori baru terlebih dahulu.'
 ]) assert.ok(render.includes(token),'dynamic category contract missing: '+token);

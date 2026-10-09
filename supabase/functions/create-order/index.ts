@@ -39,12 +39,17 @@ function validImageSignature(value:unknown){
   return false;
 }
 async function resolveTenant(req:Request){
-  const tenantId=String(req.headers.get("x-sdb-tenant-id")||"").trim();
-  if(!UUID.test(tenantId))return null;
+  const raw=String(req.headers.get("x-sdb-tenant-id")||"").trim();
+  const tenantId=UUID.test(raw)?raw:null;
+  const origin=String(req.headers.get("origin")||"").trim().replace(/\/$/,"")||null;
   const service=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
   if(!SUPABASE_URL||!service)return null;
   const sb=createClient(SUPABASE_URL,service,{auth:{persistSession:false,autoRefreshToken:false}});
-  const r=await sb.rpc("master_prototype_tenant_context",{p_tenant_id:tenantId});
+  const r=await sb.rpc("master_prototype_runtime_context",{
+    p_tenant_id:tenantId,
+    p_origin:tenantId?null:origin,
+    p_app_kind:"public"
+  });
   if(r.error||!r.data?.ok||r.data?.enabled===false)return null;
   return r.data as TenantCtx;
 }

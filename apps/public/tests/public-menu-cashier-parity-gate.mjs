@@ -10,21 +10,22 @@ for(const token of [
   '--so-admin-card:222px!important',
   'aspect-ratio:1/1!important',
   'grid-template-columns:repeat(3,var(--so-admin-card))!important',
-  '-webkit-line-clamp:2!important',
-  'body #rohmatCashierSafe .rc6Btn{min-height:36px!important;padding:7px 10px!important;border-radius:8px!important;font-size:10px!important}'
-]) assert.ok(admin.includes(token),'SMART ORDER ADMIN square visual reference missing: '+token);
+  '-webkit-line-clamp:2!important'
+]) assert.ok(admin.includes(token),'SMART ORDER ADMIN visual reference missing: '+token);
 
 for(const token of [
   'smart-order-public-menu-cashier-parity-v3',
-  '--so-menu-card:272px',
-  'grid-template-columns:repeat(3,var(--so-menu-card))!important',
-  'width:var(--so-menu-card)!important;height:var(--so-menu-card)!important;aspect-ratio:1/1!important',
-  'width:min(48%,150px)!important;height:auto!important;aspect-ratio:1/1!important',
+  'grid-template-columns:repeat(4,minmax(0,1fr))!important',
+  'grid-template-rows:minmax(0,78fr) minmax(0,22fr)!important',
+  'object-fit:contain!important',
+  'object-position:center!important',
+  'text-align:center!important',
   '-webkit-line-clamp:2!important',
-  "el.style.setProperty('aspect-ratio','1 / 1','important')",
-  "document.documentElement.dataset.rohmatMenuReference='cashier-square-1x1-v3'",
-  '@media(max-width:650px)'
-]) assert.ok(pub.includes(token),'PUBLIC square parity token missing: '+token);
+  "document.documentElement.dataset.rohmatMenuReference='four-column-contain-v4'",
+  '@media(max-width:900px)',
+  '@media(max-width:700px)',
+  '@media(max-width:420px)'
+]) assert.ok(pub.includes(token),'PUBLIC four-column/contain parity token missing: '+token);
 
 for(const token of [
   '--so-kds-card:207px!important',
@@ -39,4 +40,4 @@ assert.doesNotMatch(pub,/smart-order-public-menu-cashier-parity-v3[\s\S]{0,7000}
 
 console.log('PUBLIC_MENU_CASHIER_VISUAL_PARITY_GATE_PASS=1');
 console.log('PUBLIC_MENU_FUNCTIONAL_BOUNDARY_GATE_PASS=1');
-console.log('SMART_ORDER_MENU_SQUARE_GEOMETRY_GATE_PASS=1');
+console.log('SMART_ORDER_PUBLIC_MENU_FOUR_COLUMN_CONTAIN_GATE_PASS=1');

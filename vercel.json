@@ -46,6 +46,14 @@
       "destination": "/api/public-qris-download"
     },
     {
+      "source": "/api/locale",
+      "destination": "/apps/public/api/locale"
+    },
+    {
+      "source": "/runtime/i18n.js",
+      "destination": "/apps/shared/i18n-runtime.js"
+    },
+    {
       "source": "/runtime-lifecycle.js",
       "destination": "/api/public-render-seo-brand?rohmat_runtime=lifecycle"
     },

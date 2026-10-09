@@ -13,7 +13,7 @@ function clean(value, fallback, max = 120) {
   return v ? v.slice(0, max) : fallback;
 }
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, max-age=0, must-revalidate');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'no-referrer');
@@ -35,14 +35,27 @@ export default function handler(req, res) {
   let normalizedUrl = DEFAULTS.supabaseUrl;
   try { normalizedUrl = new URL(supabaseUrl).origin; } catch {}
 
+  const publishableKey = clean(process.env.SUPABASE_PUBLISHABLE_KEY, DEFAULTS.publishableKey, 300);
+  let locale = clean(process.env.TENANT_LOCALE, DEFAULTS.locale, 32);
+  if (tenantId && normalizedUrl && publishableKey) {
+    try {
+      const u = normalizedUrl + '/rest/v1/tenant_site_settings_public_v1?select=language_settings&tenant_id=eq.' + encodeURIComponent(tenantId) + '&limit=1';
+      const rr = await fetch(u,{cache:'no-store',headers:{apikey:publishableKey,Authorization:'Bearer '+publishableKey,'X-SDB-Tenant-ID':tenantId}});
+      if (rr.ok) {
+        const rows = await rr.json();
+        const saved = String(rows?.[0]?.language_settings?.default || '').trim();
+        if (saved) locale = saved.slice(0,32);
+      }
+    } catch {}
+  }
   const payload = {
     tenantId,
     businessName: clean(process.env.BUSINESS_NAME, DEFAULTS.businessName),
-    locale: clean(process.env.TENANT_LOCALE, DEFAULTS.locale, 32),
+    locale,
     currency: clean(process.env.TENANT_CURRENCY, DEFAULTS.currency, 3).toUpperCase(),
     timezone: clean(process.env.TENANT_TIMEZONE, DEFAULTS.timezone, 64),
     supabaseUrl: normalizedUrl,
-    publishableKey: clean(process.env.SUPABASE_PUBLISHABLE_KEY, DEFAULTS.publishableKey, 300)
+    publishableKey
   };
 
   res.statusCode = 200;

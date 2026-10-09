@@ -38,15 +38,39 @@ function parts(v:any,tz:string){
     s:`${g("day")}/${g("month")}/${g("year")} ${g("hour")}:${g("minute")}:${g("second")}`
   };
 }
-const service=(v:any)=>String(v||"").toLowerCase().includes("dine")?"Dine In":"Take Away";
-const source=(v:any)=>v==="cashier_admin"?"Smart Cashier Admin":v==="cashier_kds"?"Smart Cashier KDS":"Situs Publik / Barcode";
-const pay=(v:any)=>String(v||"").toLowerCase()==="cash"?"Cash":String(v||"").toLowerCase()==="qris_cashier"?"QRIS Kasir":"QRIS";
-function stage(o:any){
+const SHEET_LOCALES=["id-ID","en-US","ms-MY","ar-SA","zh-CN","zh-TW","ja-JP","ko-KR","hi-IN","th-TH","vi-VN","fr-FR","de-DE","es-ES","pt-BR","tr-TR","ru-RU","nl-NL"] as const;
+const SHEET_KEYS=["dine","take","public","cashierAdmin","cashierKds","cash","qrisCashier","qris","cancelled","completed","ready","preparing","newOrder","available","out","yes","no","table"] as const;
+const SHEET_VALUES:Record<string,string[]>={
+"id-ID":["Makan di Tempat","Bawa Pulang","Situs Publik / Barcode","Smart Cashier Admin","Smart Cashier KDS","Tunai","QRIS Kasir","QRIS","Dibatalkan","Pesanan Selesai","Pesanan Siap","Sedang Diproses","Pesanan Baru","Tersedia","Habis","Ya","Tidak","Meja"],
+"en-US":["Dine In","Take Away","Public Site / Barcode","Smart Cashier Admin","Smart Cashier KDS","Cash","Cashier QRIS","QRIS","Cancelled","Order Completed","Order Ready","In Progress","New Order","Available","Out of Stock","Yes","No","Table"],
+"ms-MY":["Makan di Tempat","Bawa Pulang","Laman Awam / Kod Bar","Smart Cashier Admin","Smart Cashier KDS","Tunai","QRIS Juruwang","QRIS","Dibatalkan","Pesanan Selesai","Pesanan Siap","Sedang Diproses","Pesanan Baharu","Tersedia","Habis","Ya","Tidak","Meja"],
+"ar-SA":["تناول في المكان","سفري","الموقع العام / الباركود","Smart Cashier Admin","Smart Cashier KDS","نقدًا","QRIS أمين الصندوق","QRIS","ملغى","اكتمل الطلب","الطلب جاهز","قيد المعالجة","طلب جديد","متاح","نفد المخزون","نعم","لا","الطاولة"],
+"zh-CN":["堂食","外带","公共网站 / 条码","Smart Cashier 管理端","Smart Cashier KDS","现金","收银 QRIS","QRIS","已取消","订单完成","订单已备妥","处理中","新订单","可用","缺货","是","否","桌"],
+"zh-TW":["內用","外帶","公開網站 / 條碼","Smart Cashier 管理端","Smart Cashier KDS","現金","收銀 QRIS","QRIS","已取消","訂單完成","訂單已備妥","處理中","新訂單","可用","缺貨","是","否","桌"],
+"ja-JP":["店内","持ち帰り","公開サイト / バーコード","Smart Cashier Admin","Smart Cashier KDS","現金","レジ QRIS","QRIS","キャンセル","注文完了","注文準備完了","処理中","新規注文","利用可能","売り切れ","はい","いいえ","テーブル"],
+"ko-KR":["매장 식사","포장","공개 사이트 / 바코드","Smart Cashier Admin","Smart Cashier KDS","현금","계산원 QRIS","QRIS","취소됨","주문 완료","주문 준비 완료","처리 중","새 주문","사용 가능","품절","예","아니요","테이블"],
+"hi-IN":["यहीं खाएँ","पैक करें","सार्वजनिक साइट / बारकोड","Smart Cashier Admin","Smart Cashier KDS","नकद","कैशियर QRIS","QRIS","रद्द","ऑर्डर पूर्ण","ऑर्डर तैयार","प्रक्रिया में","नया ऑर्डर","उपलब्ध","स्टॉक समाप्त","हाँ","नहीं","टेबल"],
+"th-TH":["รับประทานที่ร้าน","ซื้อกลับ","เว็บไซต์สาธารณะ / บาร์โค้ด","Smart Cashier Admin","Smart Cashier KDS","เงินสด","QRIS แคชเชียร์","QRIS","ยกเลิก","คำสั่งซื้อเสร็จสิ้น","คำสั่งซื้อพร้อม","กำลังดำเนินการ","คำสั่งซื้อใหม่","พร้อมใช้งาน","สินค้าหมด","ใช่","ไม่","โต๊ะ"],
+"vi-VN":["Dùng tại chỗ","Mang đi","Trang công khai / Mã vạch","Smart Cashier Admin","Smart Cashier KDS","Tiền mặt","QRIS Thu ngân","QRIS","Đã hủy","Đơn hoàn tất","Đơn sẵn sàng","Đang xử lý","Đơn mới","Có sẵn","Hết hàng","Có","Không","Bàn"],
+"fr-FR":["Sur place","À emporter","Site public / Code-barres","Smart Cashier Admin","Smart Cashier KDS","Espèces","QRIS Caissier","QRIS","Annulé","Commande terminée","Commande prête","En cours","Nouvelle commande","Disponible","Rupture","Oui","Non","Table"],
+"de-DE":["Vor Ort","Zum Mitnehmen","Öffentliche Seite / Barcode","Smart Cashier Admin","Smart Cashier KDS","Bar","Kassen-QRIS","QRIS","Storniert","Bestellung abgeschlossen","Bestellung bereit","In Bearbeitung","Neue Bestellung","Verfügbar","Ausverkauft","Ja","Nein","Tisch"],
+"es-ES":["Comer aquí","Para llevar","Sitio público / Código de barras","Smart Cashier Admin","Smart Cashier KDS","Efectivo","QRIS de caja","QRIS","Cancelado","Pedido completado","Pedido listo","En proceso","Pedido nuevo","Disponible","Agotado","Sí","No","Mesa"],
+"pt-BR":["No local","Para viagem","Site público / Código de barras","Smart Cashier Admin","Smart Cashier KDS","Dinheiro","QRIS do caixa","QRIS","Cancelado","Pedido concluído","Pedido pronto","Em processamento","Novo pedido","Disponível","Esgotado","Sim","Não","Mesa"],
+"tr-TR":["Yerinde","Paket","Halka Açık Site / Barkod","Smart Cashier Admin","Smart Cashier KDS","Nakit","Kasiyer QRIS","QRIS","İptal","Sipariş Tamamlandı","Sipariş Hazır","İşleniyor","Yeni Sipariş","Mevcut","Stokta Yok","Evet","Hayır","Masa"],
+"ru-RU":["В заведении","Навынос","Публичный сайт / Штрихкод","Smart Cashier Admin","Smart Cashier KDS","Наличные","QRIS кассира","QRIS","Отменено","Заказ завершён","Заказ готов","В обработке","Новый заказ","Доступно","Нет в наличии","Да","Нет","Стол"],
+"nl-NL":["Ter plaatse","Afhalen","Publieke site / Barcode","Smart Cashier Admin","Smart Cashier KDS","Contant","Kassier QRIS","QRIS","Geannuleerd","Bestelling voltooid","Bestelling gereed","In behandeling","Nieuwe bestelling","Beschikbaar","Uitverkocht","Ja","Nee","Tafel"]
+};
+function sheetLocale(v:any){const raw=String(v||"id-ID"),exact=SHEET_LOCALES.find(x=>x===raw);if(exact)return exact;const base=raw.toLowerCase().split("-")[0];return SHEET_LOCALES.find(x=>x.toLowerCase().split("-")[0]===base)||"id-ID"}
+function st(locale:string,key:typeof SHEET_KEYS[number]){const idx=SHEET_KEYS.indexOf(key);return SHEET_VALUES[sheetLocale(locale)]?.[idx]??SHEET_VALUES["id-ID"][idx]??key}
+const service=(v:any,l:string)=>String(v||"").toLowerCase().includes("dine")?st(l,"dine"):st(l,"take");
+const source=(v:any,l:string)=>v==="cashier_admin"?st(l,"cashierAdmin"):v==="cashier_kds"?st(l,"cashierKds"):st(l,"public");
+const pay=(v:any,l:string)=>String(v||"").toLowerCase()==="cash"?st(l,"cash"):String(v||"").toLowerCase()==="qris_cashier"?st(l,"qrisCashier"):st(l,"qris");
+function stage(o:any,l:string){
   const x=String(o.order_status||"").toLowerCase();
-  return ["cancelled","canceled","rejected","payment_rejected"].includes(x)?"Dibatalkan":
-    x==="completed"?"Pesanan Selesai":
-    x==="ready"?"Pesanan Siap":
-    x==="preparing"?"Sedang Diproses":"Pesanan Baru";
+  return ["cancelled","canceled","rejected","payment_rejected"].includes(x)?st(l,"cancelled"):
+    x==="completed"?st(l,"completed"):
+    x==="ready"?st(l,"ready"):
+    x==="preparing"?st(l,"preparing"):st(l,"newOrder");
 }
 const itemList=(o:any)=>(Array.isArray(o.items)?o.items:[])
   .map((i:any)=>`${Number(i.quantity??i.qty??1)||1}× ${String(i.name??i.menu_name??"Menu")}`).join("; ");
@@ -94,6 +118,10 @@ Deno.serve(async(req:Request)=>{
 
   const cfg=await sb.rpc("tenant_sheet_sync_config",{p_tenant_id:tenantId});
   if(cfg.error||!cfg.data?.ok)return json({ok:false,error:"tenant_unavailable"},404,tenantId);
+  const langRow=await sb.from("tenant_site_settings_public_v1")
+    .select("language_settings").eq("tenant_id",tenantId).maybeSingle();
+  if(langRow.error)return json({ok:false,error:"tenant_language_unavailable"},500,tenantId);
+  const locale=sheetLocale(langRow.data?.language_settings?.default||"id-ID");
 
   const token=req.headers.get("x-rohmat-writer-token")||"";
   const tokenHash=token?await hash(token):"";
@@ -123,7 +151,8 @@ Deno.serve(async(req:Request)=>{
   }
 
   const tz=String(cfg.data.timezone||"Asia/Jakarta");
-  const piiDays=cfg.data.pii_retention_days==null?null:Math.max(1,Math.min(3650,Number(cfg.data.pii_retention_days)));
+  const rawPiiDays=cfg.data.pii_retention_days==null?NaN:Number(cfg.data.pii_retention_days);
+  const piiDays=!Number.isFinite(rawPiiDays)||rawPiiDays<=0?null:Math.max(1,Math.min(3650,rawPiiDays));
   const start=`${year}-01-01T00:00:00+07:00`;
   const end=`${year+1}-01-01T00:00:00+07:00`;
 
@@ -169,19 +198,19 @@ Deno.serve(async(req:Request)=>{
         o.id,o.public_order_code,p.d,p.t,
         keepCustomerPii?(o.customer_name||""):"",
         keepCustomerPii?(o.customer_whatsapp||""):"",
-        source(o.order_source),service(o.service_mode),o.table_number||"",
+        source(o.order_source,locale),service(o.service_mode,locale),o.table_number||"",
         itemList(o),Number(o.item_count||0),Number(o.total_amount||0)
       ]);
       pesanan.push([
-        o.id,o.public_order_code,p.d,p.t,source(o.order_source),service(o.service_mode),
+        o.id,o.public_order_code,p.d,p.t,source(o.order_source,locale),service(o.service_mode,locale),
         o.table_number||"",itemList(o),Number(o.item_count||0),Number(o.total_amount||0),
-        pay(o.payment_method),o.payment_status||"",stage(o),n.t,pr.t,dn.t,
+        pay(o.payment_method,locale),o.payment_status||"",stage(o,locale),n.t,pr.t,dn.t,
         keepCustomerPii?(o.customer_note||""):"",o.cashier_actor||""
       ]);
       keuangan.push([
-        o.id,o.public_order_code,p.d,p.t,source(o.order_source),pay(o.payment_method),
+        o.id,o.public_order_code,p.d,p.t,source(o.order_source,locale),pay(o.payment_method,locale),
         Number(o.total_amount||0),rec,chg,moneyIn(o),o.payment_status||"",
-        o.cashier_actor||"",service(o.service_mode),o.table_number||"",
+        o.cashier_actor||"",service(o.service_mode,locale),o.table_number||"",
         keepProofReference?(o.payment_proof_url||""):"",v.s
       ]);
     }
@@ -204,7 +233,7 @@ Deno.serve(async(req:Request)=>{
       const p=parts(x.availability_updated_at||x.updated_at,tz);
       menu.push([
         x.id,x.name,x.category,Number(x.price||0),z.q,z.r,
-        x.is_available!==false?"Tersedia":"Habis",x.is_visible!==false?"Ya":"Tidak",
+        x.is_available!==false?st(locale,"available"):st(locale,"out"),x.is_visible!==false?st(locale,"yes"):st(locale,"no"),
         x.availability_note||"",`${p.d} ${p.t}`.trim(),x.image_url||""
       ]);
     }
@@ -235,7 +264,7 @@ Deno.serve(async(req:Request)=>{
     const drinkCategory=(v:any)=>/(minuman|drink|beverage|jus|juice|kopi|coffee|teh|tea|air|mineral)/i.test(String(v||""));
     for(const o of paidOrders){
       const p=parts(o.created_at,tz);
-      const layanan=service(o.service_mode)+(String(o.service_mode||"").toLowerCase().includes("dine")&&o.table_number?(" • Meja "+o.table_number):"");
+      const layanan=service(o.service_mode,locale)+(String(o.service_mode||"").toLowerCase().includes("dine")&&o.table_number?(" • "+st(locale,"table")+" "+o.table_number):"");
       dataPemesan.push([p.d,p.t,o.customer_name||"",layanan]);
       riwayatPembayaran.push([p.d,Number(o.total_amount||0)]);
       for(const i of (Array.isArray(o.items)?o.items:[])){

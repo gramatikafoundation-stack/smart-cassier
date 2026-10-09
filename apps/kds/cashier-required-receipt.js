@@ -4,10 +4,13 @@ window.__rohmatKdsCashierRequiredReceiptV4=1;
 
 const nativeFetch=window.fetch.bind(window);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const rp=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
-const fd=v=>new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',day:'2-digit',month:'long',year:'numeric'}).format(new Date(v||Date.now()));
-const ft=v=>new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(v||Date.now())).replace('.',':')+' WIB';
+const currentLocale=()=>String(window.__SDB_I18N__?.locale?.()||window.__SDB_TENANT_CONFIG?.locale||'id-ID');
+const currentTimezone=()=>String(window.__SDB_TENANT_CONFIG?.timezone||'Asia/Jakarta');
+const rp=n=>new Intl.NumberFormat(currentLocale(),{style:'currency',currency:window.__SDB_TENANT_CONFIG?.currency||'IDR',maximumFractionDigits:0}).format(Number(n)||0);
+const fd=v=>new Intl.DateTimeFormat(currentLocale(),{timeZone:currentTimezone(),day:'2-digit',month:'long',year:'numeric'}).format(new Date(v||Date.now()));
+const ft=v=>new Intl.DateTimeFormat(currentLocale(),{timeZone:currentTimezone(),hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(v||Date.now())).replace('.',':')+(currentTimezone()==='Asia/Jakarta'?' WIB':'');
 const table=r=>r?.service_mode==='dine-in'?String(r?.table_number||'—'):'Take Away';
+function printerPaper(){try{const x=JSON.parse(localStorage.getItem('sdb-smart-order-printer-v3')||'{}');return x.paper==='58mm'?'58mm':'80mm'}catch{return'80mm'}}
 const moneyFromText=v=>Number(String(v||'').replace(/[^0-9]/g,''))||0;
 
 function receiptData(r){
@@ -26,42 +29,63 @@ function receiptData(r){
   const chargeLabel=chargeCfg.mode==='percent'&&Number(chargeCfg.value)>0?String(chargeCfg.label||'Charge')+' '+Number(chargeCfg.value)+'%':String(chargeCfg.label||'Charge');
   const taxLabel=taxCfg.mode==='percent'&&Number(taxCfg.value)>0?String(taxCfg.label||'Pajak')+' '+Number(taxCfg.value)+'%':String(taxCfg.label||'Pajak');
   const service=r?.service_mode==='dine-in'?'Makan di Tempat':'Bawa Pulang';
-  const payment=String(r?.payment_method||r?.payment?.method||'').trim();
-  return {items,subtotal,charge,tax,total,service,payment,chargeLabel,taxLabel};
+  const paymentRaw=String(r?.payment_method||r?.payment?.method||'').trim();
+  const payment=paymentRaw==='cash'?'Tunai':paymentRaw==='qris_cashier'||paymentRaw==='qris'?'QRIS':paymentRaw||'—';
+  const paymentStatus=String(r?.payment_status||'').toLowerCase();
+  const status=paymentStatus==='verified'||paymentStatus==='paid'?'LUNAS':paymentStatus?paymentStatus.toUpperCase():'—';
+  const cashier=String(r?.verified_by_email||r?.cashier_actor||(r?.order_source==='public'?'Sistem Publik':'—'));
+  const cashReceived=r?.cash_received!=null?Math.max(0,Number(r.cash_received)||0):r?.paid_amount!=null?Math.max(0,Number(r.paid_amount)||0):null;
+  const change=r?.change_amount!=null?Math.max(0,Number(r.change_amount)||0):null;
+  const paymentAt=r?.verified_at||r?.payment_submitted_at||null;
+  return {items,subtotal,charge,tax,total,service,payment,paymentRaw,status,cashier,cashReceived,change,paymentAt,chargeLabel,taxLabel};
 }
 
 function receiptRows(r){
-  const d=receiptData(r);
-  return '<section class="receiptUnifiedV4">'+
-    '<div class="receiptCodeV4"><span>Kode Transaksi</span><strong>'+esc(r?.payment_code||r?.public_order_code||'—')+'</strong></div>'+
-    '<div class="receiptMetaV4">'+
+  const d=receiptData(r),code=r?.payment_code||r?.public_order_code||'—',dine=r?.service_mode==='dine-in';
+  return '<section class="receiptUnifiedV5">'+
+    '<header class="receiptHeroV5"><div class="receiptEyV5">BUKTI PEMBAYARAN &amp; PEMESANAN</div><h2>STRUK TRANSAKSI</h2><strong>SMART ORDER</strong></header>'+
+    '<div class="receiptMetaV5">'+
+      '<div><span>Status Pembayaran</span><strong>'+esc(d.status)+'</strong></div>'+
+      '<div><span>Kode Transaksi</span><strong>'+esc(code)+'</strong></div>'+
       '<div><span>Nama Pemesan</span><strong>'+esc(r?.customer_name||'—')+'</strong></div>'+
       '<div><span>Layanan</span><strong>'+esc(d.service)+'</strong></div>'+
-      '<div><span>Nomor Meja</span><strong>'+esc(r?.service_mode==='dine-in'?String(r?.table_number||'—'):'—')+'</strong></div>'+
-      (d.payment?'<div><span>Metode Pembayaran</span><strong>'+esc(d.payment.toUpperCase())+'</strong></div>':'')+
+      (dine?'<div><span>Nomor Meja</span><strong>'+esc(String(r?.table_number||'—'))+'</strong></div>':'')+
       '<div><span>Tanggal Pemesanan</span><strong>'+esc(fd(r?.created_at))+'</strong></div>'+
       '<div><span>Waktu Pemesanan</span><strong>'+esc(ft(r?.created_at))+'</strong></div>'+
+      '<div><span>Metode Pembayaran</span><strong>'+esc(d.payment)+'</strong></div>'+
+      (d.paymentAt?'<div><span>Waktu Pembayaran</span><strong>'+esc(ft(d.paymentAt))+'</strong></div>':'')+
+      '<div><span>Petugas Kasir</span><strong>'+esc(d.cashier)+'</strong></div>'+
     '</div>'+
-    '<div class="receiptItemsV4"><div class="receiptSectionV4">Rincian Pesanan</div>'+
-      d.items.map(i=>'<div class="receiptItemV4"><div><strong>'+esc(i.name)+'</strong><span>'+Number(i.quantity||0)+' × '+rp(i.price)+'</span></div><b>'+rp((Number(i.quantity)||0)*(Number(i.price)||0))+'</b></div>').join('')+
+    '<div class="receiptItemsV5"><div class="receiptSectionV5">Rincian Pesanan</div>'+
+      d.items.map(i=>'<div class="receiptItemV5"><div><strong>'+esc(i.name)+'</strong><span>'+Number(i.quantity||0)+' × '+rp(i.price)+'</span></div><b>'+rp((Number(i.quantity)||0)*(Number(i.price)||0))+'</b></div>').join('')+
     '</div>'+
-    '<div class="receiptTotalsV4">'+
+    '<div class="receiptTotalsV5">'+
       '<div><span>Subtotal</span><b>'+rp(d.subtotal)+'</b></div>'+
       (d.charge>0?'<div><span>'+esc(d.chargeLabel)+'</span><b>'+rp(d.charge)+'</b></div>':'')+
       (d.tax>0?'<div><span>'+esc(d.taxLabel)+'</span><b>'+rp(d.tax)+'</b></div>':'')+
-      '<div class="receiptGrandV4"><span>Total Pembayaran</span><strong>'+rp(d.total)+'</strong></div>'+
+      '<div class="receiptGrandV5"><span>TOTAL PEMBAYARAN</span><strong>'+rp(d.total)+'</strong></div>'+
+      (d.cashReceived!=null?'<div><span>Nominal Diterima</span><b>'+rp(d.cashReceived)+'</b></div>':'')+
+      (d.change!=null?'<div><span>Kembalian</span><b>'+rp(d.change)+'</b></div>':'')+
     '</div>'+
+    '<footer class="receiptFootV5"><strong>Terima kasih atas kunjungan Anda.</strong><span>Simpan struk ini sebagai bukti transaksi.</span></footer>'+
   '</section>';
 }
 
-function printReceipt(r){
-  const w=open('','_blank','width=640,height=820');
-  if(!w)return;
-  const d=receiptData(r);
-  const rows=receiptRows(r);
-  w.document.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>Struk '+esc(r?.payment_code||r?.public_order_code||'')+'</title><style>'+
-  '*{box-sizing:border-box}body{margin:0;padding:28px;background:#f5f7f6;color:#17211d;font:14px/1.45 Arial,sans-serif}.sheet{max-width:720px;margin:auto;background:#fff;border:1px solid #e1e7e3;border-radius:20px;padding:26px}.head{display:flex;justify-content:space-between;gap:18px;padding-bottom:18px;border-bottom:1px solid #e4e9e6}.head h2{margin:0;font-size:24px}.head p{margin:5px 0 0;color:#748079}.receiptCodeV4{text-align:right;background:#f3f6f4;border:1px solid #e0e6e2;border-radius:12px;padding:10px 12px}.receiptCodeV4 span,.receiptCodeV4 strong{display:block}.receiptCodeV4 span{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#75817c}.receiptMetaV4{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;padding:14px 0}.receiptMetaV4>div{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-bottom:1px solid #eef1ef}.receiptMetaV4 span{color:#68756f}.receiptItemsV4{margin-top:14px;border:1px solid #e2e8e4;border-radius:13px;overflow:hidden}.receiptSectionV4{background:#f4f7f5;padding:9px 12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.receiptItemV4{display:flex;justify-content:space-between;gap:16px;padding:10px 12px;border-top:1px solid #edf1ee}.receiptItemV4 strong,.receiptItemV4 span{display:block}.receiptItemV4 span{color:#7b8782;font-size:12px}.receiptTotalsV4{width:min(100%,340px);margin:14px 0 0 auto}.receiptTotalsV4>div{display:flex;justify-content:space-between;padding:7px 0}.receiptGrandV4{border-top:1px solid #dfe6e2;margin-top:3px;padding-top:12px!important;font-size:16px}.receiptGrandV4 strong{font-size:19px;color:#173f33}.receiptCodeV4 strong,.receiptMetaV4 strong,.receiptItemV4 strong{overflow-wrap:anywhere;word-break:break-word;min-width:0}.receiptItemV4>div{min-width:0;flex:1}.receiptItemV4>b{white-space:nowrap;flex:none}@page{size:80mm auto;margin:0}@media print{html,body{width:80mm;max-width:80mm;margin:0;padding:0}.sheet{width:80mm;max-width:80mm;margin:0;border:0;border-radius:0;box-shadow:none;padding:5mm}.head{display:block}.receiptCodeV4{text-align:left;margin-top:8px}.receiptMetaV4{grid-template-columns:1fr}.receiptMetaV4>div{align-items:flex-start}.receiptItemsV4,.receiptTotalsV4{max-width:100%;overflow:hidden}}</style></head><body><main class="sheet"><div class="head"><div><h2>Struk Pembayaran &amp; Pemesanan</h2><p>Dokumen transaksi</p></div><div class="receiptCodeV4"><span>Kode Transaksi</span><strong>'+esc(r?.payment_code||r?.public_order_code||'—')+'</strong></div></div>'+rows.replace(/^<section class="receiptUnifiedV4"><div class="receiptCodeV4">[\s\S]*?<\/div>/,'<section class="receiptUnifiedV4">')+'</main><script>onload=()=>print()<\/script></body></html>');
+function reservePrintWindow(){
+  return open('','_blank','width=520,height=780');
+}
+
+function printReceipt(r,options={}){
+  if(!r)throw Error('Data struk tidak tersedia.');
+  const w=options.window||reservePrintWindow();
+  if(!w)throw Error('Popup cetak diblokir browser.');
+  const paper=printerPaper(),rows=receiptRows(r),lang=currentLocale().split('-')[0]||'id';
+  const code=r?.payment_code||r?.public_order_code||'';
+  const css='*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#000}body{font:12px/1.38 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}.sheet{width:'+paper+';max-width:'+paper+';margin:0 auto;padding:4mm;overflow:hidden}.receiptHeroV5{text-align:center;padding-bottom:8px;border-bottom:1px dashed #000}.receiptHeroV5 .receiptEyV5{font-size:10px;font-weight:800;letter-spacing:.04em}.receiptHeroV5 h2{font-size:17px;margin:5px 0 2px}.receiptHeroV5>strong{display:block;font-size:13px}.receiptMetaV5{padding:7px 0}.receiptMetaV5>div,.receiptTotalsV5>div{display:flex;justify-content:space-between;gap:8px;padding:3px 0}.receiptMetaV5 span,.receiptTotalsV5 span{min-width:0}.receiptMetaV5 strong,.receiptTotalsV5 b,.receiptTotalsV5 strong{text-align:right;overflow-wrap:anywhere;word-break:break-word}.receiptItemsV5{border-top:1px dashed #000;border-bottom:1px dashed #000;padding:5px 0}.receiptSectionV5{font-weight:900;margin-bottom:4px}.receiptItemV5{display:flex;justify-content:space-between;gap:8px;padding:4px 0}.receiptItemV5>div{min-width:0;flex:1}.receiptItemV5 strong,.receiptItemV5 span{display:block;overflow-wrap:anywhere}.receiptItemV5 span{font-size:11px}.receiptItemV5>b{white-space:nowrap;flex:none}.receiptTotalsV5{padding:6px 0}.receiptGrandV5{font-size:14px;font-weight:900;border-top:1px dashed #000;margin-top:4px;padding-top:6px!important}.receiptGrandV5 strong{font-size:15px}.receiptFootV5{border-top:1px dashed #000;text-align:center;padding-top:7px}.receiptFootV5 strong,.receiptFootV5 span{display:block}.receiptFootV5 span{margin-top:3px;font-size:10px}@page{size:'+paper+' auto;margin:0}@media print{html,body,.sheet{width:'+paper+'!important;max-width:'+paper+'!important}.sheet{padding:3.5mm!important}}';
+  w.document.open();
+  w.document.write('<!doctype html><html lang="'+esc(lang)+'"><head><meta charset="utf-8"><title>Struk '+esc(code)+'</title><style>'+css+'</style></head><body><main class="sheet">'+rows+'</main><script>onload=()=>{setTimeout(()=>{focus();print()},60)}<\\/script></body></html>');
   w.document.close();
+  return w;
 }
 
 function showReceipt(r){
@@ -70,11 +94,13 @@ function showReceipt(r){
   const modal=document.createElement('div');
   modal.id='cashReceiptModal';
   modal.className='modal';
-  modal.innerHTML='<div class="modalbox receiptModalV4"><div class="receiptHeaderV4"><div><h2>Struk Pembayaran & Pemesanan</h2><p>Dokumen transaksi</p></div><button type="button" class="btn" data-cash-receipt-close>Tutup</button></div>'+receiptRows(r)+'<div class="receiptActionsV4"><button type="button" class="btn green" data-cash-receipt-print>Cetak Struk</button></div></div>';
+  modal.innerHTML='<div class="modalbox receiptModalV5"><div class="receiptHeaderV5"><div><div class="ey">BUKTI TRANSAKSI</div><h2>Struk Transaksi</h2></div><button type="button" class="btn" data-cash-receipt-close>Tutup</button></div>'+receiptRows(r)+'<div class="receiptActionsV5"><button type="button" class="btn green" data-cash-receipt-print>Cetak Struk</button></div></div>';
   document.body.appendChild(modal);
   modal.querySelector('[data-cash-receipt-close]')?.addEventListener('click',()=>modal.remove());
-  modal.querySelector('[data-cash-receipt-print]')?.addEventListener('click',()=>printReceipt(r));
+  modal.querySelector('[data-cash-receipt-print]')?.addEventListener('click',()=>{try{printReceipt(r)}catch(error){alert(error?.message||'Struk gagal dicetak.')}});
 }
+
+window.__SDB_UNIFIED_RECEIPT__={version:'v5-transaction-proof',receiptData,receiptRows,reservePrintWindow,printReceipt,showReceipt};
 
 function gateState(){
   const root=document.getElementById('cashierRoot');

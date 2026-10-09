@@ -55,6 +55,7 @@ function normalizeStyleRuntime(body) {
   out = out.replace(/add\('rohmat-admin-cashier-safe-v7',[\s\S]*?\);/g, '');
   out = out.replace(/add\('rohmat-admin-database-safe-v10',[\s\S]*?\);/g, "add('rohmat-admin-database-safe-v10','/admin/runtime/database-ui.js');");
   out = out.replace(/add\('rohmat-admin-kds-safe-v6',[\s\S]*?\);/g, '');
+  out = out.replace("function ctx(p){const m=(document.querySelector('.mainNav button.on')?.textContent||'').trim().toLowerCase(),s=(document.querySelector('.subnav button.on')?.textContent||'').trim().toLowerCase().replace(/\\s+/g,'-');let x=merge({},p.theme);x=merge(x,p.general);x=merge(x,p.sites?.admin);if(m==='situs admin')x=merge(x,p.pages?.admin?.[s]);return x}","function ctx(p){const mb=document.querySelector('.mainNav button.on'),sb=document.querySelector('.subnav button.on'),m=String(mb?.dataset?.main||'').trim().toLowerCase(),s=String(sb?.dataset?.sub||'').trim().toLowerCase().split(' ').filter(Boolean).join('-');let x=merge({},p.theme);x=merge(x,p.general);x=merge(x,p.sites?.admin);if(m==='admin')x=merge(x,p.pages?.admin?.[s]);return x}");
   out = out.split("const PUB='https://rohmat-pesan-bayar-publik.vercel.app/';const KDS='https://rohmat-kds-printer.vercel.app';").join("const PUB='/';const KDS='/kds';");
   return out;
 }

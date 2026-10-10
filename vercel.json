@@ -66,6 +66,14 @@
       "destination": "/apps/kds/login.html"
     },
     {
+      "source": "/admin/kds-live",
+      "destination": "/apps/kds/index.html"
+    },
+    {
+      "source": "/admin/kds-login-live",
+      "destination": "/apps/kds/login.html"
+    },
+    {
       "source": "/kds",
       "destination": "/apps/kds/index.html"
     },
@@ -271,10 +279,6 @@
           "value": "nosniff"
         },
         {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
           "key": "Referrer-Policy",
           "value": "no-referrer"
         },
@@ -290,6 +294,10 @@
         {
           "key": "Permissions-Policy",
           "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=()"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
         }
       ]
     },
@@ -299,6 +307,10 @@
         {
           "key": "X-Robots-Tag",
           "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
         }
       ]
     },
@@ -312,6 +324,10 @@
         {
           "key": "Cache-Control",
           "value": "private, no-store, max-age=0, must-revalidate"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
         }
       ]
     },
@@ -321,6 +337,10 @@
         {
           "key": "X-Robots-Tag",
           "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
         }
       ]
     },
@@ -346,6 +366,10 @@
         {
           "key": "X-Rohmat-KDS-Hardening",
           "value": "batch4-realtime-v1"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
         }
       ]
     },
@@ -371,6 +395,10 @@
         {
           "key": "X-Rohmat-KDS-Hardening",
           "value": "batch4-realtime-v1"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
         }
       ]
     },
@@ -396,6 +424,10 @@
         {
           "key": "X-Rohmat-KDS-Hardening",
           "value": "batch4-realtime-v1"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
         }
       ]
     },
@@ -421,6 +453,10 @@
         {
           "key": "X-Rohmat-KDS-Hardening",
           "value": "batch4-realtime-v1"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
         }
       ]
     },
@@ -468,6 +504,73 @@
         {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
+        }
+      ]
+    },
+    {
+      "source": "/portal",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        }
+      ]
+    },
+    {
+      "source": "/admin/kds-live",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0, must-revalidate"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=()"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; frame-ancestors 'self'; form-action 'self'; worker-src 'none'; upgrade-insecure-requests"
+        },
+        {
+          "key": "X-Rohmat-KDS-Embed",
+          "value": "admin-same-origin-v1"
+        }
+      ]
+    },
+    {
+      "source": "/admin/kds-login-live",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0, must-revalidate"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=()"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'; frame-ancestors 'self'; form-action 'self'; worker-src 'none'; upgrade-insecure-requests"
+        },
+        {
+          "key": "X-Rohmat-KDS-Embed",
+          "value": "admin-same-origin-v1"
         }
       ]
     }

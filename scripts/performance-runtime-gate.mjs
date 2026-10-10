@@ -28,6 +28,6 @@ assert.ok(!i18n.includes("if(x!==current)setLocale(x);else translate(document)")
 assert.ok(!/function routeKey\([^)]*\)\{[^}]*\.matches\(/.test(i18n),'routeKey must use stable datasets without repeated selector matching');
 
 for(const [name,src] of [['public',pub],['admin-edge',admin],['admin-proxy',adminProxy],['kds',kds],['kds-login',kdsLogin]])
-  assert.ok(src.includes('20261010-global-v3'),'i18n cache-bust version missing in '+name);
+  assert.ok(src.includes('20261011-global-v4'),'i18n cache-bust version missing in '+name);
 
 console.log('SMART_ORDER_I18N_PERFORMANCE_GATE_PASS=1');

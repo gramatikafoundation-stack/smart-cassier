@@ -43,7 +43,7 @@ const SHEET_KEYS=["dine","take","public","cashierAdmin","cashierKds","cash","qri
 const SHEET_VALUES:Record<string,string[]>={
 "id-ID":["Makan di Tempat","Bawa Pulang","Situs Publik / Barcode","Smart Cashier Admin","Smart Cashier KDS","Tunai","QRIS Kasir","QRIS","Dibatalkan","Pesanan Selesai","Pesanan Siap","Sedang Diproses","Pesanan Baru","Tersedia","Habis","Ya","Tidak","Meja"],
 "en-US":["Dine In","Take Away","Public Site / Barcode","Smart Cashier Admin","Smart Cashier KDS","Cash","Cashier QRIS","QRIS","Cancelled","Order Completed","Order Ready","In Progress","New Order","Available","Out of Stock","Yes","No","Table"],
-"ms-MY":["Makan di Tempat","Bawa Pulang","Laman Awam / Kod Bar","Smart Cashier Admin","Smart Cashier KDS","Tunai","QRIS Juruwang","QRIS","Dibatalkan","Pesanan Selesai","Pesanan Siap","Sedang Diproses","Pesanan Baharu","Tersedia","Habis","Ya","Tidak","Meja"],
+"ms-MY":["Makan di Tempat","Bawa Pulang","Laman Awam / Kod Bar","Smart Cashier Admin","Smart Cashier KDS","Tunai","QRIS Juruwang","QRIS","Dibatalkan","Pesanan Selesai","Pesanan Siap","Sedang Diproses","Pesanan Baharu","Dalam Stok","Kehabisan Stok","Ya","Tidak","Meja"],
 "ar-SA":["تناول في المكان","سفري","الموقع العام / الباركود","Smart Cashier Admin","Smart Cashier KDS","نقدًا","QRIS أمين الصندوق","QRIS","ملغى","اكتمل الطلب","الطلب جاهز","قيد المعالجة","طلب جديد","متاح","نفد المخزون","نعم","لا","الطاولة"],
 "zh-CN":["堂食","外带","公共网站 / 条码","Smart Cashier 管理端","Smart Cashier KDS","现金","收银 QRIS","QRIS","已取消","订单完成","订单已备妥","处理中","新订单","可用","缺货","是","否","桌"],
 "zh-TW":["內用","外帶","公開網站 / 條碼","Smart Cashier 管理端","Smart Cashier KDS","現金","收銀 QRIS","QRIS","已取消","訂單完成","訂單已備妥","處理中","新訂單","可用","缺貨","是","否","桌"],

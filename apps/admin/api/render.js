@@ -417,6 +417,14 @@ function applyReferenceExactStructure(html) {
 
 export function canonicalizeAdminShell(html) {
   let out = ensureCashierIntegration(String(html || ''));
+  // Golden Master v12: upstream settings runtime may still expose the historical 18-locale selector.
+  // Normalize only the known LANGS literal; shared i18n remains the translation source of truth.
+  if (!out.includes("['it-IT','Italia','ltr']")) {
+    out = out.replace(
+      "['pt-BR','Portugis','ltr'],['tr-TR','Turki','ltr']",
+      "['pt-BR','Portugis','ltr'],['it-IT','Italia','ltr'],['tr-TR','Turki','ltr']"
+    );
+  }
   out = out.split('Warung Nasi').join(BUSINESS_NAME);
   out = out.split(SUPABASE_ORIGIN + '/functions/v1/admin-media-upload').join('/admin/api/media-upload');
   out = out.replace(/MEDIA=U\+'\/functions\/v1\/admin-media-upload'/g, "MEDIA='/admin/api/media-upload'");

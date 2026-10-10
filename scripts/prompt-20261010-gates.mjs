@@ -32,16 +32,17 @@ assert.ok(pub.includes('grid-template-rows:minmax(0,78fr) minmax(0,22fr)'));
 assert.ok(pub.includes('text-align:center'));
 console.log('PUBLIC_MENU_CARD_PROPORTION_GATE=PASS');
 
-for(const token of ['repeat(3,var(--so-kds-card))','aspect-ratio:4/5','grid-template-rows:minmax(0,78fr) auto auto','object-fit:contain','text-align:center'])
+for(const token of ['repeat(3,minmax(0,1fr))','aspect-ratio:4/5','grid-template-rows:minmax(0,78fr) auto auto','object-fit:contain','text-align:center','cashLayout>aside.cashPanel','position:sticky','max-height:calc(100vh - 24px)'])
   assert.ok(kdsMenuMediaCss.includes(token),'KDS Smart Cashier public-card anatomy missing '+token);
 for(const token of ['cashPaymentConfirm','Konfirmasi Pembayaran','object-fit','contain'])
   assert.ok(kdsMenuMediaJs.includes(token),'KDS Smart Cashier payment/media enhancer missing '+token);
-for(const token of ['repeat(3,minmax(0,1fr))','aspect-ratio:4/5','grid-template-rows:minmax(0,78fr) auto auto','object-fit:contain','text-align:center','rc6PaymentConfirm','Konfirmasi Pembayaran','rc6Layout>aside.rc6Panel'])
+for(const token of ['repeat(3,minmax(0,1fr))','aspect-ratio:4/5','grid-template-rows:minmax(0,78fr) auto auto','object-fit:contain','text-align:center','rc6PaymentConfirm','Konfirmasi Pembayaran','rc6Layout>aside.rc6Panel','ensureCheckoutParity','rohmatAdminCashierCheckout','position:sticky','max-height:calc(100vh - 96px)'])
   assert.ok(adminCashierLoader.includes(token),'Admin Smart Cashier KDS/public parity missing '+token);
-assert.ok(kdsHtml.includes('menu-media.css?v=20261010-cashier-card-parity-v4'));
-assert.ok(kdsHtml.includes('menu-media.js?v=20261010-cashier-card-parity-v4'));
+assert.ok(kdsHtml.includes('menu-media.css?v=20261011-cashier-checkout-sticky-v6'));
+assert.ok(kdsHtml.includes('menu-media.js?v=20261011-cashier-checkout-sticky-v6'));
 console.log('SMART_CASHIER_PUBLIC_CARD_ANATOMY_PARITY_GATE=PASS');
 console.log('ADMIN_KDS_PAYMENT_CONFIRMATION_PARITY_GATE=PASS');
+console.log('SMART_CASHIER_CHECKOUT_STICKY_PARITY_GATE=PASS');
 
 for(const token of ['master_prototype_runtime_context','p_origin:tenantId?null:origin','if(req.method==="OPTIONS")','Access-Control-Allow-Headers','x-sdb-client-order-id','function internalKey()','const INTERNAL_KEY=internalKey()','apikey:INTERNAL_KEY','Authorization:"Bearer "+INTERNAL_KEY'])
   assert.ok(gateway.includes(token),'gateway contract missing '+token);

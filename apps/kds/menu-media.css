@@ -1,9 +1,10 @@
 /* SMART ORDER KDS Smart Cashier — public-card anatomy parity v4 */
 #cashierRoot .cashCats{display:flex!important;gap:8px!important;overflow:auto!important;margin:0 0 12px!important;padding:0!important;scrollbar-width:thin!important}
 #cashierRoot .cashCats .cashBtn{white-space:nowrap!important;border-radius:10px!important;padding:8px 12px!important;min-height:38px!important}
-#cashierRoot .cashMenu{--so-kds-card:207px!important;grid-template-columns:repeat(3,var(--so-kds-card))!important;justify-content:center!important;align-items:start!important;gap:10px!important}
+/* SMART ORDER KDS Smart Cashier — fluid three-card public geometry v5 */
+#cashierRoot .cashMenu{grid-template-columns:repeat(3,minmax(0,1fr))!important;justify-content:stretch!important;align-items:stretch!important;gap:10px!important}
 #cashierRoot .cashItem{
- width:var(--so-kds-card)!important;aspect-ratio:4/5!important;height:auto!important;min-width:0!important;overflow:hidden!important;
+ width:100%!important;aspect-ratio:4/5!important;height:auto!important;min-width:0!important;overflow:hidden!important;
  padding:0!important;gap:0!important;border-radius:12px!important;background:#fff!important;
  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;
  grid-template-rows:minmax(0,78fr) auto auto!important;align-items:stretch!important
@@ -41,9 +42,12 @@
 #cashierRoot .cashPaymentConfirm{margin:12px 0 7px!important;padding:10px 11px!important;border:1px solid #dfe6e3!important;border-radius:9px!important;background:#f4f7f5!important;color:#23352f!important}
 #cashierRoot .cashPaymentConfirm b{display:block!important;font-size:12px!important;margin:0 0 3px!important}
 #cashierRoot .cashPaymentConfirm span{display:block!important;font-size:10px!important;line-height:1.4!important;color:#71807a!important}
-@media(max-width:980px){#cashierRoot .cashMenu{grid-template-columns:repeat(2,var(--so-kds-card))!important}}
+/* SMART ORDER KDS Smart Cashier — checkout visibility/sticky parity v6 */
+#cashierRoot .cashLayout{align-items:start!important}
+#cashierRoot .cashLayout>aside.cashPanel{position:sticky!important;top:12px!important;align-self:start!important;max-height:calc(100vh - 24px)!important;overflow:auto!important;overscroll-behavior:contain!important;scrollbar-gutter:stable!important;z-index:4!important}
+@media(max-width:980px){#cashierRoot .cashLayout>aside.cashPanel{position:static!important;top:auto!important;max-height:none!important;overflow:visible!important}#cashierRoot .cashMenu{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:520px){
- #cashierRoot .cashMenu{--so-kds-card:min(190px,calc((100vw - 26px)/2))!important;grid-template-columns:repeat(2,var(--so-kds-card))!important;gap:7px!important}
+ #cashierRoot .cashMenu{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}
  #cashierRoot .cashItem>b{font-size:11px!important;padding:4px 6px 2px!important}
  #cashierRoot .cashItem>strong{font-size:10px!important;padding:0 3px 6px 6px!important}
  #cashierRoot .cashItem>.cashBtn.primary,#cashierRoot .cashItem>.q2step,#cashierRoot .cashItem>.rqStep,#cashierRoot .cashItem>.cashMenuQty{margin:0 6px 6px 0!important}

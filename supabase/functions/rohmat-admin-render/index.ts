@@ -36,7 +36,7 @@ async function bootstrapBody(ctx:TenantCtx){
   bootstrapMemo.set(ctx.tenant_id,{body,at:Date.now()});
   return body;
 }
-const CASHIER='<script id="rohmat-admin-cashier-current-v36" src="'+U+'/functions/v1/rohmat-admin-cashier-loader-v1?tenant=__SDB_TENANT_ID__&v=36" defer></script><!-- rohmat-admin-smart-cashier-subnav-v30 -->';
+const CASHIER='<script id="rohmat-admin-cashier-current-v37" src="'+U+'/functions/v1/rohmat-admin-cashier-loader-v1?tenant=__SDB_TENANT_ID__&v=37" defer></script><!-- rohmat-admin-smart-cashier-subnav-v31 -->';
 const NAV_OLD="admin:['Login','Dashboard','Pesanan','QRIS','Tim Admin','Keamanan']";
 const NAV_NEW="admin:['Login','Dashboard','Pesanan','Smart Cashier','QRIS','Tim Admin','Keamanan']";
 const A11Y_CSS=".rohmatSkipLink{position:fixed;left:12px;top:12px;z-index:9999;transform:translateY(-180%);padding:10px 14px;border-radius:10px;background:#111;color:#fff;text-decoration:none;font-weight:800}.rohmatSkipLink:focus{transform:none}*:focus-visible{outline:3px solid var(--accent,#c86d4d)!important;outline-offset:3px!important}.btn.primary,.btn.accent,.mainNav button.on,.subnav button.on{color:var(--a11y-on-primary,#fff)!important}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}";

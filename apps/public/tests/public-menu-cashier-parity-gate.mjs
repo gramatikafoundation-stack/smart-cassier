@@ -6,11 +6,15 @@ const admin=fs.readFileSync(new URL('../../admin/api/render.js',import.meta.url)
 const kds=fs.readFileSync(new URL('../../kds/menu-media.css',import.meta.url),'utf8');
 
 for(const token of [
-  'smart-order-menu-square-v1',
-  '--so-admin-card:222px!important',
-  'aspect-ratio:1/1!important',
-  'grid-template-columns:repeat(3,var(--so-admin-card))!important',
-  '-webkit-line-clamp:2!important'
+  'smart-order-admin-cashier-public-geometry-v2',
+  'grid-template-columns:repeat(3,minmax(0,1fr))!important',
+  'aspect-ratio:4/5!important',
+  'grid-template-rows:minmax(0,78fr) auto auto!important',
+  'object-fit:contain!important',
+  'text-align:center!important',
+  '-webkit-line-clamp:2!important',
+  'position:sticky!important',
+  'max-height:calc(100vh - 96px)!important'
 ]) assert.ok(admin.includes(token),'SMART ORDER ADMIN visual reference missing: '+token);
 
 for(const token of [
@@ -28,14 +32,17 @@ for(const token of [
 ]) assert.ok(pub.includes(token),'PUBLIC four-column/contain parity token missing: '+token);
 
 for(const token of [
-  '--so-kds-card:207px!important',
-  'grid-template-columns:repeat(3,var(--so-kds-card))!important',
+  'fluid three-card public geometry v5',
+  'grid-template-columns:repeat(3,minmax(0,1fr))!important',
   'aspect-ratio:4/5!important',
   'grid-template-rows:minmax(0,78fr) auto auto!important',
   'object-fit:contain!important',
   'object-position:center!important',
   'text-align:center!important',
-  '-webkit-line-clamp:2!important'
+  '-webkit-line-clamp:2!important',
+  'cashLayout>aside.cashPanel',
+  'position:sticky!important',
+  'max-height:calc(100vh - 24px)!important'
 ]) assert.ok(kds.includes(token),'KDS public-card anatomy parity token missing: '+token);
 
 assert.ok(pub.includes("e.target.closest('#confirm,#pay,#close,.cat,[data-id]')"),'public functional menu click contract changed');

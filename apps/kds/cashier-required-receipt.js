@@ -76,8 +76,15 @@ function reservePrintWindow(){
   return open('','_blank','width=520,height=780');
 }
 
-function printReceipt(r,options={}){
+async function printReceipt(r,options={}){
   if(!r)throw Error('Data struk tidak tersedia.');
+  const thermal=window.__SDB_THERMAL_PRINTER__;
+  if(thermal?.print){
+    try{if(options.window&&!options.window.closed)options.window.close()}catch{}
+    const route=await thermal.print(r);
+    if(route==='cancelled')throw Error('Cetak dibatalkan.');
+    return {mode:'unified-printer-runtime',route:route||'unknown'};
+  }
   const w=options.window||reservePrintWindow();
   if(!w)throw Error('Popup cetak diblokir browser.');
   const paper=printerPaper(),rows=receiptRows(r),lang=currentLocale().split('-')[0]||'id';
@@ -86,9 +93,8 @@ function printReceipt(r,options={}){
   w.document.open();
   w.document.write('<!doctype html><html lang="'+esc(lang)+'"><head><meta charset="utf-8"><title>Struk '+esc(code)+'</title><style>'+css+'</style></head><body><main class="sheet">'+rows+'</main><script>onload=()=>{setTimeout(()=>{focus();print()},60)}<\\/script></body></html>');
   w.document.close();
-  return w;
+  return {mode:'window-print-fallback',window:w};
 }
-
 function showReceipt(r){
   if(!r)return;
   document.getElementById('cashReceiptModal')?.remove();
@@ -98,10 +104,10 @@ function showReceipt(r){
   modal.innerHTML='<div class="modalbox receiptModalV5"><div class="receiptHeaderV5"><div><div class="ey">BUKTI TRANSAKSI</div><h2>Struk Transaksi</h2></div><button type="button" class="btn" data-cash-receipt-close>Tutup</button></div>'+receiptRows(r)+'<div class="receiptActionsV5"><button type="button" class="btn green" data-cash-receipt-print>Cetak Struk</button></div></div>';
   document.body.appendChild(modal);
   modal.querySelector('[data-cash-receipt-close]')?.addEventListener('click',()=>modal.remove());
-  modal.querySelector('[data-cash-receipt-print]')?.addEventListener('click',()=>{try{printReceipt(r)}catch(error){alert(error?.message||'Struk gagal dicetak.')}});
+  modal.querySelector('[data-cash-receipt-print]')?.addEventListener('click',()=>{printReceipt(r).catch(error=>alert(error?.message||'Struk gagal dicetak.'))});
 }
 
-window.__SDB_UNIFIED_RECEIPT__={version:'v5-transaction-proof',receiptData,receiptRows,reservePrintWindow,printReceipt,showReceipt};
+window.__SDB_UNIFIED_RECEIPT__={version:'v6-unified-printer-runtime',receiptData,receiptRows,reservePrintWindow,printReceipt,showReceipt};
 
 function gateState(){
   const root=document.getElementById('cashierRoot');

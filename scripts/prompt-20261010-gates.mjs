@@ -75,10 +75,12 @@ assert.ok(!kds.includes('function printOne('));
 assert.ok(!legacyPrintShim.includes('KITCHEN TICKET'));
 assert.ok(!legacyPrintShim.includes('[data-print]')||legacyPrintShim.includes("querySelectorAll('[data-print]').forEach(el=>el.remove())"));
 console.log('KDS_NO_PRINT_BUTTON_GATE=PASS');
-for(const token of ["action==='complete'","await run(id,action)","committed=true","printReceipt(order","handoverPrintLocks"])
-  assert.ok(kds.includes(token),'handover auto-print missing '+token);
-assert.ok(kdsHtml.includes('/kds-assets/v4/app.js?v=20261010-handover-autoprint-v2'),'KDS app must use final handover cache-buster');
-assert.ok(kdsHtml.includes('/kds-assets/v4/cashier-required-receipt.js?v=20261010-receipt-v5-autoprint'),'KDS receipt must use final receipt cache-buster');
+for(const token of ["action==='complete'","await run(id,action)","committed=true","auto_print_required","print_auto_dispatch","handoverPrintLocks"])
+  assert.ok(kds.includes(token),'durable handover auto-print contract missing '+token);
+assert.ok(kds.includes("await api.printReceipt(actionResult?.order||order"),'handover must await unified receipt/printer dispatch');
+assert.ok(kdsHtml.includes('/admin/runtime/printer.js?v=20261011-kds-unified-v1'),'KDS must load the shared SMART ORDER printer runtime');
+assert.ok(kdsHtml.includes('/kds-assets/v4/app.js?v=20261011-handover-idempotent-v3'),'KDS app must use final durable handover cache-buster');
+assert.ok(kdsHtml.includes('/kds-assets/v4/cashier-required-receipt.js?v=20261011-receipt-v6-unified-printer'),'KDS receipt must use final unified printer cache-buster');
 const kdsAssetHeaders=rootVercel.headers?.find(x=>x.source==='/kds-assets/v4/(.*)')?.headers||[];
 const kdsAssetCache=kdsAssetHeaders.find(x=>x.key==='Cache-Control')?.value||'';
 assert.equal(kdsAssetCache,'public, max-age=0, must-revalidate','KDS operational assets must revalidate after releases');
@@ -106,15 +108,15 @@ for(const src of [adminRender,visualEditor]){
 }
 console.log('ADMIN_SETTINGS_I18N_DEDUP_GATE=PASS');
 
-const locales=['id-ID','en-US','ms-MY','ar-SA','zh-CN','zh-TW','ja-JP','ko-KR','hi-IN','th-TH','vi-VN','fr-FR','de-DE','es-ES','pt-BR','tr-TR','ru-RU','nl-NL'];
+const locales=['id-ID','en-US','ms-MY','ar-SA','zh-CN','zh-TW','ja-JP','ko-KR','hi-IN','th-TH','vi-VN','fr-FR','de-DE','es-ES','pt-BR','it-IT','tr-TR','ru-RU','nl-NL'];
 for(const l of locales)assert.ok(i18n.includes("'"+l+"'"),'locale missing '+l);
 for(const key of ['nav.public','nav.admin','nav.database','action.save','payment.send','receipt.total'])
   assert.ok(i18n.includes("'"+key+"'"),'i18n key missing '+key);
 assert.ok(i18n.includes('missing'));
 assert.ok(i18n.includes("fetch('/api/locale'"));
-assert.ok(adminRender.includes('/runtime/i18n.js?v=20261010-global-v3'));
-assert.ok(kdsHtml.includes('/runtime/i18n.js?v=20261010-global-v3'));
-assert.ok(pub.includes('/runtime/i18n.js?v=20261010-global-v3'));
+assert.ok(adminRender.includes('/runtime/i18n.js?v=20261011-global-v4'));
+assert.ok(kdsHtml.includes('/runtime/i18n.js?v=20261011-global-v4'));
+assert.ok(pub.includes('/runtime/i18n.js?v=20261011-global-v4'));
 console.log('GLOBAL_I18N_COVERAGE_GATE=PASS');
 assert.ok(adminRuntime.includes("mb?.dataset?.main"));
 assert.ok(adminRuntime.includes("sb?.dataset?.sub"));

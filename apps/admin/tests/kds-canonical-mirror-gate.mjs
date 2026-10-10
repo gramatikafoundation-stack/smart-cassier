@@ -5,6 +5,8 @@ const adminRender=fs.readFileSync(new URL('../../../supabase/functions/rohmat-ad
 const adminApi=fs.readFileSync(new URL('../api/render.js',import.meta.url),'utf8');
 const vercel=JSON.parse(fs.readFileSync(new URL('../../../vercel.json',import.meta.url),'utf8'));
 
+assert.ok(!adminRender.includes("openSettings()},false)}}\\nfunction schedule(){"),'Admin settings runtime must not emit a literal backslash-n token');
+
 for(const token of [
   'data-kds-live-mirror=\\"canonical-v2\\"',
   'data-kds-canonical-src=\\"\'+src+\'\\"',

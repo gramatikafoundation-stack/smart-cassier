@@ -73,8 +73,8 @@ assert.ok(kds.includes("kdsLoginPath=()=>adminKdsEmbed()?'/admin/kds-login-live'
 assert.ok(kdsLogin.includes("kdsAppPath=()=>adminKdsEmbed()?'/admin/kds-live':'/kds'"));
 console.log('ADMIN_KDS_LIVE_VISUAL_PARITY_GATE=PASS');
 for(const src of [adminRender,visualEditor]){
-  assert.ok(src.includes("data.settingsMain='1'"),'stable settings identity missing');
-  assert.ok(src.includes('data.settingsMainV29'), 'cross-runtime settings identity missing');
+  assert.ok(src.includes("dataset.settingsMain='1'"),'stable settings identity missing');
+  assert.ok(src.includes("dataset.settingsMainV29='1'"),'cross-runtime settings identity missing');
   assert.ok(!src.includes("trim().toUpperCase()==='PENGATURAN'"),'translated text must not own settings identity');
 }
 console.log('ADMIN_SETTINGS_I18N_DEDUP_GATE=PASS');

@@ -249,8 +249,8 @@ body #rohmatCashierSafe .rc6Total{font-size:14px!important;padding:8px 0!importa
 body #rohmatCashierSafe .rc6Empty{border:1px dashed #dfe2e4!important;color:#8a9094!important;padding:10px!important;border-radius:6px!important;font-size:9px!important}
 body #rohmatCashierSafe .rc6GateReason{font-size:8px!important;color:#8a9094!important}
 body #rohmatCashierSafe .rc6Qris img{max-width:150px!important;max-height:170px!important}
-body #rohmatCashierSafe .rc6Layout:has(aside .rc6Empty)>aside{display:none!important}
-body #rohmatCashierSafe .rc6Layout:has(aside .rc6Empty){grid-template-columns:1fr!important}
+/* Keep checkout visible even when cart is empty: parity with canonical KDS Smart Cashier. */
+body #rohmatCashierSafe .rc6Layout>aside.rc6Panel{display:block!important;visibility:visible!important;opacity:1!important}
 body .topbar .ey{display:none!important}
 body .topbar{min-height:44px!important}
 body .topbar h2{font-size:13px!important}

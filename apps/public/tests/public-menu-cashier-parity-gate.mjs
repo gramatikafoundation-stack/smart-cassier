@@ -16,6 +16,8 @@ for(const token of [
   'position:sticky!important',
   'max-height:calc(100vh - 96px)!important'
 ]) assert.ok(admin.includes(token),'SMART ORDER ADMIN visual reference missing: '+token);
+assert.ok(!admin.includes('.rc6Layout:has(aside .rc6Empty)>aside{display:none!important}'),'Admin Smart Cashier must not hide checkout when cart is empty');
+assert.ok(admin.includes('Keep checkout visible even when cart is empty'),'Admin empty-cart checkout parity marker missing');
 
 for(const token of [
   'smart-order-public-menu-four-column-v4',

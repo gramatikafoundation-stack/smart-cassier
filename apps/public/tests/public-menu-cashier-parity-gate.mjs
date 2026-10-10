@@ -29,10 +29,14 @@ for(const token of [
 
 for(const token of [
   '--so-kds-card:207px!important',
-  'width:var(--so-kds-card)!important;height:var(--so-kds-card)!important;aspect-ratio:1/1!important',
-  'width:45%!important;height:auto!important;aspect-ratio:1/1!important',
+  'grid-template-columns:repeat(3,var(--so-kds-card))!important',
+  'aspect-ratio:4/5!important',
+  'grid-template-rows:minmax(0,78fr) auto auto!important',
+  'object-fit:contain!important',
+  'object-position:center!important',
+  'text-align:center!important',
   '-webkit-line-clamp:2!important'
-]) assert.ok(kds.includes(token),'KDS square geometry token missing: '+token);
+]) assert.ok(kds.includes(token),'KDS public-card anatomy parity token missing: '+token);
 
 assert.ok(pub.includes("e.target.closest('#confirm,#pay,#close,.cat,[data-id]')"),'public functional menu click contract changed');
 assert.ok(pub.includes('window.__rohmatPublicCoreRealtimeSync'),'public realtime contract missing');

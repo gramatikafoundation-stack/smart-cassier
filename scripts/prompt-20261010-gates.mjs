@@ -56,7 +56,7 @@ console.log('KDS_NO_PRINT_BUTTON_GATE=PASS');
 for(const token of ["action==='complete'","await run(id,action)","committed=true","printReceipt(order","handoverPrintLocks"])
   assert.ok(kds.includes(token),'handover auto-print missing '+token);
 console.log('KDS_HANDOVER_AUTO_PRINT_GATE=PASS');
-for(const token of ['data-kds-live-mirror="v1"',"src=login?'/kds/login':'/kds'","frame.contentDocument","[data-tab=\"'+target+'\"]"])
+for(const token of ['data-kds-live-mirror','data-kds-live-frame',"src=login?'/kds/login':'/kds'","frame.contentDocument","data-tab=","kdsMirrorReady"])
   assert.ok(adminRender.includes(token),'admin KDS live mirror contract missing '+token);
 assert.ok(!adminRender.includes('KDS dan Admin membaca source of truth pesanan yang sama.'));
 console.log('ADMIN_KDS_LIVE_VISUAL_PARITY_GATE=PASS');

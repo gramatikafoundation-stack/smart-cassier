@@ -82,6 +82,8 @@ assert.ok(localeMigration.includes('language_changed'));
 assert.ok(localeMigration.includes('after update of settings'));
 assert.ok(localeApi.includes("url.searchParams.get('format')==='csv'"));
 assert.ok(localeApi.includes("'text/csv; charset=utf-8'"));
+assert.ok(localeApi.includes("'text/html; charset=utf-8'"));
+assert.ok(localeApi.includes('<span id="locale">'));
 console.log('SHEET_I18N_NO_WRITER_REGRESSION_GATE=PASS');
 
 for(const token of ['receipt.proofOrder','receipt.transaction','SMART ORDER','receipt.status','receipt.code','receipt.customer','receipt.items','receipt.total','receipt.thanks'])

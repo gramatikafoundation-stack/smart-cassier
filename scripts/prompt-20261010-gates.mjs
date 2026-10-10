@@ -13,6 +13,7 @@ const legacyPrintShim=read('../apps/kds/print-hide.js');
 const i18n=read('../apps/shared/i18n-runtime.js');
 const adminRuntime=read('../apps/admin/api/runtime.js');
 const adminRender=read('../supabase/functions/rohmat-admin-render/index.ts');
+const visualEditor=read('../supabase/functions/rohmat-admin-visual-editor-v1/index.ts');
 const writer=read('../supabase/functions/rohmat-sheet-writer-data-v1/index.ts');
 const localeMigration=read('../supabase/migrations/20261010061500_sheet_language_reconcile_v1.sql');
 const tenantExample=read('../prototype/tenant.example.json');
@@ -55,6 +56,16 @@ console.log('KDS_NO_PRINT_BUTTON_GATE=PASS');
 for(const token of ["action==='complete'","await run(id,action)","committed=true","printReceipt(order","handoverPrintLocks"])
   assert.ok(kds.includes(token),'handover auto-print missing '+token);
 console.log('KDS_HANDOVER_AUTO_PRINT_GATE=PASS');
+for(const token of ['data-kds-live-mirror="v1"',"src=login?'/kds/login':'/kds'","frame.contentDocument","[data-tab=\"'+target+'\"]"])
+  assert.ok(adminRender.includes(token),'admin KDS live mirror contract missing '+token);
+assert.ok(!adminRender.includes('KDS dan Admin membaca source of truth pesanan yang sama.'));
+console.log('ADMIN_KDS_LIVE_VISUAL_PARITY_GATE=PASS');
+for(const src of [adminRender,visualEditor]){
+  assert.ok(src.includes("data.settingsMain='1'"),'stable settings identity missing');
+  assert.ok(src.includes('data.settingsMainV29'), 'cross-runtime settings identity missing');
+  assert.ok(!src.includes("trim().toUpperCase()==='PENGATURAN'"),'translated text must not own settings identity');
+}
+console.log('ADMIN_SETTINGS_I18N_DEDUP_GATE=PASS');
 
 const locales=['id-ID','en-US','ms-MY','ar-SA','zh-CN','zh-TW','ja-JP','ko-KR','hi-IN','th-TH','vi-VN','fr-FR','de-DE','es-ES','pt-BR','tr-TR','ru-RU','nl-NL'];
 for(const l of locales)assert.ok(i18n.includes("'"+l+"'"),'locale missing '+l);

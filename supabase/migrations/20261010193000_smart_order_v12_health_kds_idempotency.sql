@@ -7,7 +7,7 @@ create unique index if not exists order_events_kds_completion_once_uidx
 
 create unique index if not exists order_events_kds_auto_print_once_uidx
   on public.order_events(order_id,event_type)
-  where event_type in ('kds_auto_print_claimed','kitchen_ticket_auto_printed');
+  where event_type in ('kds_auto_print_claimed','kds_auto_print_dispatched');
 
 create or replace function private.integration_contract_status()
 returns jsonb
@@ -446,7 +446,7 @@ declare
   v_email extensions.citext; v_actor_id uuid; v_role text;
   v_old public.orders%rowtype; v_row public.orders%rowtype;
   v_now timestamptz:=now(); v_to text; v_event text; v_note text;
-  v_auto_claim_exists boolean:=false; v_auto_success_exists boolean:=false;
+  v_auto_claim_exists boolean:=false; v_auto_dispatch_exists boolean:=false;
 begin
   select a.email,a.actor_id,a.role into v_email,v_actor_id,v_role
   from private.admin_actor_context(p_token) a;
@@ -527,17 +527,17 @@ begin
       'idempotent',false,'state_changed',true,'auto_print_required',true
     );
 
-  elsif p_action='print_auto_success' then
+  elsif p_action='print_auto_dispatch' then
     if v_old.order_status<>'completed' then return jsonb_build_object('ok',false,'error','invalid_transition'); end if;
     select exists(select 1 from public.order_events where order_id=p_id and event_type='kds_auto_print_claimed')
       into v_auto_claim_exists;
     if not v_auto_claim_exists then return jsonb_build_object('ok',false,'error','auto_print_not_claimed'); end if;
-    select exists(select 1 from public.order_events where order_id=p_id and event_type='kitchen_ticket_auto_printed')
-      into v_auto_success_exists;
-    if v_auto_success_exists then
+    select exists(select 1 from public.order_events where order_id=p_id and event_type='kds_auto_print_dispatched')
+      into v_auto_dispatch_exists;
+    if v_auto_dispatch_exists then
       return jsonb_build_object(
         'ok',true,'request_id',v_old.request_id,'order',to_jsonb(v_old),
-        'idempotent',true,'auto_print_recorded',true
+        'idempotent',true,'auto_print_dispatched',true
       );
     end if;
     update public.orders
@@ -545,10 +545,10 @@ begin
           kds_received_at=coalesce(kds_received_at,v_now),updated_at=v_now
       where id=p_id returning * into v_row;
     insert into public.order_events(order_id,event_type,from_status,to_status,note,actor_id,actor_email,actor_role,source_app,request_id)
-      values(p_id,'kitchen_ticket_auto_printed',v_old.order_status,v_old.order_status,'Struk handover dicetak otomatis.',v_actor_id,v_email,v_role,'kds',v_old.request_id);
+      values(p_id,'kds_auto_print_dispatched',v_old.order_status,v_old.order_status,'Perintah auto-print handover diteruskan ke runtime printer.',v_actor_id,v_email,v_role,'kds',v_old.request_id);
     return jsonb_build_object(
       'ok',true,'request_id',v_old.request_id,'order',to_jsonb(v_row),
-      'idempotent',false,'auto_print_recorded',true
+      'idempotent',false,'auto_print_dispatched',true
     );
 
   elsif p_action='reopen' then
@@ -590,7 +590,7 @@ begin
   end if;
   if p_action not in (
     'verify_start','verify_payment','reject_payment','start','finish','ready',
-    'complete','reopen','print','print_auto_success'
+    'complete','reopen','print','print_auto_dispatch'
   ) then
     return jsonb_build_object('ok',false,'error','invalid_action');
   end if;
@@ -617,4 +617,4 @@ $function$;
 comment on index public.order_events_kds_completion_once_uidx is
   'Golden Master v12: canonical KDS completion event is exactly-once per order.';
 comment on index public.order_events_kds_auto_print_once_uidx is
-  'Golden Master v12: auto handover print claim/success events are exactly-once; explicit manual reprints remain separate.';
+  'Golden Master v12: auto handover print claim/dispatch events are exactly-once; explicit manual reprints remain separate.';

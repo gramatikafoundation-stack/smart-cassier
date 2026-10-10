@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 const adminRender=fs.readFileSync(new URL('../../../supabase/functions/rohmat-admin-render/index.ts',import.meta.url),'utf8');
 const adminApi=fs.readFileSync(new URL('../api/render.js',import.meta.url),'utf8');
+const adminRuntime=fs.readFileSync(new URL('../api/runtime.js',import.meta.url),'utf8');
 const vercel=JSON.parse(fs.readFileSync(new URL('../../../vercel.json',import.meta.url),'utf8'));
 
 assert.ok(!adminRender.includes("openSettings()},false)}}\\nfunction schedule(){"),'Admin settings runtime must not emit a literal backslash-n token');
@@ -19,6 +20,8 @@ assert.ok(adminApi.includes('"frame-src \'self\'"'),'Admin CSP must explicitly a
 assert.ok(adminApi.includes("const CDN_CACHE = 'no-store';"),'Admin shell CDN cache must be disabled for security/runtime freshness');
 assert.ok(adminApi.includes("out = out.replace(/<meta\\s+http-equiv=[\"']Content-Security-Policy[\"'][^>]*>/gi, '');"),'Admin canonicalizer must strip conflicting CSP meta tags');
 assert.ok(adminApi.includes('"frame-ancestors \'none\'"'),'Admin itself must remain non-frameable');
+assert.ok(adminRuntime.includes("out = out.replace(\"frame-src 'none'; worker-src\", \"frame-src 'self'; worker-src\");"),'Canonical core normalizer must preserve Browser Security V45 while allowing same-origin KDS');
+assert.ok(adminRuntime.includes("kind === 'core' ? 'no-store'"),'Canonical core runtime must not be served stale from CDN');
 
 const bySource=s=>vercel.headers.find(x=>x.source===s);
 const header=(s,k)=>bySource(s)?.headers?.find(x=>x.key===k)?.value;

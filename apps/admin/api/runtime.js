@@ -46,6 +46,7 @@ async function fetchWithTimeout(url, accept = 'application/javascript') {
 function normalizeLegacyClientRuntime(body) {
   let out = String(body || '');
   out = out.split('https://yybhpmjuywjxqurrrrxl.supabase.co').join(SUPABASE_ORIGIN);
+  out = out.replace("frame-src 'none'; worker-src", "frame-src 'self'; worker-src");
   if (CLIENT_KEY) out = out.replace(/sb_publishable_[A-Za-z0-9_-]+/g, CLIENT_KEY);
   return out;
 }
@@ -180,9 +181,11 @@ export default async function handler(req, res) {
     }
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
-    res.setHeader('CDN-Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
-    res.setHeader('Vercel-CDN-Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    const cachePolicy = kind === 'core' ? 'no-store' : 'public, max-age=60, s-maxage=300, stale-while-revalidate=600';
+    const cdnPolicy = kind === 'core' ? 'no-store' : 'public, s-maxage=300, stale-while-revalidate=600';
+    res.setHeader('Cache-Control', cachePolicy);
+    res.setHeader('CDN-Cache-Control', cdnPolicy);
+    res.setHeader('Vercel-CDN-Cache-Control', cdnPolicy);
     res.setHeader('ETag', runtime.etag);
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
     res.setHeader('X-Content-Type-Options', 'nosniff');

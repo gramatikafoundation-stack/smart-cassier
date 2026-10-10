@@ -14,7 +14,7 @@ const I18N_LOADER = '<script id="sdb-global-i18n-admin-v1" src="/runtime/i18n.js
 const NAV_OLD = "admin:['Login','Dashboard','Pesanan','QRIS','Tim Admin','Keamanan']";
 const NAV_NEW = "admin:['Login','Dashboard','Pesanan','Smart Cashier','QRIS','Tim Admin','Keamanan']";
 const MEMORY_TTL_MS = 60_000;
-const CDN_CACHE = 'public, max-age=60, stale-while-revalidate=300, stale-if-error=86400';
+const CDN_CACHE = 'no-store';
 const FUTURE_ADMIN_UI_PATCH = String.raw`<style id="smart-order-admin-foodcode-v1">
 :root{
  --bg:#f5f7f6;--panel:#fff;--panel2:#f0f4f2;--ink:#15231f;--muted:#70807a;--primary:#10201d;--accent:#00bfae;
@@ -440,6 +440,7 @@ export function canonicalizeAdminShell(html) {
   if (!/<meta\s+name=["']robots["']/i.test(out)) {
     out = out.replace(/<head>/i, '<head><meta name="robots" content="noindex,nofollow,noarchive">');
   }
+  out = out.replace(/<meta\s+http-equiv=["']Content-Security-Policy["'][^>]*>/gi, '');
   if (!out.includes('smart-order-admin-foodcode-v1')) {
     const premiumCss = FUTURE_ADMIN_UI_PATCH
       .replace(/^<style\b[^>]*>/i, '')

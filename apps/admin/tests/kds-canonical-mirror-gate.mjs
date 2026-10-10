@@ -16,6 +16,8 @@ for(const token of [
 ]) assert.ok(adminRender.includes(token),'admin KDS canonical mirror contract missing: '+token);
 
 assert.ok(adminApi.includes('"frame-src \'self\'"'),'Admin CSP must explicitly allow same-origin KDS iframe');
+assert.ok(adminApi.includes("const CDN_CACHE = 'no-store';"),'Admin shell CDN cache must be disabled for security/runtime freshness');
+assert.ok(adminApi.includes("out = out.replace(/<meta\\s+http-equiv=[\"']Content-Security-Policy[\"'][^>]*>/gi, '');"),'Admin canonicalizer must strip conflicting CSP meta tags');
 assert.ok(adminApi.includes('"frame-ancestors \'none\'"'),'Admin itself must remain non-frameable');
 
 const bySource=s=>vercel.headers.find(x=>x.source===s);

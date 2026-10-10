@@ -7,5 +7,6 @@ assert.ok(renderer.includes("database:['Riwayat Pesanan','Spreadsheet']"),'Riway
 assert.ok(renderer.includes("sub==='Riwayat Pesanan'||sub==='Riwayat'"),'renderer must preserve Riwayat Pesanan compatibility');
 assert.ok(database.includes("s==='Riwayat Pesanan'||s==='Riwayat'"),'database runtime must render restored Riwayat Pesanan');
 assert.ok(renderer.includes("root.style.setProperty(x[0],x[1],'important')"),'canonical theme tokens must override stale static important values');
-assert.ok(visual.includes("trim().toUpperCase()==='PENGATURAN'"),'PENGATURAN dedupe by visible label missing');
+assert.ok(!visual.includes("trim().toUpperCase()==='PENGATURAN'"),'settings navigation must not depend on translated visible label');
+for(const marker of ["dataset.settingsMain='1'","dataset.settingsMainV29='1'","data-settings-main"]) assert.ok(visual.includes(marker),'stable settings identity missing: '+marker);
 console.log('ADMIN_NAVIGATION_REGRESSION_GATE_PASS=1');

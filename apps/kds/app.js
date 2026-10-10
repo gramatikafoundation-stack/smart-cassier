@@ -25,11 +25,13 @@ let realtimeConnected=false,realtimeState='booting',rtSocket=null,rtHeartbeatTim
 const rtVersions=new Map(),rtDeltaTimers=new Map();
 let cashSnap=null,cashBusy=false,cashPromise=null,cashSig='',cashCat='Semua',cashMode='dine-in',cashPay='cash',cart={},cashClientOrderId='';
 const cashDraft={name:'',table:'',note:'',cash:'',qrisOk:false};
+const adminKdsEmbed=()=>location.pathname.startsWith('/admin/kds-');
+const kdsLoginPath=()=>adminKdsEmbed()?'/admin/kds-login-live':'/kds/login';
 
 async function call(body){
   const response=await fetch('/api/kds',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const data=await response.json().catch(()=>({}));
-  if(response.status===401){location.replace('/kds/login');throw new Error('invalid_session')}
+  if(response.status===401){location.replace(kdsLoginPath());throw new Error('invalid_session')}
   if(!response.ok||data?.ok===false)throw new Error(data?.error||'Permintaan KDS gagal.');
   return data;
 }
@@ -282,7 +284,7 @@ function switchTab(tab){
   stopPolling();
   syncCurrent(false).catch(()=>{}).finally(()=>schedulePolling());
 }
-async function logout(){stopPolling();stopRealtime({state:'paused'});try{await call({action:'logout'})}catch{}location.replace('/kds/login')}
+async function logout(){stopPolling();stopRealtime({state:'paused'});try{await call({action:'logout'})}catch{}location.replace(kdsLoginPath())}
 
 async function boot(){
   try{
@@ -292,7 +294,7 @@ async function boot(){
     await refresh(false);
     schedulePolling(FALLBACK_POLL_MS);
     startRealtimeHybrid().catch(()=>{});
-  }catch{location.replace('/kds/login')}
+  }catch{location.replace(kdsLoginPath())}
 }
 
 document.addEventListener('click',async e=>{const tab=e.target.closest('[data-tab]');if(tab)return switchTab(tab.dataset.tab);const a=e.target.closest('[data-act]');if(a){a.disabled=true;let printWindow=null;if(a.dataset.act==='complete'){try{printWindow=window.__SDB_UNIFIED_RECEIPT__?.reservePrintWindow?.()||open('','_blank','width=520,height=780')}catch{}}try{await act(a.dataset.id,a.dataset.act,printWindow)}catch(error){toast(error.message||'Aksi gagal')}finally{a.disabled=false}return}const pr=e.target.closest('[data-proof]');if(pr)return showProof(pr.dataset.proof);const st=e.target.closest('[data-stock]');if(st){st.disabled=true;try{await stock(st.dataset.stock,st.dataset.next==='1')}catch(error){toast(error.message||'Gagal')}finally{st.disabled=false}}});

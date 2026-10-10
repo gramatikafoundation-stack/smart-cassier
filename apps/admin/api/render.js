@@ -335,6 +335,7 @@ function contentSecurityPolicy(body) {
     "font-src 'self' data:",
     "object-src 'none'",
     "base-uri 'self'",
+    "frame-src 'self'",
     "frame-ancestors 'none'",
     "form-action 'self'",
     "upgrade-insecure-requests"

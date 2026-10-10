@@ -1,5 +1,7 @@
 const $ = id => document.getElementById(id);
 let navigating = false;
+const adminKdsEmbed=()=>location.pathname.startsWith('/admin/kds-');
+const kdsAppPath=()=>adminKdsEmbed()?'/admin/kds-live':'/kds';
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -53,7 +55,7 @@ $('loginForm').addEventListener('submit', async event => {
 
     navigating = true;
     sessionStorage.setItem('rohmat:kds:justLoggedIn', '1');
-    location.replace('/kds');
+    location.replace(kdsAppPath());
   } catch (error) {
     message.textContent = error.message === 'rate_limited'
       ? 'Terlalu banyak percobaan. Coba lagi beberapa saat.'

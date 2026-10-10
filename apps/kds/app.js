@@ -1,6 +1,7 @@
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const tenant = () => window.__SDB_TENANT_CONFIG || {businessName:'Business',locale:'id-ID',currency:'IDR',timezone:'Asia/Jakarta'};
+const tr=(key,fallback=key,vars)=>{const v=window.__SDB_I18N__?.t?.(key,vars);return v&&v!==key?v:fallback};
 let formatterKey='',moneyFormatter=null,dateTimeFormatter=null,dateOnlyFormatter=null,timeFormatter=null;
 function formatters(){
   const t=tenant(),locale=t.locale||'id-ID',currency=t.currency||'IDR',timezone=t.timezone||'Asia/Jakarta',key=locale+'|'+currency+'|'+timezone;
@@ -24,11 +25,13 @@ let realtimeConnected=false,realtimeState='booting',rtSocket=null,rtHeartbeatTim
 const rtVersions=new Map(),rtDeltaTimers=new Map();
 let cashSnap=null,cashBusy=false,cashPromise=null,cashSig='',cashCat='Semua',cashMode='dine-in',cashPay='cash',cart={},cashClientOrderId='';
 const cashDraft={name:'',table:'',note:'',cash:'',qrisOk:false};
+const adminKdsEmbed=()=>location.pathname.startsWith('/admin/kds-');
+const kdsLoginPath=()=>adminKdsEmbed()?'/admin/kds-login-live':'/kds/login';
 
 async function call(body){
   const response=await fetch('/api/kds',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const data=await response.json().catch(()=>({}));
-  if(response.status===401){location.replace('/kds/login');throw new Error('invalid_session')}
+  if(response.status===401){location.replace(kdsLoginPath());throw new Error('invalid_session')}
   if(!response.ok||data?.ok===false)throw new Error(data?.error||'Permintaan KDS gagal.');
   return data;
 }
@@ -37,24 +40,24 @@ const proof=path=>call({action:'proof',path});
 const cashier=payload=>call({action:'cashier',payload});
 
 function toast(text){const e=$('toast');e.textContent=text;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2200)}
-function payLabel(o){return o.payment_method==='cash'?'CASH':o.payment_method==='qris_cashier'?'QRIS KASIR':'QRIS'}
-function where(o){return o.service_mode==='dine-in'?'Meja '+(o.table_number||'—'):'Take Away'}
+function payLabel(o){return o.payment_method==='cash'?tr('payment.cash','CASH'):o.payment_method==='qris_cashier'?'QRIS':'QRIS'}
+function where(o){return o.service_mode==='dine-in'?tr('receipt.table','Meja')+' '+(o.table_number||'—'):tr('service.takeaway','Take Away')}
 function items(o){const a=Array.isArray(o.items)?o.items:[];return '<div class="items">'+a.map(i=>'<div class="item"><span><b>'+Number(i.quantity||0)+'×</b> '+esc(i.name)+'</span><strong>'+rp(Number(i.subtotal??(Number(i.price||0)*Number(i.quantity||0))))+'</strong></div>').join('')+'</div>'}
 function newTime(o){return o.verified_at||o.payment_submitted_at||o.kitchen_sent_at||o.created_at}
 function processTime(o){return o.preparing_at||o.ready_at}
 function readyTime(o){return o.ready_at}
-function timeline(o){return '<div class="timeline"><span class="on">Pesanan Baru: '+fmt(newTime(o))+'</span><span class="'+(processTime(o)?'on':'')+'">Sedang Diproses: '+fmt(processTime(o))+'</span><span class="'+(readyTime(o)?'on':'')+'">Pesanan Siap: '+fmt(readyTime(o))+'</span></div>'}
+function timeline(o){return '<div class="timeline"><span class="on">'+esc(tr('kds.new','Pesanan Baru'))+': '+fmt(newTime(o))+'</span><span class="'+(processTime(o)?'on':'')+'">'+esc(tr('kds.processing','Sedang Diproses'))+': '+fmt(processTime(o))+'</span><span class="'+(readyTime(o)?'on':'')+'">'+esc(tr('kds.ready','Pesanan Siap'))+': '+fmt(readyTime(o))+'</span></div>'}
 
 function card(o,stage){
   const review=o.payment_status==='submitted'&&o.order_status==='payment_review';
   let actions='';
-  if(stage==='new') actions=review?'<button class="btn green" data-act="verify_start" data-id="'+o.id+'">Verifikasi & Proses</button><button class="btn red" data-act="reject_payment" data-id="'+o.id+'">Tolak</button>':'<button class="btn green" data-act="start" data-id="'+o.id+'">Proses Pesanan</button>';
-  else if(stage==='processing') actions='<button class="btn green" data-act="ready" data-id="'+o.id+'">Tandai Pesanan Siap</button>';
-  else if(stage==='ready') actions='<button class="btn green" data-act="complete" data-id="'+o.id+'">Pesanan Diserahkan</button>';
-  const proofBtn=o.payment_proof_url?'<button class="btn" data-proof="'+esc(o.payment_proof_url)+'">Lihat Bukti</button>':'';
-  return '<article class="ticket stage-'+esc(stage)+' '+(review?'review':'')+'"><div class="th"><div><div class="code">#'+esc(o.public_order_code||o.id)+'</div><div class="name">'+esc(o.customer_name||'Pelanggan')+' · '+esc(where(o))+'</div></div><span class="badge">'+(review?'MENUNGGU BAYAR':esc(payLabel(o)))+'</span></div>'+items(o)+(o.customer_note?'<div class="note"><b>Keterangan:</b> '+esc(o.customer_note)+'</div>':'')+'<div class="meta">Total '+rp(o.total_amount||0)+'</div><div class="statusTime"><b>Waktu status:</b> '+fmt(stage==='new'?newTime(o):stage==='processing'?processTime(o):readyTime(o))+'</div>'+timeline(o)+'<div class="row">'+actions+proofBtn+'</div></article>';
+  if(stage==='new') actions=review?'<button class="btn green" data-act="verify_start" data-id="'+o.id+'">'+esc(tr('action.process','Proses Pesanan'))+'</button><button class="btn red" data-act="reject_payment" data-id="'+o.id+'">'+esc(tr('action.reject','Tolak'))+'</button>':'<button class="btn green" data-act="start" data-id="'+o.id+'">'+esc(tr('action.process','Proses Pesanan'))+'</button>';
+  else if(stage==='processing') actions='<button class="btn green" data-act="ready" data-id="'+o.id+'">'+esc(tr('action.ready','Tandai Pesanan Siap'))+'</button>';
+  else if(stage==='ready') actions='<button class="btn green" data-act="complete" data-id="'+o.id+'">'+esc(tr('action.handover','Pesanan Diserahkan'))+'</button>';
+  const proofBtn=o.payment_proof_url?'<button class="btn" data-proof="'+esc(o.payment_proof_url)+'">'+esc(tr('kds.viewProof','Lihat Bukti'))+'</button>':'';
+  return '<article class="ticket stage-'+esc(stage)+' '+(review?'review':'')+'"><div class="th"><div><div class="code">#'+esc(o.public_order_code||o.id)+'</div><div class="name">'+esc(o.customer_name||tr('common.customer','Pelanggan'))+' · '+esc(where(o))+'</div></div><span class="badge">'+(review?esc(tr('kds.waitingPayment','MENUNGGU BAYAR')):esc(payLabel(o)))+'</span></div>'+items(o)+(o.customer_note?'<div class="note"><b>'+esc(tr('kds.note','Keterangan'))+':</b> '+esc(o.customer_note)+'</div>':'')+'<div class="meta">'+esc(tr('receipt.total','Total Pembayaran'))+' '+rp(o.total_amount||0)+'</div><div class="statusTime"><b>'+esc(tr('kds.statusTime','Waktu status'))+':</b> '+fmt(stage==='new'?newTime(o):stage==='processing'?processTime(o):readyTime(o))+'</div>'+timeline(o)+'<div class="row">'+actions+proofBtn+'</div></article>';
 }
-function lane(title,desc,list,stage){return '<section class="lane lane-'+esc(stage)+'"><div class="lh"><div><h2>'+title+'</h2><p>'+desc+'</p></div><span class="count">'+list.length+' tiket</span></div><div class="cards">'+(list.length?list.map(o=>card(o,stage)).join(''):'<div class="empty">Belum ada pesanan.</div>')+'</div></section>'}
+function lane(title,desc,list,stage){return '<section class="lane lane-'+esc(stage)+'"><div class="lh"><div><h2>'+esc(title)+'</h2><p>'+esc(desc)+'</p></div><span class="count">'+esc(tr('kds.ticketCount',String(list.length)+' tiket',{n:list.length}))+'</span></div><div class="cards">'+(list.length?list.map(o=>card(o,stage)).join(''):'<div class="empty">'+esc(tr('kds.empty','Belum ada pesanan.'))+'</div>')+'</div></section>'}
 function classify(){const o=snap.orders||[];return{n:o.filter(x=>(x.payment_status==='submitted'&&x.order_status==='payment_review')||(x.payment_status==='verified'&&x.order_status==='confirmed')),p:o.filter(x=>x.payment_status==='verified'&&x.order_status==='preparing'),r:o.filter(x=>x.payment_status==='verified'&&x.order_status==='ready')}}
 function hasActiveOrders(){const {n,p,r}=classify();return n.length>0||p.length>0||r.length>0}
 function pollDelay(){return realtimeConnected?safetyPollMs:FALLBACK_POLL_MS}
@@ -73,7 +76,7 @@ function setSyncState(state,label){
 function markFresh(source='snapshot'){
   lastFreshAt=Date.now();
   const time=formatters().timeFormatter.format(new Date());
-  setSyncState(realtimeConnected?'live':'fallback',(realtimeConnected?'Live':'Hybrid')+' · '+time);
+  setSyncState(realtimeConnected?'live':'fallback',realtimeConnected?tr('kds.liveAt','Live · '+time,{time}):tr('kds.hybridAt','Hybrid · '+time,{time}));
   document.documentElement.dataset.rohmatKdsFreshSource=source;
 }
 function clearRealtimeTimers(){
@@ -86,7 +89,7 @@ function armStaleMonitor(){
   if(rtStaleTimer)clearInterval(rtStaleTimer);
   rtStaleTimer=setInterval(()=>{
     if(document.hidden||!navigator.onLine||!lastFreshAt)return;
-    if(Date.now()-lastFreshAt>staleAfterMs)setSyncState('stale','Data mungkin terlambat');
+    if(Date.now()-lastFreshAt>staleAfterMs)setSyncState('stale',tr('kds.syncDelayed','Data mungkin terlambat'));
   },5000);
 }
 function realtimeUrl(cfg){
@@ -138,8 +141,8 @@ async function applyRealtimeDelta(change={}){
 function queueRealtimeSync(change={}){
   const kind=String(change.kind||''),id=String(change.entity_id||''),key=(kind&&id)?kind+':'+id:'__full__';
   const old=rtDeltaTimers.get(key);if(old)clearTimeout(old);
-  setSyncState('syncing','Menyinkronkan');
-  const t=setTimeout(()=>{rtDeltaTimers.delete(key);applyRealtimeDelta(change).catch(()=>refresh(false,true).catch(()=>setSyncState('stale','Data mungkin terlambat')))},80);
+  setSyncState('syncing',tr('kds.syncUpdating','Memperbarui…'));
+  const t=setTimeout(()=>{rtDeltaTimers.delete(key);applyRealtimeDelta(change).catch(()=>refresh(false,true).catch(()=>setSyncState('stale',tr('kds.syncDelayed','Data mungkin terlambat'))))},80);
   rtDeltaTimers.set(key,t);
 }
 function stopRealtime({reconnect=false,state='paused'}={}){
@@ -154,7 +157,7 @@ function stopRealtime({reconnect=false,state='paused'}={}){
 function scheduleRealtimeReconnect(){
   if(document.hidden||!navigator.onLine)return;
   realtimeConnected=false;
-  setSyncState('reconnecting','Menghubungkan ulang');
+  setSyncState('reconnecting',tr('kds.syncReconnecting','Menghubungkan ulang'));
   schedulePolling(FALLBACK_POLL_MS);
   const delays=[1000,2000,5000,10000,15000,30000],delay=delays[Math.min(rtAttempt,delays.length-1)];
   rtAttempt+=1;
@@ -178,7 +181,7 @@ async function startRealtimeHybrid(){
       clearRealtimeTimers();
       if(rtSocket){try{rtSocket.close()}catch{}rtSocket=null}
       rtIntentionalClose=false;
-      setSyncState('connecting','Menghubungkan realtime');
+      setSyncState('connecting',tr('kds.syncReconnecting','Menghubungkan ulang'));
       const ws=new WebSocket(url);rtSocket=ws;
       await new Promise((resolve,reject)=>{
         let settled=false,joinRef='';
@@ -195,7 +198,7 @@ async function startRealtimeHybrid(){
             if(settled)return;settled=true;clearTimeout(rtJoinTimer);rtJoinTimer=null;
             realtimeConnected=true;rtAttempt=0;markFresh('realtime-connected');armStaleMonitor();schedulePolling(safetyPollMs);
             rtHeartbeatTimer=setInterval(()=>realtimeSend('phoenix','heartbeat',{},null),25000);
-            refresh(false,true).catch(()=>setSyncState('stale','Data mungkin terlambat'));
+            refresh(false,true).catch(()=>setSyncState('stale',tr('kds.syncDelayed','Data mungkin terlambat')));
             resolve();
             return;
           }
@@ -212,7 +215,7 @@ async function startRealtimeHybrid(){
   })();
   return rtStarting;
 }
-function renderOrders(){const {n,p,r}=classify();$('sNew').textContent=n.length;$('sProc').textContent=p.length;$('sReady').textContent=r.length;$('lanes').innerHTML=lane('Pesanan Baru','Pesanan masuk dan siap ditangani dapur',n,'new')+lane('Sedang Diproses','Pesanan yang sedang dikerjakan dapur',p,'processing')+lane('Pesanan Siap','Pesanan siap disajikan atau diserahkan',r,'ready')}
+function renderOrders(){const {n,p,r}=classify();$('sNew').textContent=n.length;$('sProc').textContent=p.length;$('sReady').textContent=r.length;$('lanes').innerHTML=lane(tr('kds.new','Pesanan Baru'),tr('kds.newDesc','Pesanan masuk dan siap ditangani dapur'),n,'new')+lane(tr('kds.processing','Sedang Diproses'),tr('kds.processingDesc','Pesanan yang sedang dikerjakan dapur'),p,'processing')+lane(tr('kds.ready','Pesanan Siap'),tr('kds.readyDesc','Pesanan siap disajikan atau diserahkan'),r,'ready')}
 function renderStock(){const q=($('search').value||'').toLowerCase(),f=$('filter').value,m=snap.menu||[];$('stockgrid').innerHTML=m.filter(x=>(!q||String(x.name).toLowerCase().includes(q)||String(x.category).toLowerCase().includes(q))&&(f==='all'||(f==='on'&&x.is_available)||(f==='off'&&!x.is_available))).map(x=>'<article class="stock '+(x.is_available?'':'off')+'"><div><b>'+esc(x.name)+'</b><div class="muted">'+esc(x.category)+' · '+rp(x.price)+'</div></div><button class="sw '+(x.is_available?'':'off')+'" data-stock="'+esc(x.id)+'" data-next="'+(x.is_available?'0':'1')+'">'+(x.is_available?'Tersedia':'Habis')+'</button></article>').join('')||'<div class="empty">Menu tidak ditemukan.</div>'}
 
 async function refresh(manual=false,afterBusy=false){
@@ -224,7 +227,7 @@ async function refresh(manual=false,afterBusy=false){
     const sig=JSON.stringify([(d.orders||[]).map(o=>[o.id,o.order_status,o.payment_status,o.updated_at,o.preparing_at,o.ready_at,o.completed_at]),(d.menu||[]).map(m=>[m.id,m.is_available])]);
     snap=d;if(sig!==lastSig){lastSig=sig;renderOrders();renderStock()}
     markFresh('orders-snapshot');
-  }catch(error){if(!realtimeConnected)setSyncState('stale','Data mungkin terlambat');if(manual)toast(error.message||'Gagal memperbarui')}})();
+  }catch(error){if(!realtimeConnected)setSyncState('stale',tr('kds.syncDelayed','Data mungkin terlambat'));if(manual)toast(error.message||'Gagal memperbarui')}})();
   syncPromise=task;
   try{return await task}finally{if(syncPromise===task)syncPromise=null;syncBusy=false;if(manual){b.disabled=false;b.textContent='↻ Perbarui'}}
 }
@@ -239,7 +242,7 @@ function cashTotal(){return cashSelected().reduce((a,x)=>a+Number(x.m.price||0)*
 function cashRerender(fn){cashRemember();if(fn)fn();cashRender()}
 function cashRender(){
   if(!cashSnap)return;const root=$('cashierRoot'),cats=['Semua',...new Set((cashSnap.menu||[]).map(x=>x.category).filter(Boolean))],list=(cashSnap.menu||[]).filter(x=>cashCat==='Semua'||x.category===cashCat),sel=cashSelected(),qris=!!(cashSnap.settings?.qris_enabled&&cashSnap.settings?.qris_image_url);
-  root.innerHTML='<div class="cashTop"><div><div class="cashEy">KDS · SMART CASHIER</div><h2>Smart Cashier</h2><div class="muted">Tampilan dan alur transaksi sama dengan Kasir pada Situs Admin.</div></div><button id="cashReload" class="cashBtn">↻ Perbarui</button></div><div class="cashLayout"><section class="cashPanel"><div class="cashCats">'+cats.map(c=>'<button class="cashBtn '+(cashCat===c?'on':'')+'" data-cash-cat="'+esc(c)+'">'+esc(c)+'</button>').join('')+'</div><div class="cashMenu">'+list.map(m=>'<article class="cashItem '+(m.is_available===false?'off':'')+'">'+(m.image_url?'<img loading="lazy" src="'+esc(m.image_url)+'" alt="'+esc(m.name)+'">':'')+'<b>'+esc(m.name)+'</b><strong>'+rp(m.price)+'</strong><button class="cashBtn primary" data-cash-add="'+esc(m.id)+'" '+(m.is_available===false?'disabled':'')+'>+ Tambah</button></article>').join('')+'</div></section><aside class="cashPanel">'+(sel.length?sel.map(x=>'<div class="cashLine"><div><b>'+esc(x.m.name)+'</b><div class="muted">'+rp(x.m.price)+' × '+x.q+'</div></div><div class="cashQty"><button class="cashBtn" data-cash-minus="'+esc(x.m.id)+'">−</button><b>'+x.q+'</b><button class="cashBtn" data-cash-plus="'+esc(x.m.id)+'">+</button></div></div>').join(''):'<div class="cashEmpty">Belum ada menu dipilih.</div>')+'<div class="cashField"><label>Nama Pemesan</label><input id="cashName" value="'+esc(cashDraft.name)+'"></div><div class="cashTwo"><button class="cashBtn '+(cashMode==='dine-in'?'on':'')+'" data-cash-mode="dine-in">Dine In</button><button class="cashBtn '+(cashMode==='take-away'?'on':'')+'" data-cash-mode="take-away">Take Away</button></div>'+(cashMode==='dine-in'?'<div class="cashField"><label>Nomor Meja</label><select id="cashTable"><option value="">Pilih meja</option>'+Array.from({length:20},(_,i)=>'<option value="'+(i+1)+'" '+(String(i+1)===String(cashDraft.table)?'selected':'')+'>Meja '+String(i+1).padStart(2,'0')+'</option>').join('')+'</select></div>':'')+'<div class="cashField"><label>Keterangan</label><textarea id="cashNote" rows="2">'+esc(cashDraft.note)+'</textarea></div><div class="cashTwo"><button class="cashBtn '+(cashPay==='cash'?'on':'')+'" data-cash-pay="cash">Cash</button><button class="cashBtn '+(cashPay==='qris_cashier'?'on':'')+'" data-cash-pay="qris_cashier">QRIS</button></div>'+(cashPay==='cash'?'<div class="cashField"><label>Uang diterima</label><input id="cashMoney" type="number" min="0" step="1000" value="'+esc(cashDraft.cash)+'"><div class="muted">Kembalian: <b id="cashChange">'+rp(Math.max(0,Number(cashDraft.cash||0)-cashTotal()))+'</b></div></div>':(qris?'<div class="cashQris"><img src="'+esc(cashSnap.settings.qris_image_url)+'" alt="QRIS"><label><input id="cashQrisOk" type="checkbox" '+(cashDraft.qrisOk?'checked':'')+'> Pembayaran QRIS sudah diterima kasir.</label></div>':'<div class="cashBad">QRIS belum tersedia.</div>'))+'<div class="cashTotal"><span>Total</span><b>'+rp(cashTotal())+'</b></div><button id="cashPayNow" class="cashBtn primary" style="width:100%" '+(!sel.length||(cashPay==='qris_cashier'&&!qris)?'disabled':'')+'>Bayar & Kirim ke Dapur</button><div id="cashMsg"></div></aside></div>';
+  root.innerHTML='<div class="cashTop"><div><div class="cashEy">KDS · SMART CASHIER</div><h2>Smart Cashier</h2><div class="muted">'+esc(tr('cashier.parity','Tampilan dan alur transaksi sama dengan Kasir pada Situs Admin.'))+'</div></div><button id="cashReload" class="cashBtn">'+esc(tr('action.refresh','↻ Perbarui'))+'</button></div><div class="cashLayout"><section class="cashPanel"><div class="cashCats">'+cats.map(c=>'<button class="cashBtn '+(cashCat===c?'on':'')+'" data-cash-cat="'+esc(c)+'">'+esc(c)+'</button>').join('')+'</div><div class="cashMenu">'+list.map(m=>'<article class="cashItem '+(m.is_available===false?'off':'')+'">'+(m.image_url?'<img loading="lazy" src="'+esc(m.image_url)+'" alt="'+esc(m.name)+'">':'')+'<b>'+esc(m.name)+'</b><strong>'+rp(m.price)+'</strong><button class="cashBtn primary" data-cash-add="'+esc(m.id)+'" '+(m.is_available===false?'disabled':'')+'>'+esc(tr('action.add','+ Tambah'))+'</button></article>').join('')+'</div></section><aside class="cashPanel">'+(sel.length?sel.map(x=>'<div class="cashLine"><div><b>'+esc(x.m.name)+'</b><div class="muted">'+rp(x.m.price)+' × '+x.q+'</div></div><div class="cashQty"><button class="cashBtn" data-cash-minus="'+esc(x.m.id)+'">−</button><b>'+x.q+'</b><button class="cashBtn" data-cash-plus="'+esc(x.m.id)+'">+</button></div></div>').join(''):'<div class="cashEmpty">'+esc(tr('cashier.empty','Belum ada menu dipilih.'))+'</div>')+'<div class="cashField"><label>'+esc(tr('receipt.customer','Nama Pemesan'))+'</label><input id="cashName" value="'+esc(cashDraft.name)+'"></div><div class="cashTwo"><button class="cashBtn '+(cashMode==='dine-in'?'on':'')+'" data-cash-mode="dine-in">'+esc(tr('service.dine','Dine In'))+'</button><button class="cashBtn '+(cashMode==='take-away'?'on':'')+'" data-cash-mode="take-away">'+esc(tr('service.takeaway','Take Away'))+'</button></div>'+(cashMode==='dine-in'?'<div class="cashField"><label>'+esc(tr('receipt.table','Nomor Meja'))+'</label><select id="cashTable"><option value="">'+esc(tr('cashier.chooseTable','Pilih meja'))+'</option>'+Array.from({length:20},(_,i)=>'<option value="'+(i+1)+'" '+(String(i+1)===String(cashDraft.table)?'selected':'')+'>Meja '+String(i+1).padStart(2,'0')+'</option>').join('')+'</select></div>':'')+'<div class="cashField"><label>'+esc(tr('kds.note','Keterangan'))+'</label><textarea id="cashNote" rows="2">'+esc(cashDraft.note)+'</textarea></div><div class="cashTwo"><button class="cashBtn '+(cashPay==='cash'?'on':'')+'" data-cash-pay="cash">'+esc(tr('payment.cash','Cash'))+'</button><button class="cashBtn '+(cashPay==='qris_cashier'?'on':'')+'" data-cash-pay="qris_cashier">QRIS</button></div>'+(cashPay==='cash'?'<div class="cashField"><label>'+esc(tr('receipt.received','Uang diterima'))+'</label><input id="cashMoney" type="number" min="0" step="1000" value="'+esc(cashDraft.cash)+'"><div class="muted">'+esc(tr('receipt.change','Kembalian'))+': <b id="cashChange">'+rp(Math.max(0,Number(cashDraft.cash||0)-cashTotal()))+'</b></div></div>':(qris?'<div class="cashQris"><img src="'+esc(cashSnap.settings.qris_image_url)+'" alt="QRIS"><label><input id="cashQrisOk" type="checkbox" '+(cashDraft.qrisOk?'checked':'')+'> '+esc(tr('cashier.qrisReceived','Pembayaran QRIS sudah diterima kasir.'))+'</label></div>':'<div class="cashBad">'+esc(tr('cashier.qrisUnavailable','QRIS belum tersedia.'))+'</div>'))+'<div class="cashTotal"><span>'+esc(tr('receipt.total','Total Pembayaran'))+'</span><b>'+rp(cashTotal())+'</b></div><button id="cashPayNow" class="cashBtn primary" style="width:100%" '+(!sel.length||(cashPay==='qris_cashier'&&!qris)?'disabled':'')+'>'+esc(tr('cashier.paySend','Bayar & Kirim ke Dapur'))+'</button><div id="cashMsg"></div></aside></div>';
   cashBind();
 }
 function cashBind(){
@@ -256,20 +259,20 @@ function cashSignature(d){return JSON.stringify([(d?.menu||[]).map(m=>[m.id,m.na
 async function cashLoad(manual=false,afterBusy=false){
   if(cashPromise){if(!afterBusy)return cashPromise;try{await cashPromise}catch{}}
   cashBusy=true;
-  if(!cashSnap)$('cashierRoot').innerHTML='<div class="cashEmpty">Memuat Smart Cashier…</div>';
+  if(!cashSnap)$('cashierRoot').innerHTML='<div class="cashEmpty">'+esc(tr('cashier.loading','Memuat Smart Cashier…'))+'</div>';
   const task=(async()=>{try{
     const next=await cashier({action:'snapshot'}),nextSig=cashSignature(next),changed=nextSig!==cashSig;
     cashSnap=next;
     if(changed||manual||!$('cashierRoot').dataset.ready){cashSig=nextSig;cashRender();$('cashierRoot').dataset.ready='1'}
     markFresh('cashier-snapshot');
   }catch(error){
-    if(!cashSnap)$('cashierRoot').innerHTML='<div class="cashBad"><b>Smart Cashier gagal dimuat.</b><br>'+esc(error.message||error)+'</div>';
+    if(!cashSnap)$('cashierRoot').innerHTML='<div class="cashBad"><b>'+esc(tr('cashier.loadFailed','Smart Cashier gagal dimuat.'))+'</b><br>'+esc(error.message||error)+'</div>';
     if(manual)toast(error.message)
   }})();
   cashPromise=task;
   try{return await task}finally{if(cashPromise===task)cashPromise=null;cashBusy=false}
 }
-async function cashCreate(){cashRemember();const msg=$('cashMsg'),btn=$('cashPayNow'),sel=cashSelected(),table=cashMode==='dine-in'?Number(cashDraft.table||0):null,cash=cashPay==='cash'?Number(cashDraft.cash||0):null;if(!sel.length)return;if(cashMode==='dine-in'&&!(table>=1&&table<=20)){msg.innerHTML='<div class="cashBad">Pilih nomor meja terlebih dahulu.</div>';return}if(cashPay==='cash'&&cash<cashTotal()){msg.innerHTML='<div class="cashBad">Uang diterima masih kurang.</div>';return}if(cashPay==='qris_cashier'&&!cashDraft.qrisOk){msg.innerHTML='<div class="cashBad">Konfirmasi pembayaran QRIS terlebih dahulu.</div>';return}btn.disabled=true;btn.textContent='Memproses…';try{const clientOrderId=cashClientOrderId||(cashClientOrderId='cashier-kds-'+crypto.randomUUID());const j=await cashier({action:'create_order',source:'cashier_kds',clientOrderId,customerName:cashDraft.name,serviceMode:cashMode,tableNumber:table,items:sel.map(x=>({menuId:x.m.id,quantity:x.q})),paymentMethod:cashPay,cashReceived:cash,note:cashDraft.note});cashClientOrderId='';msg.innerHTML='<div class="cashOk">Pesanan '+esc(j.order?.public_order_code||'')+' berhasil dikirim ke dapur.</div>';cart={};Object.assign(cashDraft,{name:'',table:'',note:'',cash:'',qrisOk:false});cashRender();stopPolling();await Promise.all([cashLoad(false,true),refresh(false,true)]);schedulePolling();toast('Pesanan berhasil dibuat dari Smart Cashier')}catch(error){msg.innerHTML='<div class="cashBad">'+esc(error.message||error)+'</div>';btn.disabled=false;btn.textContent='Bayar & Kirim ke Dapur'}}
+async function cashCreate(){cashRemember();const msg=$('cashMsg'),btn=$('cashPayNow'),sel=cashSelected(),table=cashMode==='dine-in'?Number(cashDraft.table||0):null,cash=cashPay==='cash'?Number(cashDraft.cash||0):null;if(!sel.length)return;if(cashMode==='dine-in'&&!(table>=1&&table<=20)){msg.innerHTML='<div class="cashBad">'+esc(tr('cashier.tableRequired','Pilih nomor meja terlebih dahulu.'))+'</div>';return}if(cashPay==='cash'&&cash<cashTotal()){msg.innerHTML='<div class="cashBad">'+esc(tr('cashier.cashInsufficient','Uang diterima masih kurang.'))+'</div>';return}if(cashPay==='qris_cashier'&&!cashDraft.qrisOk){msg.innerHTML='<div class="cashBad">'+esc(tr('cashier.qrisConfirmRequired','Konfirmasi pembayaran QRIS terlebih dahulu.'))+'</div>';return}btn.disabled=true;btn.textContent=tr('cashier.processing','Memproses…');try{const clientOrderId=cashClientOrderId||(cashClientOrderId='cashier-kds-'+crypto.randomUUID());const j=await cashier({action:'create_order',source:'cashier_kds',clientOrderId,customerName:cashDraft.name,serviceMode:cashMode,tableNumber:table,items:sel.map(x=>({menuId:x.m.id,quantity:x.q})),paymentMethod:cashPay,cashReceived:cash,note:cashDraft.note});cashClientOrderId='';msg.innerHTML='<div class="cashOk">'+esc(tr('cashier.orderSent','Pesanan '+String(j.order?.public_order_code||'')+' berhasil dikirim ke dapur.',{code:String(j.order?.public_order_code||'')}))+'</div>';cart={};Object.assign(cashDraft,{name:'',table:'',note:'',cash:'',qrisOk:false});cashRender();stopPolling();await Promise.all([cashLoad(false,true),refresh(false,true)]);schedulePolling();toast(tr('cashier.created','Pesanan berhasil dibuat dari Smart Cashier'))}catch(error){msg.innerHTML='<div class="cashBad">'+esc(error.message||error)+'</div>';btn.disabled=false;btn.textContent=tr('cashier.paySend','Bayar & Kirim ke Dapur')}}
 
 function switchTab(tab){
   if(current===tab)return;
@@ -281,7 +284,7 @@ function switchTab(tab){
   stopPolling();
   syncCurrent(false).catch(()=>{}).finally(()=>schedulePolling());
 }
-async function logout(){stopPolling();stopRealtime({state:'paused'});try{await call({action:'logout'})}catch{}location.replace('/kds/login')}
+async function logout(){stopPolling();stopRealtime({state:'paused'});try{await call({action:'logout'})}catch{}location.replace(kdsLoginPath())}
 
 async function boot(){
   try{
@@ -291,7 +294,7 @@ async function boot(){
     await refresh(false);
     schedulePolling(FALLBACK_POLL_MS);
     startRealtimeHybrid().catch(()=>{});
-  }catch{location.replace('/kds/login')}
+  }catch{location.replace(kdsLoginPath())}
 }
 
 document.addEventListener('click',async e=>{const tab=e.target.closest('[data-tab]');if(tab)return switchTab(tab.dataset.tab);const a=e.target.closest('[data-act]');if(a){a.disabled=true;let printWindow=null;if(a.dataset.act==='complete'){try{printWindow=window.__SDB_UNIFIED_RECEIPT__?.reservePrintWindow?.()||open('','_blank','width=520,height=780')}catch{}}try{await act(a.dataset.id,a.dataset.act,printWindow)}catch(error){toast(error.message||'Aksi gagal')}finally{a.disabled=false}return}const pr=e.target.closest('[data-proof]');if(pr)return showProof(pr.dataset.proof);const st=e.target.closest('[data-stock]');if(st){st.disabled=true;try{await stock(st.dataset.stock,st.dataset.next==='1')}catch(error){toast(error.message||'Gagal')}finally{st.disabled=false}}});

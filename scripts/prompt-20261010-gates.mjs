@@ -62,9 +62,9 @@ for(const key of ['nav.public','nav.admin','nav.database','action.save','payment
   assert.ok(i18n.includes("'"+key+"'"),'i18n key missing '+key);
 assert.ok(i18n.includes('missing'));
 assert.ok(i18n.includes("fetch('/api/locale'"));
-assert.ok(adminRender.includes('/runtime/i18n.js?v=20261010-global-v2'));
-assert.ok(kdsHtml.includes('/runtime/i18n.js?v=20261010-global-v2'));
-assert.ok(pub.includes('/runtime/i18n.js?v=20261010-global-v2'));
+assert.ok(adminRender.includes('/runtime/i18n.js?v=20261010-global-v3'));
+assert.ok(kdsHtml.includes('/runtime/i18n.js?v=20261010-global-v3'));
+assert.ok(pub.includes('/runtime/i18n.js?v=20261010-global-v3'));
 console.log('GLOBAL_I18N_COVERAGE_GATE=PASS');
 assert.ok(adminRuntime.includes("mb?.dataset?.main"));
 assert.ok(adminRuntime.includes("sb?.dataset?.sub"));

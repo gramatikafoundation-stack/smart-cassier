@@ -155,7 +155,7 @@ function integrate(raw:string,optimized=false){
     }
     out=out.replaceAll('adminTypographyAuthorityV43','adminTypographyAuthorityV44');
   }
-  if(!out.includes('/runtime/i18n.js')) out=out.replace('</body>','<script id="sdb-global-i18n-admin-v1" src="/runtime/i18n.js?v=20261010-global-v2" defer></script></body>');
+  if(!out.includes('/runtime/i18n.js')) out=out.replace('</body>','<script id="sdb-global-i18n-admin-v1" src="/runtime/i18n.js?v=20261010-global-v3" defer></script></body>');
   return out
 }
 function padExact(s:string){

@@ -10,7 +10,7 @@ const CASHIER_LOADER = '<script id="rohmat-admin-cashier-canonical-v60" src="/ad
 const PRINTER_LOADER = '<script id="sdb-smart-cashier-thermal-printer-v1" src="/admin/runtime/printer.js" defer></script>';
 const CORE_LOADER = '<script id="rohmat-admin-canonical-runtime-v60" src="/admin/runtime/core.js" defer></script>';
 const VISUAL_LOADER = '<script id="rohmat-admin-visual-editor-canonical-v60" src="/admin/runtime/visual-editor.js" defer></script>';
-const I18N_LOADER = '<script id="sdb-global-i18n-admin-v1" src="/runtime/i18n.js?v=20261010-global-v1" defer></script>';
+const I18N_LOADER = '<script id="sdb-global-i18n-admin-v1" src="/runtime/i18n.js?v=20261010-global-v3" defer></script>';
 const NAV_OLD = "admin:['Login','Dashboard','Pesanan','QRIS','Tim Admin','Keamanan']";
 const NAV_NEW = "admin:['Login','Dashboard','Pesanan','Smart Cashier','QRIS','Tim Admin','Keamanan']";
 const MEMORY_TTL_MS = 60_000;

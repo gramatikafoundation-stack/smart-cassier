@@ -62,7 +62,14 @@ assert.ok(!legacyPrintShim.includes('[data-print]')||legacyPrintShim.includes("q
 console.log('KDS_NO_PRINT_BUTTON_GATE=PASS');
 for(const token of ["action==='complete'","await run(id,action)","committed=true","printReceipt(order","handoverPrintLocks"])
   assert.ok(kds.includes(token),'handover auto-print missing '+token);
+assert.ok(kdsHtml.includes('/kds-assets/v4/app.js?v=20261010-handover-autoprint-v2'),'KDS app must use final handover cache-buster');
+assert.ok(kdsHtml.includes('/kds-assets/v4/cashier-required-receipt.js?v=20261010-receipt-v5-autoprint'),'KDS receipt must use final receipt cache-buster');
+const kdsAssetHeaders=rootVercel.headers?.find(x=>x.source==='/kds-assets/v4/(.*)')?.headers||[];
+const kdsAssetCache=kdsAssetHeaders.find(x=>x.key==='Cache-Control')?.value||'';
+assert.equal(kdsAssetCache,'public, max-age=0, must-revalidate','KDS operational assets must revalidate after releases');
+assert.ok(!kdsAssetCache.includes('immutable'),'KDS operational assets must never be immutable under a stable URL');
 console.log('KDS_HANDOVER_AUTO_PRINT_GATE=PASS');
+console.log('KDS_RUNTIME_FRESHNESS_GATE=PASS');
 for(const token of ['data-kds-live-mirror','data-kds-live-frame',"src=login?'/admin/kds-login-live':'/admin/kds-live'","frame.contentDocument","data-tab=","kdsMirrorReady"])
   assert.ok(adminRender.includes(token),'admin KDS live mirror contract missing '+token);
 assert.ok(!adminRender.includes('KDS dan Admin membaca source of truth pesanan yang sama.'));

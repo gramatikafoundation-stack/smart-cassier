@@ -74,7 +74,8 @@ for(const path of ['/kds','/kds/(.*)','/dapur','/dapur/(.*)']){
 }
 const ah=headers.get('/kds-assets/v4/(.*)');
 assert.ok(ah);
-assert.equal(ah.get('cache-control'),'public, max-age=31536000, immutable');
+assert.equal(ah.get('cache-control'),'public, max-age=0, must-revalidate');
+assert.ok(!ah.get('cache-control').includes('immutable'),'KDS operational assets must revalidate so stale action handlers cannot survive releases');
 const api=headers.get('/api/kds');
 assert.ok(api);
 assert.equal(api.get('x-rohmat-kds-region'),'sin1');

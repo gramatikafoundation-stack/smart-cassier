@@ -247,7 +247,7 @@ async function act(id,action,printWindow=null){
         const api=window.__SDB_UNIFIED_RECEIPT__;
         if(!api?.printReceipt)throw Error('Runtime struk belum siap.');
         await api.printReceipt(actionResult?.order||order,{window:printWindow,auto:true});
-        await run(id,'print_auto_success');
+        await run(id,'print_auto_dispatch');
         toast('Pesanan diserahkan. Struk dikirim ke printer.');
       }catch(error){
         try{if(printWindow&&!printWindow.closed)printWindow.close()}catch{}

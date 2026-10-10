@@ -35,6 +35,11 @@ for(const token of ['clientOrderId','X-Request-ID','rohmat:order-commit-success'
   assert.ok(pub.includes(token),'public commit contract missing '+token);
 for(const token of ['payment_verification_started','payment_verification_success','order_commit_started','order_commit_success','order_commit_failed','sheet_sync_enqueued'])
   assert.ok(core.includes(token),'structured order event missing '+token);
+for(const token of ['require_table_qr_signature','const requireTableQr=','table_qr_verification_success','table_qr_verification_skipped','reason:"tenant_not_required"'])
+  assert.ok(core.includes(token),'conditional table QR contract missing '+token);
+assert.equal((core.match(/verify_table_qr_signature_tenant/g)||[]).length,1,'table QR verifier must exist exactly once');
+assert.ok(core.indexOf('const requireTableQr=')<core.indexOf('verify_table_qr_signature_tenant'),'table QR verifier must be gated by tenant setting');
+console.log('PUBLIC_TABLE_QR_OPTIONAL_GATE=PASS');
 console.log('PUBLIC_PAYMENT_COMMIT_GATE=PASS');
 
 assert.ok(!pub.includes("status.textContent='Pembayaran berhasil'"),'false success marker found');

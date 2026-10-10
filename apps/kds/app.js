@@ -233,7 +233,46 @@ async function refresh(manual=false,afterBusy=false){
 }
 async function run(id,command){return rpc('kds_update_order',{p_id:id,p_action:command})}
 const handoverPrintLocks=new Set();
-async function act(id,action,printWindow=null){stopPolling();const order=(snap.orders||[]).find(x=>String(x.id)===String(id));let committed=false;try{if(action==='verify_start')await run(id,'verify_start');else await run(id,action);committed=true;if(action==='complete'&&order&&!handoverPrintLocks.has(String(id))){handoverPrintLocks.add(String(id));try{const api=window.__SDB_UNIFIED_RECEIPT__;if(!api?.printReceipt)throw Error('Runtime struk belum siap.');api.printReceipt(order,{window:printWindow,auto:true});run(id,'print').catch(()=>{});toast('Pesanan diserahkan. Struk dikirim ke printer.')}catch(error){try{if(printWindow&&!printWindow.closed)printWindow.close()}catch{}toast('Pesanan sudah diserahkan. Cetak struk gagal: '+String(error?.message||error))}finally{handoverPrintLocks.delete(String(id))}}else{try{if(printWindow&&!printWindow.closed)printWindow.close()}catch{}toast(action==='start'||action==='verify_start'?'Pesanan masuk ke Sedang Diproses':action==='ready'?'Pesanan masuk ke Pesanan Siap':action==='complete'?'Pesanan diserahkan dan diarsipkan':'Status diperbarui')}await refresh(false,true)}catch(error){if(action==='complete'&&!committed){try{if(printWindow&&!printWindow.closed)printWindow.close()}catch{}}throw error}finally{schedulePolling()}}
+async function act(id,action,printWindow=null){
+  stopPolling();
+  const order=(snap.orders||[]).find(x=>String(x.id)===String(id));
+  let committed=false,actionResult=null;
+  try{
+    actionResult=action==='verify_start'?await run(id,'verify_start'):await run(id,action);
+    committed=true;
+    const autoPrintRequired=action==='complete'&&actionResult?.auto_print_required===true;
+    if(autoPrintRequired&&order&&!handoverPrintLocks.has(String(id))){
+      handoverPrintLocks.add(String(id));
+      try{
+        const api=window.__SDB_UNIFIED_RECEIPT__;
+        if(!api?.printReceipt)throw Error('Runtime struk belum siap.');
+        await api.printReceipt(actionResult?.order||order,{window:printWindow,auto:true});
+        await run(id,'print_auto_success');
+        toast('Pesanan diserahkan. Struk dikirim ke printer.');
+      }catch(error){
+        try{if(printWindow&&!printWindow.closed)printWindow.close()}catch{}
+        toast('Pesanan sudah diserahkan. Cetak struk gagal: '+String(error?.message||error));
+      }finally{
+        handoverPrintLocks.delete(String(id));
+      }
+    }else{
+      try{if(printWindow&&!printWindow.closed)printWindow.close()}catch{}
+      toast(action==='start'||action==='verify_start'
+        ?'Pesanan masuk ke Sedang Diproses'
+        :action==='ready'
+          ?'Pesanan masuk ke Pesanan Siap'
+          :action==='complete'
+            ?(actionResult?.idempotent?'Pesanan sudah diserahkan sebelumnya.':'Pesanan diserahkan dan diarsipkan')
+            :'Status diperbarui');
+    }
+    await refresh(false,true);
+  }catch(error){
+    if(action==='complete'&&!committed){try{if(printWindow&&!printWindow.closed)printWindow.close()}catch{}}
+    throw error;
+  }finally{
+    schedulePolling();
+  }
+}
 async function stock(id,on){stopPolling();try{await rpc('kds_set_availability',{p_id:id,p_available:on,p_note:on?'':'Habis'});toast(on?'Menu kembali tersedia':'Menu ditandai habis');await refresh(false,true)}finally{schedulePolling()}}
 async function showProof(path){try{const d=await proof(path);$('proofImg').src=d.url;$('proofModal').hidden=false}catch(error){toast(error.message||'Bukti gagal dibuka')}}
 function cashRemember(){if($('cashName'))cashDraft.name=$('cashName').value;if($('cashTable'))cashDraft.table=$('cashTable').value;if($('cashNote'))cashDraft.note=$('cashNote').value;if($('cashMoney'))cashDraft.cash=$('cashMoney').value;if($('cashQrisOk'))cashDraft.qrisOk=$('cashQrisOk').checked}

@@ -363,6 +363,8 @@ function ensureCashierIntegration(html) {
   let out = html.includes(NAV_NEW) ? html : html.replace(NAV_OLD, NAV_NEW);
   out = out.replace(/<script\b[^>]*\bid=["']rohmat-admin-cashier-(?:loader|current)-v\d+["'][^>]*>[\s\S]*?<\/script>(?:<!-- rohmat-admin-smart-cashier-subnav-v\d+ -->)?/gi, '');
   out = out.replace(/<script\b[^>]*\bid=["']sdb-smart-cashier-thermal-printer-v\d+["'][^>]*>[\s\S]*?<\/script>/gi, '');
+  // Shared i18n is a singleton. Remove any upstream/global legacy loader so v4 is the only owner.
+  out = out.replace(/<script\b[^>]*\bsrc=["'][^"']*\/runtime\/i18n\.js(?:\?[^"']*)?["'][^>]*>[\s\S]*?<\/script>/gi, '');
   const at = out.lastIndexOf('</body>');
   const loaders = CASHIER_LOADER + PRINTER_LOADER + I18N_LOADER;
   return at >= 0 ? out.slice(0, at) + loaders + out.slice(at) : out + loaders;

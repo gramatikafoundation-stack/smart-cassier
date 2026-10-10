@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(new URL(p,import.meta.url),'utf8');
 
 const pub=read('../apps/public/api/render.js');
+const localeApi=read('../apps/public/api/locale.js');
 const gateway=read('../supabase/functions/create-order/index.ts');
 const core=read('../supabase/functions/create-order-v6/index.ts');
 const kds=read('../apps/kds/app.js');
@@ -79,6 +80,8 @@ for(const token of ['tenant_site_settings_public_v1','language_settings','sheetL
   assert.ok(writer.includes(token),'sheet locale writer missing '+token);
 assert.ok(localeMigration.includes('language_changed'));
 assert.ok(localeMigration.includes('after update of settings'));
+assert.ok(localeApi.includes("url.searchParams.get('format')==='csv'"));
+assert.ok(localeApi.includes("'text/csv; charset=utf-8'"));
 console.log('SHEET_I18N_NO_WRITER_REGRESSION_GATE=PASS');
 
 for(const token of ['receipt.proofOrder','receipt.transaction','SMART ORDER','receipt.status','receipt.code','receipt.customer','receipt.items','receipt.total','receipt.thanks'])

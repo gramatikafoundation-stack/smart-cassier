@@ -2,8 +2,10 @@ import { resolvePublicTenantConfig } from '../lib/tenant-config.js';
 
 export default async function handler(req,res){
   if(req.method!=='GET'){res.statusCode=405;res.setHeader('Allow','GET');return res.end('method_not_allowed')}
+  const url=new URL(req.url||'/api/locale','https://smart-order-sdb.vercel.app');
+  const csv=url.searchParams.get('format')==='csv';
   const cfg=await resolvePublicTenantConfig(req);
-  if(!cfg?.ok||!cfg.tenantId){res.statusCode=503;res.setHeader('Cache-Control','no-store');return res.end('id-ID')}
+  if(!cfg?.ok||!cfg.tenantId){res.statusCode=503;res.setHeader('Cache-Control','no-store');res.setHeader('Content-Type',csv?'text/csv; charset=utf-8':'text/plain; charset=utf-8');return res.end(csv?'id-ID\n':'id-ID')}
   const sb=String(process.env.SUPABASE_URL||'').replace(/\/$/,'');
   const key=String(process.env.SUPABASE_PUBLISHABLE_KEY||process.env.SUPABASE_ANON_KEY||'');
   let locale=String(cfg.locale||'id-ID');
@@ -19,9 +21,9 @@ export default async function handler(req,res){
     }catch{}
   }
   res.statusCode=200;
-  res.setHeader('Content-Type','text/plain; charset=utf-8');
+  res.setHeader('Content-Type',csv?'text/csv; charset=utf-8':'text/plain; charset=utf-8');
   res.setHeader('Cache-Control','no-store, max-age=0, must-revalidate');
   res.setHeader('X-Content-Type-Options','nosniff');
   res.setHeader('X-SDB-Tenant-ID',String(cfg.tenantId));
-  res.end(locale||'id-ID');
+  res.end((locale||'id-ID')+(csv?'\n':''));
 }

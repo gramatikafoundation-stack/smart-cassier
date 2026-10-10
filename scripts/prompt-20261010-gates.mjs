@@ -17,6 +17,8 @@ const visualEditor=read('../supabase/functions/rohmat-admin-visual-editor-v1/ind
 const writer=read('../supabase/functions/rohmat-sheet-writer-data-v1/index.ts');
 const localeMigration=read('../supabase/migrations/20261010061500_sheet_language_reconcile_v1.sql');
 const tenantExample=read('../prototype/tenant.example.json');
+const kdsLogin=read('../apps/kds/login.js');
+const rootVercel=JSON.parse(read('../vercel.json'));
 
 assert.ok(pub.includes('grid-template-columns:repeat(4,minmax(0,1fr))'));
 console.log('PUBLIC_MENU_FOUR_COLUMN_GATE=PASS');
@@ -56,9 +58,19 @@ console.log('KDS_NO_PRINT_BUTTON_GATE=PASS');
 for(const token of ["action==='complete'","await run(id,action)","committed=true","printReceipt(order","handoverPrintLocks"])
   assert.ok(kds.includes(token),'handover auto-print missing '+token);
 console.log('KDS_HANDOVER_AUTO_PRINT_GATE=PASS');
-for(const token of ['data-kds-live-mirror','data-kds-live-frame',"src=login?'/kds/login':'/kds'","frame.contentDocument","data-tab=","kdsMirrorReady"])
+for(const token of ['data-kds-live-mirror','data-kds-live-frame',"src=login?'/admin/kds-login-live':'/admin/kds-live'","frame.contentDocument","data-tab=","kdsMirrorReady"])
   assert.ok(adminRender.includes(token),'admin KDS live mirror contract missing '+token);
 assert.ok(!adminRender.includes('KDS dan Admin membaca source of truth pesanan yang sama.'));
+for(const [source,destination] of [['/admin/kds-live','/apps/kds/index.html'],['/admin/kds-login-live','/apps/kds/login.html']])
+  assert.ok(rootVercel.rewrites?.some(x=>x.source===source&&x.destination===destination),'KDS embed rewrite missing '+source);
+for(const source of ['/admin/kds-live','/admin/kds-login-live']){
+  const h=rootVercel.headers?.find(x=>x.source===source)?.headers||[],m=Object.fromEntries(h.map(x=>[x.key,x.value]));
+  assert.equal(m['X-Frame-Options'],'SAMEORIGIN','KDS embed must be same-origin only');
+  assert.ok(String(m['Content-Security-Policy']||'').includes("frame-ancestors 'self'"),'KDS embed CSP must allow same-origin parent only');
+}
+assert.ok(kds.includes("adminKdsEmbed=()=>location.pathname.startsWith('/admin/kds-')"));
+assert.ok(kds.includes("kdsLoginPath=()=>adminKdsEmbed()?'/admin/kds-login-live':'/kds/login'"));
+assert.ok(kdsLogin.includes("kdsAppPath=()=>adminKdsEmbed()?'/admin/kds-live':'/kds'"));
 console.log('ADMIN_KDS_LIVE_VISUAL_PARITY_GATE=PASS');
 for(const src of [adminRender,visualEditor]){
   assert.ok(src.includes("data.settingsMain='1'"),'stable settings identity missing');

@@ -13,7 +13,10 @@ assert.ok(app.includes("refresh(false,true).catch"),'KDS realtime must retain ca
 assert.ok(!perf.includes('refresh = async function'),'performance layer must not override canonical refresh owner');
 assert.ok(!perf.includes('fastOrderSig'),'orphan fastOrderSig must not exist');
 assert.ok(!perf.includes('fastMenuSig'),'orphan fastMenuSig must not exist');
-assert.ok(html.includes('/kds-assets/v4/app.js?v=20261010-handover-autoprint-v2'),'KDS app cache-buster must ship the handover auto-print runtime');
+assert.ok(html.includes('/kds-assets/v4/app.js?v=20261011-handover-idempotent-v3'),'KDS app cache-buster must ship the durable handover idempotency runtime');
 assert.ok(html.includes('/kds-assets/v4/perf.js?v=20261010-kds-final-v1'),'KDS perf cache-buster must ship the current integration runtime');
-assert.ok(html.includes('/kds-assets/v4/cashier-required-receipt.js?v=20261010-receipt-v5-autoprint'),'KDS receipt cache-buster must ship the unified receipt runtime');
+assert.ok(html.includes('/kds-assets/v4/cashier-required-receipt.js?v=20261011-receipt-v6-unified-printer'),'KDS receipt cache-buster must ship the unified printer receipt runtime');
+assert.ok(html.includes('/admin/runtime/printer.js?v=20261011-kds-unified-v1'),'KDS must load the shared SMART ORDER thermal printer runtime');
+assert.ok(app.includes("print_auto_dispatch"),'KDS handover must record a durable auto-print dispatch after runtime handoff');
+assert.ok(app.includes("auto_print_required"),'KDS handover must obey the server-side auto-print claim');
 console.log('KDS_ADMIN_INTEGRATION_GATE_PASS=1');

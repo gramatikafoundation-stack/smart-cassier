@@ -77,7 +77,7 @@ function tenantize(raw:string,ctx:TenantCtx){
 const ADMIN_SETTINGS_THEME_RUNTIME_V2=String.raw`<script id="rohmat-admin-settings-theme-v2">(()=>{'use strict';
 if(window.__rohmatAdminSettingsThemeV2)return;window.__rohmatAdminSettingsThemeV2=1;
 const U='__SDB_SUPABASE_ORIGIN__',K='__SDB_SUPABASE_PUBLISHABLE_KEY__',TENANT='__SDB_TENANT_ID__',LS='rohmat-admin-session-v4';
-const LANGS=[['id-ID','Indonesia','ltr'],['en-US','Inggris','ltr'],['ms-MY','Malaysia','ltr'],['ar-SA','Arab','rtl'],['zh-CN','Mandarin (Sederhana)','ltr'],['zh-TW','Mandarin (Tradisional)','ltr'],['ja-JP','Jepang','ltr'],['ko-KR','Korea','ltr'],['hi-IN','Hindi','ltr'],['th-TH','Thailand','ltr'],['vi-VN','Vietnam','ltr'],['fr-FR','Prancis','ltr'],['de-DE','Jerman','ltr'],['es-ES','Spanyol','ltr'],['pt-BR','Portugis','ltr'],['tr-TR','Turki','ltr'],['ru-RU','Rusia','ltr'],['nl-NL','Belanda','ltr']];
+const LANGS=[['id-ID','Indonesia','ltr'],['en-US','Inggris','ltr'],['ms-MY','Malaysia','ltr'],['ar-SA','Arab','rtl'],['zh-CN','Mandarin (Sederhana)','ltr'],['zh-TW','Mandarin (Tradisional)','ltr'],['ja-JP','Jepang','ltr'],['ko-KR','Korea','ltr'],['hi-IN','Hindi','ltr'],['th-TH','Thailand','ltr'],['vi-VN','Vietnam','ltr'],['fr-FR','Prancis','ltr'],['de-DE','Jerman','ltr'],['es-ES','Spanyol','ltr'],['pt-BR','Portugis','ltr'],['it-IT','Italia','ltr'],['tr-TR','Turki','ltr'],['ru-RU','Rusia','ltr'],['nl-NL','Belanda','ltr']];
 let state=null,stateAt=0,catalogCache=null,catalogBusy=false,queued=false;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rp=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
@@ -154,7 +154,7 @@ function integrate(raw:string,optimized=false){
     }
     out=out.replaceAll('adminTypographyAuthorityV43','adminTypographyAuthorityV44');
   }
-  if(!out.includes('/runtime/i18n.js')) out=out.replace('</body>','<script id="sdb-global-i18n-admin-v1" src="/runtime/i18n.js?v=20261010-global-v3" defer></script></body>');
+  if(!out.includes('/runtime/i18n.js')) out=out.replace('</body>','<script id="sdb-global-i18n-admin-v1" src="/runtime/i18n.js?v=20261011-global-v4" defer></script></body>');
   return out
 }
 function padExact(s:string){

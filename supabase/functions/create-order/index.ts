@@ -20,7 +20,7 @@ type TenantCtx={tenant_id:string;public_origin:string;enabled?:boolean};
 function h(o:string|null,requestId:string,ctx?:TenantCtx){
   return{
     "Access-Control-Allow-Origin":o&&ctx&&o===ctx.public_origin?o:"",
-    "Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info, x-request-id, x-sdb-tenant-id",
+    "Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info, x-request-id, x-sdb-tenant-id, x-sdb-client-order-id",
     "Access-Control-Allow-Methods":"POST, OPTIONS",
     "Access-Control-Expose-Headers":"X-Request-ID, X-Rohmat-Contract, X-SDB-Tenant-ID",
     "Content-Type":"application/json; charset=utf-8",

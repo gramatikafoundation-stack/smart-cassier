@@ -6,6 +6,7 @@ const nativeFetch=window.fetch.bind(window);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const currentLocale=()=>String(window.__SDB_I18N__?.locale?.()||window.__SDB_TENANT_CONFIG?.locale||'id-ID');
 const currentTimezone=()=>String(window.__SDB_TENANT_CONFIG?.timezone||'Asia/Jakarta');
+const tr=(key,fallback)=>String(window.__SDB_I18N__?.t?.(key)||fallback||key);
 const rp=n=>new Intl.NumberFormat(currentLocale(),{style:'currency',currency:window.__SDB_TENANT_CONFIG?.currency||'IDR',maximumFractionDigits:0}).format(Number(n)||0);
 const fd=v=>new Intl.DateTimeFormat(currentLocale(),{timeZone:currentTimezone(),day:'2-digit',month:'long',year:'numeric'}).format(new Date(v||Date.now()));
 const ft=v=>new Intl.DateTimeFormat(currentLocale(),{timeZone:currentTimezone(),hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(v||Date.now())).replace('.',':')+(currentTimezone()==='Asia/Jakarta'?' WIB':'');
@@ -28,11 +29,11 @@ function receiptData(r){
   const taxCfg=pricing.tax&&typeof pricing.tax==='object'?pricing.tax:{};
   const chargeLabel=chargeCfg.mode==='percent'&&Number(chargeCfg.value)>0?String(chargeCfg.label||'Charge')+' '+Number(chargeCfg.value)+'%':String(chargeCfg.label||'Charge');
   const taxLabel=taxCfg.mode==='percent'&&Number(taxCfg.value)>0?String(taxCfg.label||'Pajak')+' '+Number(taxCfg.value)+'%':String(taxCfg.label||'Pajak');
-  const service=r?.service_mode==='dine-in'?'Makan di Tempat':'Bawa Pulang';
+  const service=r?.service_mode==='dine-in'?tr('service.dine','Makan di Tempat'):tr('service.takeaway','Bawa Pulang');
   const paymentRaw=String(r?.payment_method||r?.payment?.method||'').trim();
-  const payment=paymentRaw==='cash'?'Tunai':paymentRaw==='qris_cashier'||paymentRaw==='qris'?'QRIS':paymentRaw||'—';
+  const payment=paymentRaw==='cash'?tr('payment.cash','Tunai'):paymentRaw==='qris_cashier'||paymentRaw==='qris'?'QRIS':paymentRaw||'—';
   const paymentStatus=String(r?.payment_status||'').toLowerCase();
-  const status=paymentStatus==='verified'||paymentStatus==='paid'?'LUNAS':paymentStatus?paymentStatus.toUpperCase():'—';
+  const status=paymentStatus==='verified'||paymentStatus==='paid'?tr('payment.paid','LUNAS'):paymentStatus?paymentStatus.toUpperCase():'—';
   const cashier=String(r?.verified_by_email||r?.cashier_actor||(r?.order_source==='public'?'Sistem Publik':'—'));
   const cashReceived=r?.cash_received!=null?Math.max(0,Number(r.cash_received)||0):r?.paid_amount!=null?Math.max(0,Number(r.paid_amount)||0):null;
   const change=r?.change_amount!=null?Math.max(0,Number(r.change_amount)||0):null;
@@ -43,31 +44,31 @@ function receiptData(r){
 function receiptRows(r){
   const d=receiptData(r),code=r?.payment_code||r?.public_order_code||'—',dine=r?.service_mode==='dine-in';
   return '<section class="receiptUnifiedV5">'+
-    '<header class="receiptHeroV5"><div class="receiptEyV5">BUKTI PEMBAYARAN &amp; PEMESANAN</div><h2>STRUK TRANSAKSI</h2><strong>SMART ORDER</strong></header>'+
+    '<header class="receiptHeroV5"><div class="receiptEyV5">'+esc(tr('receipt.proofOrder','BUKTI PEMBAYARAN & PEMESANAN'))+'</div><h2>'+esc(tr('receipt.transaction','STRUK TRANSAKSI'))+'</h2><strong>SMART ORDER</strong></header>'+
     '<div class="receiptMetaV5">'+
-      '<div><span>Status Pembayaran</span><strong>'+esc(d.status)+'</strong></div>'+
-      '<div><span>Kode Transaksi</span><strong>'+esc(code)+'</strong></div>'+
-      '<div><span>Nama Pemesan</span><strong>'+esc(r?.customer_name||'—')+'</strong></div>'+
-      '<div><span>Layanan</span><strong>'+esc(d.service)+'</strong></div>'+
-      (dine?'<div><span>Nomor Meja</span><strong>'+esc(String(r?.table_number||'—'))+'</strong></div>':'')+
-      '<div><span>Tanggal Pemesanan</span><strong>'+esc(fd(r?.created_at))+'</strong></div>'+
-      '<div><span>Waktu Pemesanan</span><strong>'+esc(ft(r?.created_at))+'</strong></div>'+
-      '<div><span>Metode Pembayaran</span><strong>'+esc(d.payment)+'</strong></div>'+
-      (d.paymentAt?'<div><span>Waktu Pembayaran</span><strong>'+esc(ft(d.paymentAt))+'</strong></div>':'')+
-      '<div><span>Petugas Kasir</span><strong>'+esc(d.cashier)+'</strong></div>'+
+      '<div><span>'+esc(tr('receipt.status','Status Pembayaran'))+'</span><strong>'+esc(d.status)+'</strong></div>'+
+      '<div><span>'+esc(tr('receipt.code','Kode Transaksi'))+'</span><strong>'+esc(code)+'</strong></div>'+
+      '<div><span>'+esc(tr('receipt.customer','Nama Pemesan'))+'</span><strong>'+esc(r?.customer_name||'—')+'</strong></div>'+
+      '<div><span>'+esc(tr('receipt.service','Layanan'))+'</span><strong>'+esc(d.service)+'</strong></div>'+
+      (dine?'<div><span>'+esc(tr('receipt.table','Nomor Meja'))+'</span><strong>'+esc(String(r?.table_number||'—'))+'</strong></div>':'')+
+      '<div><span>'+esc(tr('receipt.orderDate','Tanggal Pemesanan'))+'</span><strong>'+esc(fd(r?.created_at))+'</strong></div>'+
+      '<div><span>'+esc(tr('receipt.orderTime','Waktu Pemesanan'))+'</span><strong>'+esc(ft(r?.created_at))+'</strong></div>'+
+      '<div><span>'+esc(tr('receipt.method','Metode Pembayaran'))+'</span><strong>'+esc(d.payment)+'</strong></div>'+
+      (d.paymentAt?'<div><span>'+esc(tr('receipt.paymentTime','Waktu Pembayaran'))+'</span><strong>'+esc(ft(d.paymentAt))+'</strong></div>':'')+
+      '<div><span>'+esc(tr('receipt.cashier','Petugas Kasir'))+'</span><strong>'+esc(d.cashier)+'</strong></div>'+
     '</div>'+
-    '<div class="receiptItemsV5"><div class="receiptSectionV5">Rincian Pesanan</div>'+
+    '<div class="receiptItemsV5"><div class="receiptSectionV5">'+esc(tr('receipt.items','Rincian Pesanan'))+'</div>'+
       d.items.map(i=>'<div class="receiptItemV5"><div><strong>'+esc(i.name)+'</strong><span>'+Number(i.quantity||0)+' × '+rp(i.price)+'</span></div><b>'+rp((Number(i.quantity)||0)*(Number(i.price)||0))+'</b></div>').join('')+
     '</div>'+
     '<div class="receiptTotalsV5">'+
-      '<div><span>Subtotal</span><b>'+rp(d.subtotal)+'</b></div>'+
+      '<div><span>'+esc(tr('receipt.subtotal','Subtotal'))+'</span><b>'+rp(d.subtotal)+'</b></div>'+
       (d.charge>0?'<div><span>'+esc(d.chargeLabel)+'</span><b>'+rp(d.charge)+'</b></div>':'')+
       (d.tax>0?'<div><span>'+esc(d.taxLabel)+'</span><b>'+rp(d.tax)+'</b></div>':'')+
-      '<div class="receiptGrandV5"><span>TOTAL PEMBAYARAN</span><strong>'+rp(d.total)+'</strong></div>'+
-      (d.cashReceived!=null?'<div><span>Nominal Diterima</span><b>'+rp(d.cashReceived)+'</b></div>':'')+
-      (d.change!=null?'<div><span>Kembalian</span><b>'+rp(d.change)+'</b></div>':'')+
+      '<div class="receiptGrandV5"><span>'+esc(tr('receipt.total','Total Pembayaran').toUpperCase())+'</span><strong>'+rp(d.total)+'</strong></div>'+
+      (d.cashReceived!=null?'<div><span>'+esc(tr('receipt.received','Nominal Diterima'))+'</span><b>'+rp(d.cashReceived)+'</b></div>':'')+
+      (d.change!=null?'<div><span>'+esc(tr('receipt.change','Kembalian'))+'</span><b>'+rp(d.change)+'</b></div>':'')+
     '</div>'+
-    '<footer class="receiptFootV5"><strong>Terima kasih atas kunjungan Anda.</strong><span>Simpan struk ini sebagai bukti transaksi.</span></footer>'+
+    '<footer class="receiptFootV5"><strong>'+esc(tr('receipt.thanks','Terima kasih atas kunjungan Anda.'))+'</strong><span>'+esc(tr('receipt.keep','Simpan struk ini sebagai bukti transaksi.'))+'</span></footer>'+
   '</section>';
 }
 

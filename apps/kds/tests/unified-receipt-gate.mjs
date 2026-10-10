@@ -6,7 +6,7 @@ const css=fs.readFileSync(new URL('../styles.css',import.meta.url),'utf8');
 const pub=fs.readFileSync(new URL('../../../supabase/functions/rohmat-public-element-runtime-v64/index.ts',import.meta.url),'utf8');
 
 assert.doesNotMatch(kds,/KITCHEN TICKET|RINGKASAN PESANAN/i,'legacy KDS ticket/summary label must not return');
-for(const label of ['BUKTI PEMBAYARAN &amp; PEMESANAN','STRUK TRANSAKSI','SMART ORDER','Status Pembayaran','Kode Transaksi','Rincian Pesanan','Subtotal','TOTAL PEMBAYARAN','Terima kasih']) assert.ok(kds.includes(label),'KDS receipt missing: '+label);
+for(const label of ['receipt.proofOrder','receipt.transaction','SMART ORDER','receipt.status','receipt.code','receipt.items','receipt.subtotal','receipt.total','receipt.thanks']) assert.ok(kds.includes(label),'KDS receipt i18n/structure missing: '+label);
 for(const token of ["'58mm'","'80mm'","@page{size:'+paper+' auto;margin:0}",'overflow-wrap:anywhere']) assert.ok(kds.includes(token),'KDS thermal contract missing: '+token);
 for(const token of ['receiptModalV5','receiptMetaV5','receiptItemsV5','receiptTotalsV5','receiptGrandV5']) assert.ok(css.includes(token),'KDS receipt V5 CSS missing: '+token);
 assert.match(pub,/rohmat-unified-receipt-v(?:4|5-pricing)/,'Public receipt runtime marker missing');

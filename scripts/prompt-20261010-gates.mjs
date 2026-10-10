@@ -8,6 +8,7 @@ const core=read('../supabase/functions/create-order-v6/index.ts');
 const kds=read('../apps/kds/app.js');
 const kdsHtml=read('../apps/kds/index.html');
 const receipt=read('../apps/kds/cashier-required-receipt.js');
+const legacyPrintShim=read('../apps/kds/print-hide.js');
 const i18n=read('../apps/shared/i18n-runtime.js');
 const adminRuntime=read('../apps/admin/api/runtime.js');
 const adminRender=read('../supabase/functions/rohmat-admin-render/index.ts');
@@ -24,7 +25,7 @@ assert.ok(pub.includes('grid-template-rows:minmax(0,78fr) minmax(0,22fr)'));
 assert.ok(pub.includes('text-align:center'));
 console.log('PUBLIC_MENU_CARD_PROPORTION_GATE=PASS');
 
-for(const token of ['master_prototype_runtime_context','p_origin:tenantId?null:origin','if(req.method==="OPTIONS")','Access-Control-Allow-Headers','function internalKey()','const INTERNAL_KEY=internalKey()','apikey:INTERNAL_KEY','Authorization:"Bearer "+INTERNAL_KEY'])
+for(const token of ['master_prototype_runtime_context','p_origin:tenantId?null:origin','if(req.method==="OPTIONS")','Access-Control-Allow-Headers','x-sdb-client-order-id','function internalKey()','const INTERNAL_KEY=internalKey()','apikey:INTERNAL_KEY','Authorization:"Bearer "+INTERNAL_KEY'])
   assert.ok(gateway.includes(token),'gateway contract missing '+token);
 for(const token of ['clientOrderId','X-Request-ID','rohmat:order-commit-success','Pesanan sedang disimpan','async function prepareOrder','if(!PIPE?.use)','currentInput=prepared.input','currentInit=prepared.init'])
   assert.ok(pub.includes(token),'public commit contract missing '+token);
@@ -47,6 +48,8 @@ console.log('PUBLIC_SHEET_SYNC_ENQUEUE_GATE=PASS');
 assert.ok(!kds.includes('data-print='));
 assert.ok(!kdsHtml.includes('print-hide.js'));
 assert.ok(!kds.includes('function printOne('));
+assert.ok(!legacyPrintShim.includes('KITCHEN TICKET'));
+assert.ok(!legacyPrintShim.includes('[data-print]')||legacyPrintShim.includes("querySelectorAll('[data-print]').forEach(el=>el.remove())"));
 console.log('KDS_NO_PRINT_BUTTON_GATE=PASS');
 for(const token of ["action==='complete'","await run(id,action)","committed=true","printReceipt(order","handoverPrintLocks"])
   assert.ok(kds.includes(token),'handover auto-print missing '+token);
@@ -57,10 +60,15 @@ for(const l of locales)assert.ok(i18n.includes("'"+l+"'"),'locale missing '+l);
 for(const key of ['nav.public','nav.admin','nav.database','action.save','payment.send','receipt.total'])
   assert.ok(i18n.includes("'"+key+"'"),'i18n key missing '+key);
 assert.ok(i18n.includes('missing'));
+assert.ok(i18n.includes("fetch('/api/locale'"));
+assert.ok(adminRender.includes('/runtime/i18n.js?v=20261010-global-v2'));
+assert.ok(kdsHtml.includes('/runtime/i18n.js?v=20261010-global-v2'));
+assert.ok(pub.includes('/runtime/i18n.js?v=20261010-global-v2'));
 console.log('GLOBAL_I18N_COVERAGE_GATE=PASS');
 assert.ok(adminRuntime.includes("mb?.dataset?.main"));
 assert.ok(adminRuntime.includes("sb?.dataset?.sub"));
 assert.ok(adminRender.includes("mb?.dataset?.main||(mb?.dataset?.settingsMain?'settings':'')"));
+assert.ok(!adminRender.includes("sb?.dataset?.settingsSub||sb?.textContent||''"));
 console.log('I18N_ROUTE_ID_STABILITY_GATE=PASS');
 assert.ok(i18n.includes("current==='ar-SA'?'rtl':'ltr'"));
 assert.ok(adminRender.includes("['ar-SA','Arab','rtl']"));
@@ -73,8 +81,8 @@ assert.ok(localeMigration.includes('language_changed'));
 assert.ok(localeMigration.includes('after update of settings'));
 console.log('SHEET_I18N_NO_WRITER_REGRESSION_GATE=PASS');
 
-for(const token of ['BUKTI PEMBAYARAN &amp; PEMESANAN','STRUK TRANSAKSI','SMART ORDER','Status Pembayaran','Kode Transaksi','Nama Pemesan','Rincian Pesanan','TOTAL PEMBAYARAN','Terima kasih'])
-  assert.ok(receipt.includes(token),'receipt section missing '+token);
+for(const token of ['receipt.proofOrder','receipt.transaction','SMART ORDER','receipt.status','receipt.code','receipt.customer','receipt.items','receipt.total','receipt.thanks'])
+  assert.ok(receipt.includes(token),'receipt i18n/section contract missing '+token);
 for(const token of ['58mm','80mm','payment_status','public_order_code','customer_name','service_mode','table_number','cashier_actor','cash_received','change_amount'])
   assert.ok(receipt.includes(token),'receipt dynamic field missing '+token);
 assert.ok(!receipt.includes('Fariz'));

@@ -1,6 +1,7 @@
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const tenant = () => window.__SDB_TENANT_CONFIG || {businessName:'Business',locale:'id-ID',currency:'IDR',timezone:'Asia/Jakarta'};
+const tr=(key,fallback=key,vars)=>{const v=window.__SDB_I18N__?.t?.(key,vars);return v&&v!==key?v:fallback};
 let formatterKey='',moneyFormatter=null,dateTimeFormatter=null,dateOnlyFormatter=null,timeFormatter=null;
 function formatters(){
   const t=tenant(),locale=t.locale||'id-ID',currency=t.currency||'IDR',timezone=t.timezone||'Asia/Jakarta',key=locale+'|'+currency+'|'+timezone;
@@ -38,23 +39,23 @@ const cashier=payload=>call({action:'cashier',payload});
 
 function toast(text){const e=$('toast');e.textContent=text;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2200)}
 function payLabel(o){return o.payment_method==='cash'?'CASH':o.payment_method==='qris_cashier'?'QRIS KASIR':'QRIS'}
-function where(o){return o.service_mode==='dine-in'?'Meja '+(o.table_number||'—'):'Take Away'}
+function where(o){return o.service_mode==='dine-in'?tr('receipt.table','Meja')+' '+(o.table_number||'—'):tr('service.takeaway','Take Away')}
 function items(o){const a=Array.isArray(o.items)?o.items:[];return '<div class="items">'+a.map(i=>'<div class="item"><span><b>'+Number(i.quantity||0)+'×</b> '+esc(i.name)+'</span><strong>'+rp(Number(i.subtotal??(Number(i.price||0)*Number(i.quantity||0))))+'</strong></div>').join('')+'</div>'}
 function newTime(o){return o.verified_at||o.payment_submitted_at||o.kitchen_sent_at||o.created_at}
 function processTime(o){return o.preparing_at||o.ready_at}
 function readyTime(o){return o.ready_at}
-function timeline(o){return '<div class="timeline"><span class="on">Pesanan Baru: '+fmt(newTime(o))+'</span><span class="'+(processTime(o)?'on':'')+'">Sedang Diproses: '+fmt(processTime(o))+'</span><span class="'+(readyTime(o)?'on':'')+'">Pesanan Siap: '+fmt(readyTime(o))+'</span></div>'}
+function timeline(o){return '<div class="timeline"><span class="on">'+esc(tr('kds.new','Pesanan Baru'))+': '+fmt(newTime(o))+'</span><span class="'+(processTime(o)?'on':'')+'">'+esc(tr('kds.processing','Sedang Diproses'))+': '+fmt(processTime(o))+'</span><span class="'+(readyTime(o)?'on':'')+'">'+esc(tr('kds.ready','Pesanan Siap'))+': '+fmt(readyTime(o))+'</span></div>'}
 
 function card(o,stage){
   const review=o.payment_status==='submitted'&&o.order_status==='payment_review';
   let actions='';
-  if(stage==='new') actions=review?'<button class="btn green" data-act="verify_start" data-id="'+o.id+'">Verifikasi & Proses</button><button class="btn red" data-act="reject_payment" data-id="'+o.id+'">Tolak</button>':'<button class="btn green" data-act="start" data-id="'+o.id+'">Proses Pesanan</button>';
-  else if(stage==='processing') actions='<button class="btn green" data-act="ready" data-id="'+o.id+'">Tandai Pesanan Siap</button>';
-  else if(stage==='ready') actions='<button class="btn green" data-act="complete" data-id="'+o.id+'">Pesanan Diserahkan</button>';
-  const proofBtn=o.payment_proof_url?'<button class="btn" data-proof="'+esc(o.payment_proof_url)+'">Lihat Bukti</button>':'';
-  return '<article class="ticket stage-'+esc(stage)+' '+(review?'review':'')+'"><div class="th"><div><div class="code">#'+esc(o.public_order_code||o.id)+'</div><div class="name">'+esc(o.customer_name||'Pelanggan')+' · '+esc(where(o))+'</div></div><span class="badge">'+(review?'MENUNGGU BAYAR':esc(payLabel(o)))+'</span></div>'+items(o)+(o.customer_note?'<div class="note"><b>Keterangan:</b> '+esc(o.customer_note)+'</div>':'')+'<div class="meta">Total '+rp(o.total_amount||0)+'</div><div class="statusTime"><b>Waktu status:</b> '+fmt(stage==='new'?newTime(o):stage==='processing'?processTime(o):readyTime(o))+'</div>'+timeline(o)+'<div class="row">'+actions+proofBtn+'</div></article>';
+  if(stage==='new') actions=review?'<button class="btn green" data-act="verify_start" data-id="'+o.id+'">'+esc(tr('action.process','Proses Pesanan'))+'</button><button class="btn red" data-act="reject_payment" data-id="'+o.id+'">'+esc(tr('action.reject','Tolak'))+'</button>':'<button class="btn green" data-act="start" data-id="'+o.id+'">'+esc(tr('action.process','Proses Pesanan'))+'</button>';
+  else if(stage==='processing') actions='<button class="btn green" data-act="ready" data-id="'+o.id+'">'+esc(tr('action.ready','Tandai Pesanan Siap'))+'</button>';
+  else if(stage==='ready') actions='<button class="btn green" data-act="complete" data-id="'+o.id+'">'+esc(tr('action.handover','Pesanan Diserahkan'))+'</button>';
+  const proofBtn=o.payment_proof_url?'<button class="btn" data-proof="'+esc(o.payment_proof_url)+'">'+esc(tr('kds.viewProof','Lihat Bukti'))+'</button>':'';
+  return '<article class="ticket stage-'+esc(stage)+' '+(review?'review':'')+'"><div class="th"><div><div class="code">#'+esc(o.public_order_code||o.id)+'</div><div class="name">'+esc(o.customer_name||tr('common.customer','Pelanggan'))+' · '+esc(where(o))+'</div></div><span class="badge">'+(review?esc(tr('kds.waitingPayment','MENUNGGU BAYAR')):esc(payLabel(o)))+'</span></div>'+items(o)+(o.customer_note?'<div class="note"><b>'+esc(tr('kds.note','Keterangan'))+':</b> '+esc(o.customer_note)+'</div>':'')+'<div class="meta">'+esc(tr('receipt.total','Total Pembayaran'))+' '+rp(o.total_amount||0)+'</div><div class="statusTime"><b>'+esc(tr('kds.statusTime','Waktu status'))+':</b> '+fmt(stage==='new'?newTime(o):stage==='processing'?processTime(o):readyTime(o))+'</div>'+timeline(o)+'<div class="row">'+actions+proofBtn+'</div></article>';
 }
-function lane(title,desc,list,stage){return '<section class="lane lane-'+esc(stage)+'"><div class="lh"><div><h2>'+title+'</h2><p>'+desc+'</p></div><span class="count">'+list.length+' tiket</span></div><div class="cards">'+(list.length?list.map(o=>card(o,stage)).join(''):'<div class="empty">Belum ada pesanan.</div>')+'</div></section>'}
+function lane(title,desc,list,stage){return '<section class="lane lane-'+esc(stage)+'"><div class="lh"><div><h2>'+esc(title)+'</h2><p>'+esc(desc)+'</p></div><span class="count">'+esc(tr('kds.ticketCount',String(list.length)+' tiket',{n:list.length}))+'</span></div><div class="cards">'+(list.length?list.map(o=>card(o,stage)).join(''):'<div class="empty">'+esc(tr('kds.empty','Belum ada pesanan.'))+'</div>')+'</div></section>'}
 function classify(){const o=snap.orders||[];return{n:o.filter(x=>(x.payment_status==='submitted'&&x.order_status==='payment_review')||(x.payment_status==='verified'&&x.order_status==='confirmed')),p:o.filter(x=>x.payment_status==='verified'&&x.order_status==='preparing'),r:o.filter(x=>x.payment_status==='verified'&&x.order_status==='ready')}}
 function hasActiveOrders(){const {n,p,r}=classify();return n.length>0||p.length>0||r.length>0}
 function pollDelay(){return realtimeConnected?safetyPollMs:FALLBACK_POLL_MS}
@@ -73,7 +74,7 @@ function setSyncState(state,label){
 function markFresh(source='snapshot'){
   lastFreshAt=Date.now();
   const time=formatters().timeFormatter.format(new Date());
-  setSyncState(realtimeConnected?'live':'fallback',(realtimeConnected?'Live':'Hybrid')+' · '+time);
+  setSyncState(realtimeConnected?'live':'fallback',realtimeConnected?tr('kds.liveAt','Live · '+time,{time}):tr('kds.hybridAt','Hybrid · '+time,{time}));
   document.documentElement.dataset.rohmatKdsFreshSource=source;
 }
 function clearRealtimeTimers(){
@@ -86,7 +87,7 @@ function armStaleMonitor(){
   if(rtStaleTimer)clearInterval(rtStaleTimer);
   rtStaleTimer=setInterval(()=>{
     if(document.hidden||!navigator.onLine||!lastFreshAt)return;
-    if(Date.now()-lastFreshAt>staleAfterMs)setSyncState('stale','Data mungkin terlambat');
+    if(Date.now()-lastFreshAt>staleAfterMs)setSyncState('stale',tr('kds.syncDelayed','Data mungkin terlambat'));
   },5000);
 }
 function realtimeUrl(cfg){
@@ -138,8 +139,8 @@ async function applyRealtimeDelta(change={}){
 function queueRealtimeSync(change={}){
   const kind=String(change.kind||''),id=String(change.entity_id||''),key=(kind&&id)?kind+':'+id:'__full__';
   const old=rtDeltaTimers.get(key);if(old)clearTimeout(old);
-  setSyncState('syncing','Menyinkronkan');
-  const t=setTimeout(()=>{rtDeltaTimers.delete(key);applyRealtimeDelta(change).catch(()=>refresh(false,true).catch(()=>setSyncState('stale','Data mungkin terlambat')))},80);
+  setSyncState('syncing',tr('kds.syncUpdating','Memperbarui…'));
+  const t=setTimeout(()=>{rtDeltaTimers.delete(key);applyRealtimeDelta(change).catch(()=>refresh(false,true).catch(()=>setSyncState('stale',tr('kds.syncDelayed','Data mungkin terlambat'))))},80);
   rtDeltaTimers.set(key,t);
 }
 function stopRealtime({reconnect=false,state='paused'}={}){
@@ -154,7 +155,7 @@ function stopRealtime({reconnect=false,state='paused'}={}){
 function scheduleRealtimeReconnect(){
   if(document.hidden||!navigator.onLine)return;
   realtimeConnected=false;
-  setSyncState('reconnecting','Menghubungkan ulang');
+  setSyncState('reconnecting',tr('kds.syncReconnecting','Menghubungkan ulang'));
   schedulePolling(FALLBACK_POLL_MS);
   const delays=[1000,2000,5000,10000,15000,30000],delay=delays[Math.min(rtAttempt,delays.length-1)];
   rtAttempt+=1;
@@ -178,7 +179,7 @@ async function startRealtimeHybrid(){
       clearRealtimeTimers();
       if(rtSocket){try{rtSocket.close()}catch{}rtSocket=null}
       rtIntentionalClose=false;
-      setSyncState('connecting','Menghubungkan realtime');
+      setSyncState('connecting',tr('kds.syncReconnecting','Menghubungkan ulang'));
       const ws=new WebSocket(url);rtSocket=ws;
       await new Promise((resolve,reject)=>{
         let settled=false,joinRef='';
@@ -195,7 +196,7 @@ async function startRealtimeHybrid(){
             if(settled)return;settled=true;clearTimeout(rtJoinTimer);rtJoinTimer=null;
             realtimeConnected=true;rtAttempt=0;markFresh('realtime-connected');armStaleMonitor();schedulePolling(safetyPollMs);
             rtHeartbeatTimer=setInterval(()=>realtimeSend('phoenix','heartbeat',{},null),25000);
-            refresh(false,true).catch(()=>setSyncState('stale','Data mungkin terlambat'));
+            refresh(false,true).catch(()=>setSyncState('stale',tr('kds.syncDelayed','Data mungkin terlambat')));
             resolve();
             return;
           }
@@ -212,7 +213,7 @@ async function startRealtimeHybrid(){
   })();
   return rtStarting;
 }
-function renderOrders(){const {n,p,r}=classify();$('sNew').textContent=n.length;$('sProc').textContent=p.length;$('sReady').textContent=r.length;$('lanes').innerHTML=lane('Pesanan Baru','Pesanan masuk dan siap ditangani dapur',n,'new')+lane('Sedang Diproses','Pesanan yang sedang dikerjakan dapur',p,'processing')+lane('Pesanan Siap','Pesanan siap disajikan atau diserahkan',r,'ready')}
+function renderOrders(){const {n,p,r}=classify();$('sNew').textContent=n.length;$('sProc').textContent=p.length;$('sReady').textContent=r.length;$('lanes').innerHTML=lane(tr('kds.new','Pesanan Baru'),tr('kds.newDesc','Pesanan masuk dan siap ditangani dapur'),n,'new')+lane(tr('kds.processing','Sedang Diproses'),tr('kds.processingDesc','Pesanan yang sedang dikerjakan dapur'),p,'processing')+lane(tr('kds.ready','Pesanan Siap'),tr('kds.readyDesc','Pesanan siap disajikan atau diserahkan'),r,'ready')}
 function renderStock(){const q=($('search').value||'').toLowerCase(),f=$('filter').value,m=snap.menu||[];$('stockgrid').innerHTML=m.filter(x=>(!q||String(x.name).toLowerCase().includes(q)||String(x.category).toLowerCase().includes(q))&&(f==='all'||(f==='on'&&x.is_available)||(f==='off'&&!x.is_available))).map(x=>'<article class="stock '+(x.is_available?'':'off')+'"><div><b>'+esc(x.name)+'</b><div class="muted">'+esc(x.category)+' · '+rp(x.price)+'</div></div><button class="sw '+(x.is_available?'':'off')+'" data-stock="'+esc(x.id)+'" data-next="'+(x.is_available?'0':'1')+'">'+(x.is_available?'Tersedia':'Habis')+'</button></article>').join('')||'<div class="empty">Menu tidak ditemukan.</div>'}
 
 async function refresh(manual=false,afterBusy=false){
@@ -224,7 +225,7 @@ async function refresh(manual=false,afterBusy=false){
     const sig=JSON.stringify([(d.orders||[]).map(o=>[o.id,o.order_status,o.payment_status,o.updated_at,o.preparing_at,o.ready_at,o.completed_at]),(d.menu||[]).map(m=>[m.id,m.is_available])]);
     snap=d;if(sig!==lastSig){lastSig=sig;renderOrders();renderStock()}
     markFresh('orders-snapshot');
-  }catch(error){if(!realtimeConnected)setSyncState('stale','Data mungkin terlambat');if(manual)toast(error.message||'Gagal memperbarui')}})();
+  }catch(error){if(!realtimeConnected)setSyncState('stale',tr('kds.syncDelayed','Data mungkin terlambat'));if(manual)toast(error.message||'Gagal memperbarui')}})();
   syncPromise=task;
   try{return await task}finally{if(syncPromise===task)syncPromise=null;syncBusy=false;if(manual){b.disabled=false;b.textContent='↻ Perbarui'}}
 }

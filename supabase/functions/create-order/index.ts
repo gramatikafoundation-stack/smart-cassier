@@ -2,6 +2,15 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const SUPABASE_URL=Deno.env.get("SUPABASE_URL")||"";
+function internalKey(){
+  try{
+    const raw=Deno.env.get("SUPABASE_SECRET_KEYS")||"";
+    const keys=raw?JSON.parse(raw):{};
+    if(typeof keys?.default==="string"&&keys.default)return keys.default;
+  }catch{}
+  return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
+}
+const INTERNAL_KEY=internalKey();
 const TARGET=Deno.env.get("ORDER_CORE_URL")||(SUPABASE_URL?SUPABASE_URL.replace(/\/$/,"")+"/functions/v1/create-order-v6":"");
 const MAX=4_900_000;
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -58,7 +67,7 @@ Deno.serve(async(req:Request)=>{
   const o=req.headers.get("origin");
   const incoming=req.headers.get("x-request-id")||"";
   const requestId=UUID.test(incoming)?incoming:crypto.randomUUID();
-  if(!TARGET||!SUPABASE_URL)return out(o,503,"Konfigurasi platform belum lengkap.",requestId);
+  if(!TARGET||!SUPABASE_URL||!INTERNAL_KEY)return out(o,503,"Konfigurasi platform belum lengkap.",requestId);
 
   const ctx=await resolveTenant(req);
   if(!ctx)return out(o,400,"Tenant wajib dan harus valid.",requestId);
@@ -83,8 +92,8 @@ Deno.serve(async(req:Request)=>{
       method:"POST",
       headers:{
         Origin:o,
-        apikey:req.headers.get("apikey")||"",
-        Authorization:req.headers.get("authorization")||"",
+        apikey:INTERNAL_KEY,
+        Authorization:"Bearer "+INTERNAL_KEY,
         "Content-Type":"application/json",
         "X-Request-ID":requestId,
         "X-SDB-Tenant-ID":ctx.tenant_id

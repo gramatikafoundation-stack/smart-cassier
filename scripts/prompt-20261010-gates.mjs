@@ -24,9 +24,9 @@ assert.ok(pub.includes('grid-template-rows:minmax(0,78fr) minmax(0,22fr)'));
 assert.ok(pub.includes('text-align:center'));
 console.log('PUBLIC_MENU_CARD_PROPORTION_GATE=PASS');
 
-for(const token of ['master_prototype_runtime_context','p_origin:tenantId?null:origin','if(req.method==="OPTIONS")','Access-Control-Allow-Headers'])
+for(const token of ['master_prototype_runtime_context','p_origin:tenantId?null:origin','if(req.method==="OPTIONS")','Access-Control-Allow-Headers','function internalKey()','const INTERNAL_KEY=internalKey()','apikey:INTERNAL_KEY','Authorization:"Bearer "+INTERNAL_KEY'])
   assert.ok(gateway.includes(token),'gateway contract missing '+token);
-for(const token of ['clientOrderId','X-Request-ID','rohmat:order-commit-success','Pesanan sedang disimpan'])
+for(const token of ['clientOrderId','X-Request-ID','rohmat:order-commit-success','Pesanan sedang disimpan','async function prepareOrder','if(!PIPE?.use)','currentInput=prepared.input','currentInit=prepared.init'])
   assert.ok(pub.includes(token),'public commit contract missing '+token);
 for(const token of ['payment_verification_started','payment_verification_success','order_commit_started','order_commit_success','order_commit_failed','sheet_sync_enqueued'])
   assert.ok(core.includes(token),'structured order event missing '+token);

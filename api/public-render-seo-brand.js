@@ -10,7 +10,8 @@ function amendHtml(html){
   let out = html.replace(EXPOSED_INTERNAL_NOTE, '')
     .replaceAll('table<=20', 'table<=6')
     .replaceAll('n<=20', 'n<=6')
-    .replace('Array.from({length:20}', 'Array.from({length:6}');
+    .replace('Array.from({length:20}', 'Array.from({length:6}')
+    .replaceAll("'MEJA '+st.table", "(st.table?'MEJA '+st.table:'PILIH MEJA')");
   if (!out.includes(RENDER_ANCHOR) || !out.includes('id="app"')) return out;
   const nonce = out.match(/<script nonce="([^"]+)"/)?.[1];
   if (!nonce || !/^[A-Za-z0-9_-]{8,128}$/.test(nonce)) return out;

@@ -97,6 +97,10 @@ function tenantizeRuntimeHtml(html, tenantId, businessName, heroImageUrl = '') {
   const safeBusiness = String(businessName || 'Business').trim() || 'Business';
   const tenantBusinessMarker = '<span data-tenant-business hidden>' + escapeHtml(safeBusiness) + '</span>';
   let out = html;
+  // Kedai Terserah: keep payment verification details server-side; use Golden Master checkout UI.
+  if (safeTenant === KEDAI_TERSERAH_TENANT_ID) {
+    out = out.replace(/<div class="kt-qris-note" role="status">[\s\S]*?<\/div>/g, '');
+  }
   if (/<span\s+data-tenant-business\s+hidden>[^<]*<\/span>/i.test(out)) {
     out = out.replace(/<span\s+data-tenant-business\s+hidden>[^<]*<\/span>/i, tenantBusinessMarker);
   } else {

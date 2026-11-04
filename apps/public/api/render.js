@@ -74,6 +74,17 @@ function injectPublicPatch(html) {
   return at >= 0 ? html.slice(0, at) + PUBLIC_UX_PATCH + html.slice(at) : html + PUBLIC_UX_PATCH;
 }
 
+const KEDAI_TERSERAH_TENANT_ID = 'f90dba28-021b-4bb4-bc4d-1e50f70c7809';
+const TENANT_AUTO_OCR_PATCH = "<script id=\"sdb-tenant-ocr-autostart-v1\">\n(()=>{'use strict';\nif(window.__sdbTenantAutoOcrV1)return;\nwindow.__sdbTenantAutoOcrV1=true;\nlet task=0,observer=null,limit=null;\nfunction isProof(input){\n  return input instanceof HTMLInputElement&&input.type==='file'&&\n    (input.id==='proof'||/bukti|proof|pembayaran/i.test([input.id,input.name,input.getAttribute('aria-label')||''].join(' ')));\n}\nfunction locateButton(){\n  return [...document.querySelectorAll('button')].find(el=>/periksa\\s+(?:ulang\\s+)?bukti\\s+dengan\\s+ocr|periksa\\s+bukti\\s+ocr/i.test(el.textContent||''));\n}\nfunction info(message){\n  const input=[...document.querySelectorAll('input[type=file]')].find(isProof);\n  if(!input)return;\n  let el=document.getElementById('sdb-auto-ocr-info');\n  if(!el){\n    el=document.createElement('p');el.id='sdb-auto-ocr-info';\n    el.setAttribute('role','status');el.setAttribute('aria-live','polite');\n    el.style.cssText='margin:8px 0 0;font-size:13px;line-height:1.5;color:#315343';\n    input.insertAdjacentElement('afterend',el);\n  }\n  if(el.textContent!==message)el.textContent=message;\n}\nfunction clearWatch(){\n  if(observer){observer.disconnect();observer=null;}\n  if(limit){clearTimeout(limit);limit=null;}\n}\ndocument.addEventListener('change',event=>{\n  const input=event.target;\n  if(!isProof(input))return;\n  clearWatch();\n  const seq=++task,file=input.files&&input.files[0];\n  if(!file){info('Pilih bukti pembayaran agar OCR berjalan otomatis.');return;}\n  if(!/^image\\/(?:png|jpeg|webp)$/.test(file.type)||!file.size||file.size>3*1024*1024){\n    info('Berkas harus berupa JPEG, PNG, atau WebP berukuran maksimal 3 MB.');return;\n  }\n  info('Bukti diterima. Memulai OCR otomatis...');\n  let started=false;\n  function kick(){\n    if(started||seq!==task)return;\n    const live=[...document.querySelectorAll('input[type=file]')].find(isProof);\n    if(!live||live.files?.[0]!==file)return;\n    const button=locateButton();\n    if(!button||button.disabled||button.getAttribute('aria-disabled')==='true')return;\n    started=true;clearWatch();\n    info('OCR sedang memeriksa bukti pembayaran. Tunggu hasil verifikasi.');\n    button.click();\n  }\n  observer=new MutationObserver(kick);\n  observer.observe(document.body||document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','aria-disabled']});\n  setTimeout(kick,0);\n  setTimeout(kick,80);\n  setTimeout(kick,300);\n  setTimeout(kick,900);\n  limit=setTimeout(()=>{\n    if(started||seq!==task)return;\n    clearWatch();\n    info('OCR belum dapat dimulai. Periksa kesiapan layanan pembayaran atau gunakan pemeriksaan manual.');\n  },8000);\n},true);\n})();\n</script><!-- sdb-tenant-ocr-autostart-v1 -->";
+function injectTenantAutoOcr(html,tenantId){
+  if(tenantId!==KEDAI_TERSERAH_TENANT_ID||html.includes('id="sdb-tenant-ocr-autostart-v1"'))return html;
+  const oldCopy='OCR dapat dijalankan secara terpisah agar pemilihan berkas tetap responsif.';
+  const newCopy='OCR akan berjalan otomatis setelah file dipilih. Tunggu hasil verifikasi sebelum mengirim pesanan.';
+  const out=html.replace(oldCopy,newCopy);
+  const at=out.lastIndexOf('</body>');
+  return at>=0?out.slice(0,at)+TENANT_AUTO_OCR_PATCH+out.slice(at):out+TENANT_AUTO_OCR_PATCH;
+}
+
 function secureHtml(html, nonce) {
   return html.replace(/<script(?=\s|>)/g, `<script nonce="${nonce}"`).replace(/<style(?=\s|>)/g, `<style nonce="${nonce}"`);
 }
@@ -174,7 +185,7 @@ export default async function handler(req, res) {
     if (!valid) throw new Error('invalid_lkg');
     const tenantized = tenantizeRuntimeHtml(html, tenantId, businessName, heroImageUrl);
     const optimized = optimizeHtml(tenantized);
-    const patched = injectPublicPatch(optimized.html);
+    const patched = injectTenantAutoOcr(injectPublicPatch(optimized.html), tenantId);
     const body = secureHtml(patched, nonce);
     res.statusCode = 200;
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -189,7 +200,7 @@ export default async function handler(req, res) {
     for (const [key, value] of Object.entries(securityHeaders(nonce, supabaseOrigin))) res.setHeader(key, value);
     res.setHeader('X-Rohmat-Public', 'master-prototype-lkg-v1');
     res.setHeader('X-SDB-Tenant-ID', tenantId);
-    res.setHeader('X-Rohmat-Public-OCR', 'smart-v6-target4s-fallback4.5-hard4.95-v77');
+    res.setHeader('X-Rohmat-Public-OCR', tenantId===KEDAI_TERSERAH_TENANT_ID ? 'smart-v6-autostart-file-v1' : 'smart-v6-target4s-fallback4.5-hard4.95-v77');
     res.setHeader('X-Rohmat-Public-CSP', 'nonce-v2-script-style');
     res.setHeader('X-Rohmat-Public-Bundle-Min', String(MIN_LKG_BYTES));
     res.setHeader('X-Rohmat-Public-CDN', 'vercel-300-swr60');

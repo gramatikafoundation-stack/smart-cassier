@@ -13,6 +13,7 @@ function amendHtml(html){
     .replaceAll('table<=20', 'table<=6')
     .replaceAll('n<=20', 'n<=6')
     .replace('Array.from({length:20}', 'Array.from({length:6}')
+    .replace('is_available:Number(m.price)>0','is_available:m.is_available===true')
     .replaceAll("'MEJA '+st.table", "(st.table?'MEJA '+st.table:'PILIH MEJA')");
   if (!out.includes(RENDER_ANCHOR) || !out.includes('id="app"')) return out;
   const nonce = out.match(/<script nonce="([^"]+)"/)?.[1];

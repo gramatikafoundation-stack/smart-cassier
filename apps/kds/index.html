@@ -12,8 +12,26 @@
 </head>
 <body class="kdsPage">
   <a class="skipLink" href="#ordersTab">Lewati ke konten utama</a>
-  <div id="app" hidden>
-    <header class="shell top">
+  <div id="app" hidden class="kds-app-grid">
+    <aside class="kds-sidebar" aria-label="Navigasi spesifik KDS">
+      <div class="kds-brand">
+        <img src="/sdb-parent-brand.jpg?v=20261007-official-social-v2" alt="Logo resmi SDB — SMART DIGITAL FOR BUSINESS" width="80" height="80">
+        <div class="kds-brand-text"><strong>SMART DIGITAL</strong><span>FOR BUSINESS</span></div>
+      </div>
+      <div class="kds-sidebar-tenant"><span class="kds-tenant-dot"></span><span data-tenant-business>Kedai Terserah</span></div>
+      <div class="kds-sidebar-heading"><span>MODUL OPERASIONAL</span><h2 id="kdsModuleLabel">Pesanan Dapur</h2><p id="kdsModuleDescription">Pantau pesanan dan progres dapur.</p></div>
+      <nav id="kdsSubnav" class="kds-subnav" aria-label="Navigasi spesifik Pesanan Dapur">
+        <button type="button" data-kds-side="new" class="kds-side-link active">Pesanan Baru</button>
+        <button type="button" data-kds-side="process" class="kds-side-link">Sedang Diproses</button>
+        <button type="button" data-kds-side="ready" class="kds-side-link">Pesanan Siap</button>
+      </nav>
+      <div class="kds-sidebar-footer">
+        <button type="button" id="kdsGuideOpen" class="kds-guide-launch">◎ <span>Pengenalan Navigasi</span></button>
+        <small>SMART ORDER · KITCHEN SYSTEM</small>
+      </div>
+    </aside>
+    <div class="kds-workspace">
+      <header class="shell top">
       <div class="bar">
         <div class="ico" aria-hidden="true">♨</div>
         <div>
@@ -27,11 +45,7 @@
           <button id="logout" class="btn" type="button">Keluar</button>
         </div>
       </div>
-      <nav class="tabs" role="tablist" aria-label="Bagian KDS">
-        <button id="tabOrders" class="tab on" type="button" role="tab" aria-selected="true" aria-controls="ordersTab" data-tab="orders">Pesanan Dapur</button>
-        <button id="tabCashier" class="tab" type="button" role="tab" aria-selected="false" aria-controls="cashierTab" data-tab="cashier">Smart Cashier</button>
-        <button id="tabStock" class="tab" type="button" role="tab" aria-selected="false" aria-controls="stockTab" data-tab="stock">Ketersediaan Barang</button>
-      </nav>
+
     </header>
     <main class="shell" id="kdsMain">
       <section id="ordersTab" role="tabpanel" aria-labelledby="tabOrders" tabindex="-1">
@@ -57,6 +71,38 @@
         </div>
       </section>
     </main>
+    </div>
+    <nav class="tabs kds-bottom-nav" role="tablist" aria-label="Navigasi umum KDS">
+      <button id="tabOrders" class="tab on" type="button" role="tab" aria-selected="true" aria-controls="ordersTab" data-tab="orders"><span aria-hidden="true" class="kds-tab-icon">♨</span><span>Pesanan Dapur</span></button>
+      <button id="tabCashier" class="tab" type="button" role="tab" aria-selected="false" aria-controls="cashierTab" data-tab="cashier"><span aria-hidden="true" class="kds-tab-icon">▣</span><span>Smart Cashier</span></button>
+      <button id="tabStock" class="tab" type="button" role="tab" aria-selected="false" aria-controls="stockTab" data-tab="stock"><span aria-hidden="true" class="kds-tab-icon">▤</span><span>Ketersediaan Barang</span></button>
+    </nav>
+  </div>
+  <div id="kdsGuideOverlay" class="kds-guide-overlay" hidden>
+    <section class="kds-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="kdsGuideTitle" aria-describedby="kdsGuideSummary">
+      <div class="kds-guide-head">
+        <div><span class="kds-guide-eyebrow">SMART DIGITAL FOR BUSINESS</span><h2 id="kdsGuideTitle">Pengenalan Navigasi KDS</h2><p id="kdsGuideSummary">Tiga modul operasional — satu alur kerja terpadu.</p></div>
+        <button id="kdsGuideClose" type="button" class="kds-guide-close" aria-label="Tutup panduan">✕</button>
+      </div>
+      <div class="kds-showcase">
+        <div class="kds-showcase-phone" aria-label="Pratinjau antarmuka smartphone">
+          <div class="kds-phone-bezel"><div class="kds-phone-island" aria-hidden="true"></div><div id="kdsPhoneDisplay" class="kds-phone-screen"></div></div>
+        </div>
+        <div class="kds-showcase-copy">
+          <span id="kdsGuideCounter" class="kds-guide-count">01 / 03</span>
+          <h3 id="kdsGuideSlideTitle">Pesanan Dapur</h3>
+          <p id="kdsGuideSlideDescription"></p>
+          <div id="kdsGuideSlideSteps" class="kds-guide-steps"></div>
+          <div class="kds-guide-controls">
+            <button id="kdsGuidePrev" type="button" aria-label="Lihat navigasi sebelumnya">←</button>
+            <div id="kdsGuideDots" class="kds-guide-dots" aria-label="Indikator slide"></div>
+            <button id="kdsGuideNext" type="button" aria-label="Lihat navigasi berikutnya">→</button>
+          </div>
+          <button id="kdsGuideExplore" type="button" class="kds-guide-explore">Buka modul ini ↗</button>
+          <small>Ilustrasi data contoh — bukan transaksi produksi.</small>
+        </div>
+      </div>
+    </section>
   </div>
   <div id="proofModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="proofTitle" hidden>
     <div class="modalbox">

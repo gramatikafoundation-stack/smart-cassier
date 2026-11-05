@@ -253,3 +253,165 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPollin
 window.addEventListener('offline',()=>{stopPolling();stopRealtime({state:'offline'})});
 window.addEventListener('online',()=>{setSyncState('reconnecting','Menghubungkan ulang');syncCurrent(false).catch(()=>{}).finally(()=>schedulePolling(FALLBACK_POLL_MS));startRealtimeHybrid().catch(()=>{})});
 boot();
+
+/* SDB KDS Navigation & Introduction Showcase V1 — presentation only; no mock transactions issued. */
+;(() => {
+  'use strict';
+  const byId = id => document.getElementById(id);
+  const moduleConfig = {
+    orders: {
+      title:'Pesanan Dapur',
+      description:'Pantau pesanan dan progres dapur.',
+      links:[['new','Pesanan Baru'],['process','Sedang Diproses'],['ready','Pesanan Siap']]
+    },
+    cashier: {
+      title:'Smart Cashier',
+      description:'Kelola menu, keranjang, dan pembayaran kasir.',
+      links:[['catalog','Katalog Menu'],['cart','Keranjang Kasir'],['payment','Pembayaran']]
+    },
+    stock: {
+      title:'Ketersediaan Barang',
+      description:'Cari dan perbarui status ketersediaan menu.',
+      links:[['all','Semua Menu'],['on','Tersedia'],['off','Habis']]
+    }
+  };
+  const guideSlides = [
+    {
+      tab:'orders',title:'Pesanan Dapur',
+      description:'Pantau pesanan baru, proses pengerjaan, dan pesanan siap secara terstruktur. Status aktual mengikuti sistem KDS yang terhubung.',
+      steps:['Pesanan baru masuk ke antrean dapur.','Petugas memperbarui status sesuai progres.','Pesanan siap diteruskan untuk penyajian.'],
+      nav:['Baru','Diproses','Siap'],
+      cards:[['DEMO · Pesanan #001','Meja A3 · 2 menu','Pesanan Baru'],['DEMO · Pesanan #002','Meja B1 · 1 menu','Sedang Diproses']]
+    },
+    {
+      tab:'cashier',title:'Smart Cashier',
+      description:'Buka katalog menu, susun keranjang pelanggan, dan periksa pembayaran melalui kontrol kasir yang tersedia.',
+      steps:['Cari dan pilih menu dari katalog aktual.','Periksa kuantitas dan rincian keranjang.','Konfirmasi pembayaran dengan mekanisme yang sah.'],
+      nav:['Katalog','Keranjang','Bayar'],
+      cards:[['DEMO · Es Uby Creamy','Contoh item menu','Katalog'],['DEMO · Keranjang Kasir','1 jenis item · nilai contoh','Periksa Total']]
+    },
+    {
+      tab:'stock',title:'Ketersediaan Barang',
+      description:'Cari produk dan kelola status tersedia atau habis, sehingga pelanggan tidak memilih menu yang sedang tidak dijual.',
+      steps:['Temukan produk menggunakan pencarian.','Gunakan filter Semua, Tersedia, atau Habis.','Ubah status dengan hak akses KDS yang berlaku.'],
+      nav:['Semua','Tersedia','Habis'],
+      cards:[['DEMO · Es Uby Creamy','Menu contoh dari Kedai Terserah','Tersedia'],['DEMO · Aren Latte (ICE)','Menu contoh dari Kedai Terserah','Habis']]
+    }
+  ];
+  let slideIndex=0, lastFocused=null, swipeX=null;
+  const overlay=byId('kdsGuideOverlay');
+  const motion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth';
+  function activeTab(){return document.querySelector('.kds-bottom-nav .tab.on')?.dataset.tab||'orders'}
+  function updateSidebar(){
+    const tab=activeTab(), conf=moduleConfig[tab]||moduleConfig.orders;
+    const nav=byId('kdsSubnav');if(!nav)return;
+    byId('kdsModuleLabel').textContent=conf.title;
+    byId('kdsModuleDescription').textContent=conf.description;
+    nav.setAttribute('aria-label','Navigasi spesifik '+conf.title);
+    nav.replaceChildren(...conf.links.map(([id,label],index)=>{
+      const button=document.createElement('button');
+      button.type='button';button.className='kds-side-link'+(index===0?' active':'');
+      button.dataset.kdsSide=id;button.textContent=label;button.setAttribute('aria-current',index===0?'true':'false');
+      return button;
+    }));
+  }
+  function goToSidebar(tab,side){
+    let target=null;
+    if(tab==='orders'){
+      const indices={new:0,process:1,ready:2},i=indices[side]??0;
+      target=document.querySelectorAll('#lanes .lane')[i]||byId(['sNew','sProc','sDone'][i]);
+    }else if(tab==='cashier'){
+      const selectors={catalog:'#cashierRoot .cashMenu',cart:'#cashierRoot .cashLayout > aside.cashPanel',payment:'#cashPayNow'};
+      target=document.querySelector(selectors[side]||selectors.catalog)||byId('cashierRoot');
+    }else if(tab==='stock'){
+      const select=byId('filter');
+      if(select){select.value=side==='on'||side==='off'?side:'all';select.dispatchEvent(new Event('change',{bubbles:true}));}
+      target=byId('stockgrid')||byId('stockTab');
+    }
+    if(target){
+      if(!target.hasAttribute('tabindex')&&!/^(INPUT|BUTTON|SELECT|TEXTAREA)$/.test(target.tagName))target.setAttribute('tabindex','-1');
+      target.scrollIntoView({behavior:motion(),block:'nearest',inline:'nearest'});
+      try{target.focus({preventScroll:true})}catch{}
+      target.classList.add('kds-navigated');setTimeout(()=>target.classList.remove('kds-navigated'),1000);
+    }
+    document.querySelectorAll('#kdsSubnav [data-kds-side]').forEach(b=>{
+      const on=b.dataset.kdsSide===side;
+      b.classList.toggle('active',on);b.setAttribute('aria-current',on?'true':'false');
+    });
+  }
+  const miniBottom=active=>'<div class="kds-mini-bottom">'+[
+    ['orders','♨<br>Pesanan'],['cashier','▣<br>Kasir'],['stock','▤<br>Barang']
+  ].map(([id,name])=>'<span class="'+(active===id?'on':'')+'">'+name+'</span>').join('')+'</div>';
+  function drawPhone(s){
+    const nav=s.nav.map((t,i)=>'<div class="kds-mini-nav '+(i===0?'on':'')+'">'+t+'</div>').join('');
+    const cards=s.cards.map((c,i)=>'<div class="kds-mini-card '+(i===1?'warn':'')+'"><b>'+c[0]+'</b><span>'+c[1]+'</span><em>'+c[2]+'</em></div>').join('');
+    return '<div class="kds-mini-status"><span>10:24</span><span>● ● ▰</span></div>'+
+      '<div class="kds-mini-layout"><div class="kds-mini-side"><div class="kds-mini-logo">SDB</div><small>SMART DIGITAL<br>FOR BUSINESS</small>'+nav+'</div>'+
+      '<div class="kds-mini-content"><h4>'+s.title+'</h4>'+cards+'</div></div>'+miniBottom(s.tab);
+  }
+  function drawSlide(){
+    const s=guideSlides[slideIndex];if(!s)return;
+    byId('kdsGuideCounter').textContent=String(slideIndex+1).padStart(2,'0')+' / 03';
+    byId('kdsGuideSlideTitle').textContent=s.title;
+    byId('kdsGuideSlideDescription').textContent=s.description;
+    byId('kdsGuideSlideSteps').replaceChildren(...s.steps.map((line,i)=>{
+      const box=document.createElement('div');box.className='kds-guide-step';box.textContent=String(i+1).padStart(2,'0')+' · '+line;return box;
+    }));
+    byId('kdsPhoneDisplay').innerHTML=drawPhone(s);
+    const dots=byId('kdsGuideDots');
+    dots.replaceChildren(...guideSlides.map((item,i)=>{
+      const b=document.createElement('button');b.type='button';
+      b.className=i===slideIndex?'active':'';
+      b.setAttribute('aria-label','Lihat '+item.title);
+      b.setAttribute('aria-current',i===slideIndex?'true':'false');
+      b.addEventListener('click',()=>setSlide(i));
+      return b;
+    }));
+    byId('kdsGuideExplore').textContent='Buka '+s.title+' ↗';
+  }
+  function setSlide(i){slideIndex=(i+guideSlides.length)%guideSlides.length;drawSlide()}
+  function openGuide(){
+    if(!overlay)return;lastFocused=document.activeElement;
+    const currentTab=activeTab();const found=guideSlides.findIndex(s=>s.tab===currentTab);
+    setSlide(found<0?0:found);
+    overlay.hidden=false;byId('kdsGuideClose')?.focus();
+  }
+  function closeGuide(){
+    if(!overlay)return;overlay.hidden=true;
+    try{lastFocused?.focus()}catch{}
+  }
+  byId('kdsGuideOpen')?.addEventListener('click',openGuide);
+  byId('kdsGuideClose')?.addEventListener('click',closeGuide);
+  byId('kdsGuidePrev')?.addEventListener('click',()=>setSlide(slideIndex-1));
+  byId('kdsGuideNext')?.addEventListener('click',()=>setSlide(slideIndex+1));
+  byId('kdsGuideExplore')?.addEventListener('click',()=>{
+    const tab=guideSlides[slideIndex].tab;
+    closeGuide();
+    if(typeof switchTab==='function')switchTab(tab);
+  });
+  overlay?.addEventListener('click',e=>{if(e.target===overlay)closeGuide()});
+  overlay?.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.preventDefault();closeGuide();}
+    if(e.key==='ArrowRight'){e.preventDefault();setSlide(slideIndex+1);}
+    if(e.key==='ArrowLeft'){e.preventDefault();setSlide(slideIndex-1);}
+    if(e.key==='Tab'){
+      const focusables=[...overlay.querySelectorAll('button:not([disabled])')].filter(b=>b.offsetParent!==null);
+      if(!focusables.length)return;
+      const first=focusables[0],last=focusables[focusables.length-1];
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+    }
+  });
+  overlay?.addEventListener('touchstart',e=>{swipeX=e.changedTouches[0]?.screenX??null},{passive:true});
+  overlay?.addEventListener('touchend',e=>{
+    if(swipeX===null)return;const delta=(e.changedTouches[0]?.screenX??swipeX)-swipeX;swipeX=null;
+    if(Math.abs(delta)>55)setSlide(slideIndex+(delta<0?1:-1));
+  },{passive:true});
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('#kdsSubnav [data-kds-side]');if(!b)return;
+    goToSidebar(activeTab(),b.dataset.kdsSide);
+  });
+  document.addEventListener('rohmat:kds-page',()=>queueMicrotask(updateSidebar));
+  updateSidebar();drawSlide();
+  window.__SDB_KDS_PREMIUM_NAV_V1=true;
+})();

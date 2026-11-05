@@ -77,7 +77,7 @@ const NAVIGATION_RUNTIME = "(()=>{'use strict';if(window.__rohmatAdminCanonicalN
 "if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();})();";
 
 
-const SDB_ADMIN_LAYOUT_RUNTIME = String.raw\`
+const SDB_ADMIN_LAYOUT_RUNTIME = String.raw`
 (()=>{'use strict';
 if(window.__sdbAdminNavigationLayoutV1)return;
 window.__sdbAdminNavigationLayoutV1=true;
@@ -96,7 +96,7 @@ const rules=[
 '.topbar{z-index:30!important}',
 '@media(max-width:800px){.shell{grid-template-columns:160px minmax(0,1fr)!important}.sidebar{padding:12px 7px!important}.sidebar>.subnav button{font-size:12px!important;padding:9px 7px!important}.content{padding:14px!important}.sidebar>.mainNav button{font-size:10px!important;padding:10px 6px!important}}',
 '@media(max-width:520px){.shell{grid-template-columns:118px minmax(0,1fr)!important}.sidebar{padding:10px 5px!important}.sidebar>.subnav button{font-size:11px!important;padding:9px 6px!important}.sidebar>.mainNav{width:calc(100% - 12px)!important;border-radius:16px!important;gap:2px!important;padding:5px!important}.sidebar>.mainNav button{font-size:9px!important;padding:10px 3px!important;white-space:normal!important;line-height:1.2!important}.content{padding:10px!important}.topbar{padding:10px!important}}'
-].join('\\n');
+].join(' ');
 function ensureStyle(){if(document.getElementById(CSS_ID))return;const s=document.createElement('style');s.id=CSS_ID;s.textContent=rules;document.head.appendChild(s)}
 function apply(){
  const shell=document.querySelector('#root .shell');
@@ -120,7 +120,7 @@ function schedule(){if(pending)return;pending=true;requestAnimationFrame(()=>{pe
 function start(){ensureStyle();schedule();const root=document.getElementById('root');if(root)new MutationObserver(schedule).observe(root,{childList:true,subtree:true});document.addEventListener('rohmat:navigation',schedule)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
-\`;
+`;
 
 export function buildCanonicalCoreFromHtml(html, styleRuntime) {
   const v41 = inlineScript(html, 'admin-design-system-runtime-v41');

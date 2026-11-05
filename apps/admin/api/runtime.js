@@ -94,6 +94,11 @@ const rules=[
 '.content>.subnav{display:none!important}',
 '.workspace,.content,#view{min-width:0!important}',
 '.topbar{z-index:30!important}',
+'.shell[data-sdb-cashier-active="true"] #rohmatCashierSafe .rc6Layout{grid-template-columns:minmax(0,7fr) minmax(280px,3fr)!important;align-items:start!important}',
+'.shell[data-sdb-cashier-active="true"] #rohmatCashierSafe .rc6Cats{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;position:relative!important;top:auto!important;width:100%!important;overflow-x:auto!important;justify-content:flex-start!important;gap:8px!important;margin:0 0 14px!important;padding:4px 2px 10px!important}',
+'.shell[data-sdb-cashier-active="true"] #rohmatCashierSafe .rc6Cats button{flex:0 0 auto!important;white-space:nowrap!important}',
+'.shell[data-sdb-cashier-active="true"] #rohmatCashierSafe .rc6Layout>.rc6Panel:first-child{min-width:0!important}',
+'@media(max-width:1100px){.shell[data-sdb-cashier-active="true"] #rohmatCashierSafe .rc6Layout{grid-template-columns:minmax(0,1fr)!important}}',
 '@media(max-width:800px){.shell{grid-template-columns:160px minmax(0,1fr)!important}.sidebar{padding:12px 7px!important}.sidebar>.subnav button{font-size:12px!important;padding:9px 7px!important}.content{padding:14px!important}.sidebar>.mainNav button{font-size:10px!important;padding:10px 6px!important}}',
 '@media(max-width:520px){.shell{grid-template-columns:118px minmax(0,1fr)!important}.sidebar{padding:10px 5px!important}.sidebar>.subnav button{font-size:11px!important;padding:9px 6px!important}.sidebar>.mainNav{width:calc(100% - 12px)!important;border-radius:16px!important;gap:2px!important;padding:5px!important}.sidebar>.mainNav button{font-size:9px!important;padding:10px 3px!important;white-space:normal!important;line-height:1.2!important}.content{padding:10px!important}.topbar{padding:10px!important}}'
 ].join(' ');

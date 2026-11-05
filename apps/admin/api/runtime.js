@@ -76,6 +76,52 @@ const NAVIGATION_RUNTIME = "(()=>{'use strict';if(window.__rohmatAdminCanonicalN
 "const start=()=>{patchLinks();const root=document.getElementById('root');if(root){let p=false;new MutationObserver(()=>{if(p)return;p=true;requestAnimationFrame(()=>{p=false;patchLinks()})}).observe(root,{childList:true,subtree:true})}};" +
 "if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();})();";
 
+
+const SDB_ADMIN_LAYOUT_RUNTIME = String.raw\`
+(()=>{'use strict';
+if(window.__sdbAdminNavigationLayoutV1)return;
+window.__sdbAdminNavigationLayoutV1=true;
+const CSS_ID='sdb-admin-navigation-layout-v1';
+const rules=[
+'.shell{grid-template-columns:220px minmax(0,1fr)!important;padding-bottom:92px!important}',
+'.sidebar{min-width:0!important;gap:14px!important;padding:18px 12px!important;overflow:visible!important}',
+'.sidebar>.subnav{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:7px!important;overflow-y:auto!important;overflow-x:hidden!important;flex:1!important;min-height:0!important;padding:8px 1px 12px!important;max-height:calc(100svh - 190px)!important}',
+'.sidebar>.subnav button{width:100%!important;text-align:left!important;white-space:normal!important;border-radius:12px!important;line-height:1.35!important;padding:11px 12px!important;background:rgba(255,255,255,.09)!important;color:#edf5ef!important;border:1px solid rgba(255,255,255,.12)!important}',
+'.sidebar>.subnav button.on{background:#fff!important;color:#214c39!important;border-color:#fff!important;box-shadow:0 4px 12px rgba(0,0,0,.08)!important}',
+'.sidebar>.mainNav{position:fixed!important;left:50%!important;bottom:max(10px,env(safe-area-inset-bottom))!important;transform:translateX(-50%)!important;z-index:100!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-around!important;gap:5px!important;width:min(900px,calc(100% - 20px))!important;min-height:64px!important;padding:7px!important;border:1px solid rgba(255,255,255,.22)!important;border-radius:22px!important;background:#173f33!important;box-shadow:0 10px 38px rgba(10,45,31,.22)!important;overflow-x:auto!important;scrollbar-width:thin!important}',
+'.sidebar>.mainNav button{flex:1 0 auto!important;min-width:0!important;max-width:190px!important;text-align:center!important;padding:11px 8px!important;white-space:nowrap!important;font-size:clamp(10px,1.15vw,13px)!important;border-radius:14px!important}',
+'.sidebar>.mainNav button.on{background:#fff!important;color:#173f33!important}',
+'.content>.subnav{display:none!important}',
+'.workspace,.content,#view{min-width:0!important}',
+'.topbar{z-index:30!important}',
+'@media(max-width:800px){.shell{grid-template-columns:160px minmax(0,1fr)!important}.sidebar{padding:12px 7px!important}.sidebar>.subnav button{font-size:12px!important;padding:9px 7px!important}.content{padding:14px!important}.sidebar>.mainNav button{font-size:10px!important;padding:10px 6px!important}}',
+'@media(max-width:520px){.shell{grid-template-columns:118px minmax(0,1fr)!important}.sidebar{padding:10px 5px!important}.sidebar>.subnav button{font-size:11px!important;padding:9px 6px!important}.sidebar>.mainNav{width:calc(100% - 12px)!important;border-radius:16px!important;gap:2px!important;padding:5px!important}.sidebar>.mainNav button{font-size:9px!important;padding:10px 3px!important;white-space:normal!important;line-height:1.2!important}.content{padding:10px!important}.topbar{padding:10px!important}}'
+].join('\\n');
+function ensureStyle(){if(document.getElementById(CSS_ID))return;const s=document.createElement('style');s.id=CSS_ID;s.textContent=rules;document.head.appendChild(s)}
+function apply(){
+ const shell=document.querySelector('#root .shell');
+ if(!shell)return;
+ const aside=shell.querySelector(':scope > .sidebar');
+ const content=shell.querySelector('.workspace .content');
+ const nav=aside&&aside.querySelector(':scope > .mainNav');
+ const sub=(aside&&aside.querySelector(':scope > .subnav'))||(content&&content.querySelector(':scope > .subnav'));
+ if(!aside||!content||!nav||!sub)return;
+ if(sub.parentElement!==aside){const foot=aside.querySelector(':scope > .sidebarFoot');aside.insertBefore(sub,foot||null)}
+ const unique=new Set();
+ nav.querySelectorAll('button[data-main]').forEach(b=>{const key=b.dataset.main;if(unique.has(key)){b.remove();return}unique.add(key)});
+ const seen=new Set();
+ sub.querySelectorAll('button[data-sub]').forEach(b=>{const key=b.dataset.sub;if(seen.has(key)){b.remove();return}seen.add(key)});
+ const cashier=!!sub.querySelector('button[data-sub="Smart Cashier"].on');
+ shell.dataset.sdbCashierActive=cashier?'true':'false';
+ if(cashier){const view=document.getElementById('view');if(view)view.dataset.sdbCashierMenuTop='true'}
+}
+let pending=false;
+function schedule(){if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;ensureStyle();apply()})}
+function start(){ensureStyle();schedule();const root=document.getElementById('root');if(root)new MutationObserver(schedule).observe(root,{childList:true,subtree:true});document.addEventListener('rohmat:navigation',schedule)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+\`;
+
 export function buildCanonicalCoreFromHtml(html, styleRuntime) {
   const v41 = inlineScript(html, 'admin-design-system-runtime-v41');
   const v50 = inlineScript(html, 'admin-theme14-runtime-v50');
@@ -87,6 +133,7 @@ export function buildCanonicalCoreFromHtml(html, styleRuntime) {
     v50,
     String(styleRuntime),
     NAVIGATION_RUNTIME,
+    SDB_ADMIN_LAYOUT_RUNTIME,
     ';document.documentElement.dataset.rohmatAdminCanonicalRuntime="v60";'
   ].join('\n;\n');
 }
